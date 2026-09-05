@@ -118,6 +118,33 @@ def validate_replay_constraints(
         )
 
 
+def _coerce_split_definitions(
+    split_definitions: object,
+) -> Iterable[SplitDefinition] | None:
+    if split_definitions is None:
+        return None
+    if isinstance(split_definitions, (list, tuple)):
+        converted: list[SplitDefinition] = []
+        for split in split_definitions:
+            if isinstance(split, SplitDefinition):
+                converted.append(split)
+                continue
+            if isinstance(split, dict):
+                converted.append(
+                    SplitDefinition(
+                        str(split["name"]),
+                        str(split["start"]),
+                        str(split["end"]),
+                    )
+                )
+                continue
+            raise ValueError("split_definitions must be SplitDefinition instances or dicts")
+        return tuple(converted)
+    if isinstance(split_definitions, SplitDefinition):
+        return (split_definitions,)
+    raise ValueError("split_definitions must be list-like or SplitDefinition")
+
+
 def validate_replay_constraints_dict(
     rows: Iterable[CorpusRow],
     *,
@@ -127,9 +154,12 @@ def validate_replay_constraints_dict(
     """Validate an admitted candidate using a manifest-style dictionary."""
 
     manifest = manifest or {}
+    split_definitions = manifest.get("split_definitions")
+    if split_definitions is None:
+        split_definitions = manifest.get("splits")
     validate_replay_constraints(
         rows,
-        split_definitions=manifest.get("split_definitions"),
+        split_definitions=_coerce_split_definitions(split_definitions),
         expected_system_id=expected_system_id,
         release_scope=manifest.get("release_scope"),
         threshold_frozen=bool(manifest.get("thresholds_frozen", True)),

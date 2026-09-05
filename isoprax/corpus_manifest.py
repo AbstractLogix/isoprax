@@ -157,4 +157,11 @@ def validate_corpus_manifest(manifest: Mapping[str, Any]) -> bool:
         raise ValueError("counts_by_split must be a mapping")
     if set(manifest["counts_by_split"]) != set(_CANONICAL_SPLITS):
         raise ValueError("counts_by_split must include canonical splits")
+    for split in _CANONICAL_SPLITS:
+        counts = manifest["counts_by_split"].get(split, {})
+        if not isinstance(counts, Mapping):
+            raise ValueError(f"counts_by_split[{split}] must be a mapping")
+        for outcome in ("observed_positive", "observed_negative", "censored"):
+            if outcome not in counts:
+                raise ValueError(f"missing count for {split}:{outcome}")
     return True

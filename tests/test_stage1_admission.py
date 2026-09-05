@@ -12,6 +12,7 @@ from isoprax.corpus_manifest import build_corpus_manifest, validate_corpus_manif
 from isoprax.replay_constraints import (
     ReplayConstraintError,
     validate_replay_constraints,
+    validate_replay_constraints_dict,
 )
 
 SplitDefs: TypeAlias = tuple[
@@ -324,3 +325,60 @@ def test_replay_constraints_reject_cross_system_and_split_leakage(
             threshold_frozen=True,
             horizon_frozen=True,
         )
+
+
+def test_validate_corpus_manifest_requires_split_count_outcomes() -> None:
+    invalid_manifest = {
+        "source_system": "svc-a",
+        "release_scope": "manifest-only",
+        "horizon_rule": "fixed-24h-predeclared",
+        "thresholds_frozen": True,
+        "split_definitions": [
+            {"name": "train", "start": "2026-01-01T00:00:00+00:00", "end": "2026-01-07T00:00:00+00:00"},
+            {"name": "calibration_fit", "start": "2026-01-07T00:00:00+00:00", "end": "2026-01-14T00:00:00+00:00"},
+            {"name": "calibration_gate", "start": "2026-01-14T00:00:00+00:00", "end": "2026-01-21T00:00:00+00:00"},
+            {"name": "test", "start": "2026-01-21T00:00:00+00:00", "end": "2026-01-28T00:00:00+00:00"},
+        ],
+        "counts_by_split": {
+            "train": {"observed_positive": 1},
+            "calibration_fit": {"observed_positive": 0, "observed_negative": 0, "censored": 0},
+            "calibration_gate": {"observed_positive": 0, "observed_negative": 0, "censored": 0},
+            "test": {"observed_positive": 0, "observed_negative": 0, "censored": 0},
+        },
+    }
+    with pytest.raises(ValueError):
+        validate_corpus_manifest(invalid_manifest)
+
+
+def test_validate_replay_constraints_dict_accepts_manifest_splits(profile: AdmissionProfile) -> None:
+    rows = [
+        _row(row_id="r1", split="train", change_id="c-train"),
+        _row(
+            row_id="r2",
+            split="calibration_fit",
+            score_time="2026-01-09T00:00:00+00:00",
+            change_id="c-fit",
+        ),
+        _row(
+            row_id="r3",
+            split="calibration_gate",
+            score_time="2026-01-16T00:00:00+00:00",
+            change_id="c-gate",
+        ),
+        _row(
+            row_id="r4",
+            split="test",
+            score_time="2026-01-22T00:00:00+00:00",
+            change_id="c-test",
+        ),
+    ]
+    manifest = {
+        "splits": [
+            {"name": s.name, "start": s.start, "end": s.end}
+            for s in profile.split_definitions
+        ],
+        "release_scope": "manifest-only",
+        "thresholds_frozen": True,
+        "horizon_frozen": True,
+    }
+    validate_replay_constraints_dict(rows, manifest=manifest, expected_system_id="svc-a")
