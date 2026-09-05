@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "isoprax-reference"
+version = "0.1.0"
+description = "Isoprax v0.3 cross-family conformance reference implementation"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10,<3.15"
+dependencies = [
+  "numpy>=1.26,<3",
+  "scikit-learn>=1.5,<2",
+  "scipy>=1.11,<2",
+]
+
+[dependency-groups]
+dev = [
+  "pre-commit>=4,<5",
+  "pytest>=8,<9",
+  "ruff>=0.12,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"isoprax/__init__.py" = ["F401"]
+"examples/demo_cross_family.py" = ["E402"]
+
+[tool.setuptools]
+packages = ["isoprax"]
