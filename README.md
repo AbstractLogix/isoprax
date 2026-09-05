@@ -26,6 +26,22 @@ In this repository, the runnable POC-aligned implementation is the code under
 `isoprax/` plus `examples/demo_cross_family.py` and
 `tests/test_conformance.py`.
 
+## Why Stage 1 matters
+
+The repository's most defensible near-term contribution is its Stage 1
+admission-before-acquisition discipline. The implementation does not claim a
+new model or broader conformance class; it enforces the evidence-gate checks
+that make real corpus work credible:
+
+- lineage completeness from change → deployment → observation,
+- prediction-time leakage rejection,
+- single-system corpus boundaries with cross-system pooling rejected,
+- no private third-party production data or privileged telemetry requirements,
+- deterministic reporting that keeps admission as evidence infrastructure only.
+
+This is materially more mature and immediately useful than speculative JEPA or
+profile work, and it is the right near-term boundary for the project.
+
 ## What this proves
 
 Running `examples/demo_cross_family.py` demonstrates, on synthetic data:
