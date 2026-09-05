@@ -21,7 +21,7 @@ _CANONICAL_SCREEN_ORDER = (
     "prediction_metadata",
 )
 _NO_CHANGE_EVENT_SENTINEL = "no Change-family event exists to condition on"
-_COMMSURABILITY_SENTINEL = "Isoprax v0.3 §5.6"
+_COMMENSURABILITY_SENTINEL = "Isoprax v0.3 §5.6"
 _REPLAY_JUSTIFICATION_SENTINEL = "Deterministic replay remains structurally justified"
 _KNOWN_EXCLUSION_TYPES = {
     "structural_no_change_events",
@@ -165,7 +165,7 @@ class ExclusionEntry:
             raise ValueError("exclusion entries must not describe a pending or deferred path")
         if self.exclusion_type == "structural_no_change_events" and _NO_CHANGE_EVENT_SENTINEL.lower() not in reason_lower:
             raise ValueError("structural no-change exclusion must state the absence of a Change-family event")
-        if self.exclusion_type == "commensurability_mismatch" and _COMMSURABILITY_SENTINEL.lower() not in reason_lower:
+        if self.exclusion_type == "commensurability_mismatch" and _COMMENSURABILITY_SENTINEL.lower() not in reason_lower:
             raise ValueError("commensurability exclusion must cite Isoprax v0.3 §5.6")
         if self.exclusion_type == "structural_replay_justification" and _REPLAY_JUSTIFICATION_SENTINEL.lower() not in reason_lower:
             raise ValueError("replay justification exclusion must state that deterministic replay is structurally justified")
@@ -608,7 +608,7 @@ def record_exclusion_entry(
     reason_lower = reason.lower()
     if exclusion_type == "structural_no_change_events" and _NO_CHANGE_EVENT_SENTINEL.lower() not in reason_lower:
         raise ValueError("structural no-change exclusion must state the absence of a Change-family event")
-    if exclusion_type == "commensurability_mismatch" and _COMMSURABILITY_SENTINEL.lower() not in reason_lower:
+    if exclusion_type == "commensurability_mismatch" and _COMMENSURABILITY_SENTINEL.lower() not in reason_lower:
         raise ValueError("commensurability exclusion must cite Isoprax v0.3 §5.6")
     if exclusion_type == "structural_replay_justification" and _REPLAY_JUSTIFICATION_SENTINEL.lower() not in reason_lower:
         raise ValueError("replay justification exclusion must state that deterministic replay is structurally justified")
@@ -622,21 +622,13 @@ def build_replay_justification_exclusion(
     dataset_id: str,
     *,
     paired_dataset_available: bool = False,
-    shared_observation_process: bool = True,
 ) -> ExclusionEntry:
-    if shared_observation_process:
-        reason = (
-            "Deterministic replay remains structurally justified because both families share one observation process; "
-            "calibration does not change the conclusion. The justification is independent of paired-public-dataset scarcity "
-            "and survives future large paired datasets unless that dataset also derives both families' labels from one observation process."
-        )
-    else:
-        reason = (
-            "Deterministic replay remains structurally justified only when both families share one observation process; "
-            "here they do not, so this replay-justification exclusion is not applicable. Calibration does not change the conclusion. "
-            "The justification is independent of paired-public-dataset scarcity and survives future large paired datasets unless that dataset also derives both families' labels from one observation process."
-        )
-    if paired_dataset_available and not shared_observation_process:
+    reason = (
+        "Deterministic replay remains structurally justified because both families share one observation process; "
+        "calibration does not change the conclusion. The justification is independent of paired-public-dataset scarcity "
+        "and survives future large paired datasets unless that dataset also derives both families' labels from one observation process."
+    )
+    if paired_dataset_available:
         reason += " A later paired dataset does not rescue the exclusion unless it also shares one observation process across both families."
     return ExclusionEntry(
         dataset_id=dataset_id,
