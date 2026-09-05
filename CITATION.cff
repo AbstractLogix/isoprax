@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Isoprax reference implementation"
+abstract: "Offline reference implementation for the Isoprax v0.3 cross-family conformance proof, including Stage 0 structural conformance and Stage 1 corpus-admission evidence gating."
+authors:
+  - family-names: "AbstractLogix"
+    given-names: "Contributors"
+version: "0.1.0"
+date-released: "2026-09-05"
+url: "https://github.com/AbstractLogix/isoprax"
+repository-code: "https://github.com/AbstractLogix/isoprax"
+license: "Apache-2.0"
