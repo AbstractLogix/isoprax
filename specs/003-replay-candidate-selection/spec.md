@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-05
 
-**Status**: Draft
+**Status**: Complete
 
 **Input**: User description: "Define how a candidate system is screened and how its analysis plan is predeclared and made tamper-evident, before any Stage 1 corpus (002) can be collected against it. Reuse compatible archived decision records without importing corpus-execution or JEPA/profile scope."
 

@@ -45,6 +45,10 @@ class CorpusManifest:
             raise ValueError("horizon_rule metadata is required")
         if not self.split_definitions:
             raise ValueError("split_definitions are required")
+        if not self.published_artifacts or not all(
+            artifact.strip() for artifact in self.published_artifacts
+        ):
+            raise ValueError("published_artifacts are required")
         if set(self.counts_by_split) != set(_CANONICAL_SPLITS):
             raise ValueError("counts_by_split must include canonical splits")
         for split in _CANONICAL_SPLITS:
@@ -102,7 +106,9 @@ def build_corpus_manifest(
 
     if not source_system or not source_system.strip():
         raise ValueError("source_system is required")
-    manifest_release_scope = release_scope if release_scope is not None else profile.release_scope
+    manifest_release_scope = (
+        release_scope if release_scope is not None else profile.release_scope
+    )
     if not manifest_release_scope.strip():
         raise ValueError("release_scope metadata is required")
 
@@ -114,7 +120,11 @@ def build_corpus_manifest(
         split_definitions=profile.split_definitions,
         counts_by_split=_counts_by_split(sorted(rows, key=lambda r: r.row_id)),
         expected_system_id=profile.expected_system_id,
-        published_artifacts=tuple(published_artifacts),
+        published_artifacts=(
+            tuple(published_artifacts)
+            if published_artifacts
+            else profile.published_artifacts
+        ),
         privacy_constraints=tuple(privacy_constraints),
         generated_by=generated_by,
     )

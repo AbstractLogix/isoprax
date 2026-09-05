@@ -14,3 +14,9 @@
   gate-by-gate evidence and failed-gate reasons.
 - **AdmissionManifest**: Publishable metadata containing split boundaries,
   class counts, horizon declaration, release scope, and provenance summary.
+- **CalibrationEvidence**: Non-empty row identifiers showing calibration fitting
+  used only `calibration_fit` rows and gating used only `calibration_gate` rows.
+- **PredeclarationEvidence**: Hash, external anchor reference, and ordered
+  predeclaration/corpus-collection timestamps for frozen horizon and thresholds.
+- **CorpusProvenance**: Source identity and explicit private-production and
+  privileged-telemetry exclusions required for admissibility.

@@ -32,3 +32,12 @@
 - Screening order and fail-fast semantics: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006
 - Predeclaration integrity: FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013
 - Exclusion structure: FR-014, FR-015, FR-016
+
+## Phase 5: Convergence
+
+- [x] T016 Implement the frozen Screen 3 build-floor derivation from exactly 200 known-good commits of an unrelated stable project, using the two-decimal 5th percentile capped at 0.90, and reject clustered failures without a bypass per FR-005 (missing).
+- [x] T017 Validate Screen 4 against the supplied prediction-time feature allowlist at every sampled commit rather than accepting a caller-provided boolean per FR-006 (partial).
+- [x] T018 Execute a real Git ancestry check for each corpus-data commit, with an injectable Git runner for deterministic tests, per FR-010 and SC-003 (missing).
+- [x] T019 Reject, rather than merely report, a corpus-data commit with a timestamp before the anchored predeclaration commit per FR-013 (partial).
+- [x] T020 Validate that each required external anchor is independent of the project repository and clock, retaining the public-remote precondition for remote-dependent anchors, per FR-011 and FR-012 (partial).
+- [x] T021 Format the replay-selection implementation and its focused tests, then run the planned full validation suite per plan: Testing and T015 (partial).

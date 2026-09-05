@@ -24,6 +24,11 @@ from isoprax import (
     require_commensurable,
 )
 from isoprax.baseline_strategies import DEFECT_LINKED_FIX, JOB_RUN_FAILURE
+from isoprax.evaluation import (
+    check_calibration_conformance,
+    paired_comparison,
+    time_sliced_split,
+)
 
 # --- Section 4: event model MUSTs ---
 
@@ -42,6 +47,22 @@ def test_events_have_unique_ids():
 def test_family_discriminator_set():
     assert ChangeEvent(repo="r", change_ref="x").family == Family.CHANGE
     assert RunEvent(job_type="j", exit_status="ok").family == Family.OPERATIONAL
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    ["not-a-timestamp", "2026-01-01T00:00:00", "2026-01-01T00:00:00+02:00"],
+)
+def test_event_rejects_non_rfc3339_or_non_utc_timestamp(timestamp):
+    with pytest.raises(ValueError):
+        ChangeEvent(repo="r", change_ref="x", timestamp=timestamp)
+
+
+def test_event_rejects_missing_id_or_source():
+    with pytest.raises(ValueError):
+        ChangeEvent(repo="r", change_ref="x", id="")
+    with pytest.raises(ValueError):
+        ChangeEvent(repo="r", change_ref="x", source="")
 
 
 def test_extension_field_preserved(tmp_path):
@@ -337,7 +358,8 @@ def test_cross_family_report_pools_when_commensurable():
     )
     assert rep.commensurable is True
     assert rep.pooled_ece is not None
-    assert "Semantic" in rep.declarable_class
+    assert "Structural" in rep.declarable_class
+    assert "Semantic/Full" in rep.declarable_class
 
 
 def test_outcome_definition_resolvable_from_kb(tmp_path):
@@ -348,3 +370,29 @@ def test_outcome_definition_resolvable_from_kb(tmp_path):
     assert got.event == DEFECT_LINKED_FIX.event
     with pytest.raises(KeyError):
         kb.get_outcome_definition("nope")
+
+
+def test_calibration_conformance_handles_required_edges():
+    assert not check_calibration_conformance([0.5], [1]).passes
+    assert not check_calibration_conformance([0.5] * 500, [1] * 500).passes
+    with pytest.raises(ValueError, match="equal length"):
+        check_calibration_conformance([0.1], [0, 1])
+    with pytest.raises(ValueError, match="binary"):
+        check_calibration_conformance([0.1], [2])
+
+
+def test_time_sliced_and_paired_evaluation_utilities_reject_invalid_inputs():
+    train, test = time_sliced_split(
+        [
+            {"timestamp": "2026-01-03T00:00:00+00:00"},
+            {"timestamp": "2026-01-01T00:00:00+00:00"},
+            {"timestamp": "2026-01-02T00:00:00+00:00"},
+        ],
+        train_frac=2 / 3,
+    )
+    assert [event["timestamp"] for event in train + test] == sorted(
+        event["timestamp"] for event in train + test
+    )
+    assert paired_comparison([0.4, 0.3], [0.2, 0.1]).candidate_brier < 0.4
+    with pytest.raises(ValueError, match="equal-length"):
+        paired_comparison([0.1], [0.1, 0.2])

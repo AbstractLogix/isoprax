@@ -63,3 +63,12 @@
   T010
 - Corpus-boundary/governance: FR-019, FR-022, FR-023, FR-024, FR-025 → T010a,
   T010b, T010c, T012a
+
+## Phase 5: Convergence
+
+- [x] T014 Record score-time provenance for every prediction field and reject fields observed after score time per FR-003 and FR-017 (missing).
+- [x] T015 Require build, deployment, and monitoring evidence and enforce censorship when any required outcome evidence is unavailable per FR-009 and FR-010 (missing).
+- [x] T016 Require and validate distinct calibration-fit and calibration-gate evidence tied to the corresponding chronological splits per FR-013 (missing).
+- [x] T017 Require provenance that excludes private production data and privileged telemetry, and enforce anchored predeclaration before corpus collection for horizon and threshold rules per FR-018, FR-023, and FR-025 (missing).
+- [x] T018 Include validated provenance, predeclaration, and publishable-artifact metadata in deterministic manifests per FR-014 and FR-024 (partial).
+- [x] T019 Update completed feature status and convergence evidence with the obtained validation result per T013 (partial).

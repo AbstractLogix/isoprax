@@ -44,6 +44,10 @@ class Signal:
     def __post_init__(self) -> None:
         if not self.explanation or not self.explanation.strip():
             raise ValueError("Signal.explanation MUST be non-empty (spec 5.2)")
+        if not self.strategy_id or not self.strategy_id.strip():
+            raise ValueError("Signal.strategy_id is required")
+        if not self.strategy_version or not self.strategy_version.strip():
+            raise ValueError("Signal.strategy_version is required")
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -88,14 +92,20 @@ class ProbabilitySignal(Signal):
 class RiskSignal(ProbabilitySignal):
     """Change family: P(this change is defect-inducing)."""
 
-    pass
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.family != Family.CHANGE:
+            raise ValueError("RiskSignal family must be change")
 
 
 @dataclass
 class AnomalySignal(ProbabilitySignal):
     """Operational family: P(this run/resource experiences the adverse outcome)."""
 
-    pass
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.family != Family.OPERATIONAL:
+            raise ValueError("AnomalySignal family must be operational")
 
 
 @dataclass
@@ -111,6 +121,8 @@ class ForecastSignal(Signal):
 
     def __post_init__(self) -> None:
         super().__post_init__()
+        if self.family != Family.OPERATIONAL:
+            raise ValueError("ForecastSignal family must be operational")
         if not (0.0 <= self.interval_confidence <= 1.0):
             raise ValueError(
                 f"interval_confidence must be in [0,1], got {self.interval_confidence}"

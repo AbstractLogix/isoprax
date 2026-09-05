@@ -1,10 +1,14 @@
+from dataclasses import replace
 from typing import TypeAlias
 
 import pytest
 
 from isoprax.admission import (
     AdmissionProfile,
+    CalibrationEvidence,
+    CorpusProvenance,
     CorpusRow,
+    PredeclarationEvidence,
     SplitDefinition,
     evaluate_admission,
 )
@@ -79,6 +83,9 @@ def _row(
     change_id: str = "c1",
     change_group_id: str | None = None,
     censor_reason: str | None = None,
+    build_succeeded: bool = True,
+    deployment_succeeded: bool = True,
+    monitoring_complete: bool = True,
 ) -> CorpusRow:
     return CorpusRow(
         row_id=row_id,
@@ -96,6 +103,13 @@ def _row(
         threshold_version=threshold_version,
         change_group_id=change_group_id,
         censor_reason=censor_reason,
+        prediction_field_observed_at={
+            key: score_time
+            for key in (prediction_fields or {"diff_size": 42, "files_touched": 3})
+        },
+        build_succeeded=build_succeeded,
+        deployment_succeeded=deployment_succeeded,
+        monitoring_complete=monitoring_complete,
     )
 
 
@@ -121,6 +135,23 @@ def test_prediction_time_gate_rejects_forbidden_fields(
     assert not g.passed
 
 
+def test_prediction_time_gate_rejects_post_score_time_fields(
+    profile: AdmissionProfile,
+) -> None:
+    row = _row()
+    row = replace(
+        row,
+        prediction_field_observed_at={
+            "diff_size": "2026-01-02T00:00:01+00:00",
+            "files_touched": "2026-01-02T00:00:00+00:00",
+        },
+    )
+    gate = {
+        gate.gate_id: gate for gate in evaluate_admission([row], profile).gate_results
+    }["prediction_time_fields"]
+    assert not gate.passed
+
+
 def test_outcome_gate_rejects_negative_without_complete_window(
     profile: AdmissionProfile,
 ) -> None:
@@ -144,6 +175,18 @@ def test_outcome_gate_requires_censor_reason(profile: AdmissionProfile) -> None:
     )
     g = {x.gate_id: x for x in rep.gate_results}["outcome_censoring"]
     assert not g.passed
+
+
+def test_outcome_gate_requires_censoring_for_missing_build_evidence(
+    profile: AdmissionProfile,
+) -> None:
+    gate = {
+        gate.gate_id: gate
+        for gate in evaluate_admission(
+            [_row(build_succeeded=False)], profile
+        ).gate_results
+    }["outcome_censoring"]
+    assert not gate.passed
 
 
 def test_split_gate_rejects_row_outside_declared_window(
@@ -285,6 +328,55 @@ def test_manifest_contains_release_and_threshold_metadata(
     assert rep.manifest["thresholds_frozen"] is True
 
 
+def test_admission_requires_split_separated_calibration_and_safe_provenance(
+    profile: AdmissionProfile,
+) -> None:
+    rows = [
+        _row(row_id="train", split="train", score_time="2026-01-02T00:00:00+00:00"),
+        _row(
+            row_id="fit",
+            split="calibration_fit",
+            score_time="2026-01-08T00:00:00+00:00",
+        ),
+        _row(
+            row_id="gate",
+            split="calibration_gate",
+            score_time="2026-01-15T00:00:00+00:00",
+        ),
+        _row(row_id="test", split="test", score_time="2026-01-22T00:00:00+00:00"),
+    ]
+    evidence_profile = replace(
+        profile,
+        calibration_evidence=CalibrationEvidence(("fit",), ("gate",)),
+        predeclaration_evidence=PredeclarationEvidence(
+            artifact_hash="sha256:abc",
+            external_anchor_reference="https://anchor.example/abc",
+            predeclared_at="2025-12-31T00:00:00+00:00",
+            corpus_collection_started_at="2026-01-01T00:00:00+00:00",
+        ),
+        corpus_provenance=CorpusProvenance(
+            source_system="deterministic-replay",
+            uses_private_production_data=False,
+            uses_privileged_telemetry=False,
+        ),
+        published_artifacts=("manifest.json",),
+    )
+    gates = {
+        gate.gate_id: gate
+        for gate in evaluate_admission(rows, evidence_profile).gate_results
+    }
+    assert gates["calibration_evidence"].passed
+    assert gates["provenance"].passed
+
+    unsafe = replace(
+        evidence_profile,
+        corpus_provenance=CorpusProvenance("private", True, False),
+    )
+    assert not {
+        gate.gate_id: gate for gate in evaluate_admission(rows, unsafe).gate_results
+    }["provenance"].passed
+
+
 def test_manifest_build_and_validate_for_real_data_follow_on(
     profile: AdmissionProfile,
 ) -> None:
@@ -334,15 +426,39 @@ def test_validate_corpus_manifest_requires_split_count_outcomes() -> None:
         "horizon_rule": "fixed-24h-predeclared",
         "thresholds_frozen": True,
         "split_definitions": [
-            {"name": "train", "start": "2026-01-01T00:00:00+00:00", "end": "2026-01-07T00:00:00+00:00"},
-            {"name": "calibration_fit", "start": "2026-01-07T00:00:00+00:00", "end": "2026-01-14T00:00:00+00:00"},
-            {"name": "calibration_gate", "start": "2026-01-14T00:00:00+00:00", "end": "2026-01-21T00:00:00+00:00"},
-            {"name": "test", "start": "2026-01-21T00:00:00+00:00", "end": "2026-01-28T00:00:00+00:00"},
+            {
+                "name": "train",
+                "start": "2026-01-01T00:00:00+00:00",
+                "end": "2026-01-07T00:00:00+00:00",
+            },
+            {
+                "name": "calibration_fit",
+                "start": "2026-01-07T00:00:00+00:00",
+                "end": "2026-01-14T00:00:00+00:00",
+            },
+            {
+                "name": "calibration_gate",
+                "start": "2026-01-14T00:00:00+00:00",
+                "end": "2026-01-21T00:00:00+00:00",
+            },
+            {
+                "name": "test",
+                "start": "2026-01-21T00:00:00+00:00",
+                "end": "2026-01-28T00:00:00+00:00",
+            },
         ],
         "counts_by_split": {
             "train": {"observed_positive": 1},
-            "calibration_fit": {"observed_positive": 0, "observed_negative": 0, "censored": 0},
-            "calibration_gate": {"observed_positive": 0, "observed_negative": 0, "censored": 0},
+            "calibration_fit": {
+                "observed_positive": 0,
+                "observed_negative": 0,
+                "censored": 0,
+            },
+            "calibration_gate": {
+                "observed_positive": 0,
+                "observed_negative": 0,
+                "censored": 0,
+            },
             "test": {"observed_positive": 0, "observed_negative": 0, "censored": 0},
         },
     }
@@ -350,7 +466,9 @@ def test_validate_corpus_manifest_requires_split_count_outcomes() -> None:
         validate_corpus_manifest(invalid_manifest)
 
 
-def test_validate_replay_constraints_dict_accepts_manifest_splits(profile: AdmissionProfile) -> None:
+def test_validate_replay_constraints_dict_accepts_manifest_splits(
+    profile: AdmissionProfile,
+) -> None:
     rows = [
         _row(row_id="r1", split="train", change_id="c-train"),
         _row(
@@ -381,4 +499,6 @@ def test_validate_replay_constraints_dict_accepts_manifest_splits(profile: Admis
         "thresholds_frozen": True,
         "horizon_frozen": True,
     }
-    validate_replay_constraints_dict(rows, manifest=manifest, expected_system_id="svc-a")
+    validate_replay_constraints_dict(
+        rows, manifest=manifest, expected_system_id="svc-a"
+    )

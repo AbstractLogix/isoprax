@@ -27,3 +27,15 @@
 - `uv run python examples/demo_cross_family.py` passed and preserved Stage 0
   Structural claim boundary (`pooled figure WITHHELD` for non-commensurable
   baseline Outcome Definitions).
+
+## Convergence update (2026-09-05)
+
+- Every prediction-time field now carries an observed-at timestamp and is
+  rejected when it is later than its row's score time.
+- Rows with failed build/deployment evidence or incomplete monitoring must be
+  censored; they cannot be admitted as observed outcomes.
+- Admission requires split-separated calibration-fit/gate row evidence,
+  non-private/non-privileged corpus provenance, anchored predeclaration before
+  collection, and at least one declared publishable artifact.
+- These records are included in the deterministic admission manifest. Passing
+  admission remains evidence infrastructure, not a Semantic or Full claim.

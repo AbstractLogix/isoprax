@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-05
 
-**Status**: Ready for Implementation
+**Status**: Complete
 
 **Input**: User description: "Implement the Stage 0 Isoprax v0.3 reference kernel from the new
 normative specification; use the supplied POC selectively and keep scope strictly Stage 0."

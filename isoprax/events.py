@@ -39,6 +39,29 @@ class Event:
     # family is set by subclasses; declared here for a uniform interface
     family: Family = Family.OPERATIONAL
 
+    def __post_init__(self) -> None:
+        if type(self) is Event:
+            raise ValueError("Event must be a ChangeEvent, RunEvent, or MetricSample")
+        if not self.id or not self.id.strip():
+            raise ValueError("Event.id is required")
+        if not self.source or not self.source.strip():
+            raise ValueError("Event.source is required")
+        if not isinstance(self.timestamp, str) or not self.timestamp:
+            raise ValueError("Event.timestamp must be RFC 3339 UTC")
+        normalized = (
+            self.timestamp[:-1] + "+00:00"
+            if self.timestamp.endswith("Z")
+            else self.timestamp
+        )
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except ValueError as error:
+            raise ValueError("Event.timestamp must be RFC 3339 UTC") from error
+        if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(
+            parsed
+        ):
+            raise ValueError("Event.timestamp must be UTC")
+
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["family"] = self.family.value
@@ -64,6 +87,7 @@ class ChangeEvent(Event):
     features: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        super().__post_init__()
         # mandatory-field enforcement (spec 4.2)
         if not self.repo or not self.change_ref:
             raise ValueError("ChangeEvent requires 'repo' and 'change_ref'")
@@ -86,6 +110,7 @@ class RunEvent(Event):
     resource_metrics: dict[str, Any] = field(default_factory=dict)  # extensible
 
     def __post_init__(self) -> None:
+        super().__post_init__()
         if not self.job_type or not self.exit_status:
             raise ValueError("RunEvent requires 'job_type' and 'exit_status'")
         if self.family != Family.OPERATIONAL:
@@ -105,6 +130,7 @@ class MetricSample(Event):
     unit: Optional[str] = None
 
     def __post_init__(self) -> None:
+        super().__post_init__()
         if not self.resource_id or not self.resource_type:
             raise ValueError("MetricSample requires 'resource_id' and 'resource_type'")
         if self.family != Family.OPERATIONAL:
