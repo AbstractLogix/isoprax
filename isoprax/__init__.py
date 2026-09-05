@@ -21,8 +21,20 @@ from .commensurability import (
     check_commensurable,
     require_commensurable,
 )
+from .corpus_manifest import (
+    CorpusManifest,
+    build_corpus_manifest,
+    validate_corpus_manifest,
+)
 from .events import ChangeEvent, Event, Family, MetricSample, RunEvent
 from .kb import KnowledgeBase, Outcome, SQLiteKB
+from .replay_constraints import (
+    ReplayConstraint,
+    ReplayConstraintError,
+    build_replay_constraints,
+    validate_replay_constraints,
+    validate_replay_constraints_dict,
+)
 from .signals import (
     AnomalySignal,
     CalibrationStatus,

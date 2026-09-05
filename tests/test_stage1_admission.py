@@ -8,6 +8,11 @@ from isoprax.admission import (
     SplitDefinition,
     evaluate_admission,
 )
+from isoprax.corpus_manifest import build_corpus_manifest, validate_corpus_manifest
+from isoprax.replay_constraints import (
+    ReplayConstraintError,
+    validate_replay_constraints,
+)
 
 SplitDefs: TypeAlias = tuple[
     SplitDefinition,
@@ -277,3 +282,45 @@ def test_manifest_contains_release_and_threshold_metadata(
     rep = evaluate_admission([_row()], profile)
     assert rep.manifest["release_scope"] == "manifest-only"
     assert rep.manifest["thresholds_frozen"] is True
+
+
+def test_manifest_build_and_validate_for_real_data_follow_on(
+    profile: AdmissionProfile,
+) -> None:
+    rows = [_row(row_id="r1", split="train"), _row(row_id="r2", split="test")]
+    manifest = build_corpus_manifest(
+        rows,
+        profile,
+        source_system="svc-a",
+        published_artifacts=("admission-manifest.json",),
+        privacy_constraints=("no-private-telemetry",),
+    )
+    assert manifest.source_system == "svc-a"
+    assert manifest.release_scope == "manifest-only"
+    assert manifest.counts_by_split["train"]["observed_positive"] == 1
+    assert manifest.counts_by_split["test"]["observed_positive"] == 1
+    assert validate_corpus_manifest(manifest.to_dict()) is True
+
+
+def test_replay_constraints_reject_cross_system_and_split_leakage(
+    profile: AdmissionProfile,
+) -> None:
+    rows = [
+        _row(row_id="r1", split="train", change_id="c-shared", system_id="svc-a"),
+        _row(
+            row_id="r2",
+            split="test",
+            score_time="2026-01-22T00:00:00+00:00",
+            change_id="c-shared",
+            system_id="svc-b",
+        ),
+    ]
+    with pytest.raises(ReplayConstraintError):
+        validate_replay_constraints(
+            rows,
+            split_definitions=profile.split_definitions,
+            expected_system_id="svc-a",
+            release_scope="manifest-only",
+            threshold_frozen=True,
+            horizon_frozen=True,
+        )
