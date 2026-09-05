@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from isoprax import (
-    CandidateRecord,
     PredeclarationArtifact,
     build_replay_justification_exclusion,
     compute_predeclaration_hash,

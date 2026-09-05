@@ -13,6 +13,14 @@ from .baseline_strategies import (
     DistributionAnomalyStrategy,
     HeuristicRiskStrategy,
 )
+from .candidate_selection import (
+    CandidateRecord,
+    ScreeningResult,
+    evaluate_candidate_screening,
+    screen_candidate,
+    screen_candidate_system,
+    screen_candidates,
+)
 from .commensurability import (
     CommensurabilityResult,
     IncommensurableError,
@@ -26,15 +34,8 @@ from .corpus_manifest import (
     build_corpus_manifest,
     validate_corpus_manifest,
 )
-from .candidate_selection import (
-    CandidateRecord,
-    ScreeningResult,
-    evaluate_candidate_screening,
-    screen_candidate,
-    screen_candidate_system,
-    screen_candidates,
-)
 from .events import ChangeEvent, Event, Family, MetricSample, RunEvent
+from .kb import KnowledgeBase, Outcome, SQLiteKB
 from .predeclaration import (
     ExclusionEntry,
     PredeclarationArtifact,
@@ -50,7 +51,6 @@ from .predeclaration import (
     validate_predeclaration_artifact,
     validate_predeclaration_provenance,
 )
-from .kb import KnowledgeBase, Outcome, SQLiteKB
 from .replay_constraints import (
     ReplayConstraint,
     ReplayConstraintError,
