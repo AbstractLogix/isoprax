@@ -72,7 +72,7 @@ A reviewer consults the exclusion record to see which public datasets cannot sup
 - **FR-008**: System MUST reject a soak-duration value computed using any data from the observation window it is meant to bound and MUST accept only a value derived as a stated rule over training-period-only data.
 - **FR-009**: System MUST compute and record a content hash of the predeclaration artifact and MUST detect and reject a mismatch between the recorded hash and the artifact's current content when re-checked.
 - **FR-010**: System MUST record the commit identifier containing the predeclaration artifact and execute an ancestry check confirming it is an ancestor of every corpus-data commit; a recorded claim of predeclaration order MUST NOT substitute for an executed check.
-- **FR-011**: System MUST require at least one anchor for the predeclaration commit independent of the project's own repository and clock, recorded as an anchor type and retrievable reference, and reject a predeclaration with no such anchor.
+- **FR-011**: System MUST require at least one external anchor for the predeclaration commit independent of the project's own repository and clock, recorded as an anchor type and retrievable reference, and reject a predeclaration with no such anchor. This is the minimum accepted gate; a public remote plus an independent detached timestamp/attestation (for example, an OpenTimestamps-style anchor) is the recommended stronger configuration because ancestry alone does not prevent rewriting history before first publication.
 - **FR-012**: System MUST require a public remote to be configured and the repository pushed to it before an anchor dependent on that remote is recorded.
 - **FR-013**: System MUST reject any corpus-data commit whose timestamp precedes the anchored predeclaration commit from being treated as validly predeclared against.
 - **FR-014**: System MUST maintain an exclusion record for datasets with no code-change events, stating the reason as the structural absence of a Change-family event and MUST NOT describe the dataset as pending or deferred.
@@ -114,6 +114,11 @@ A reviewer consults the exclusion record to see which public datasets cannot sup
 ## Archive Reuse Boundaries
 
 This feature may reuse archived decisions for candidate-screening order, provenance mechanics, exclusion record entries, and soak-duration derivation rules. It must not import archive-specific replay-execution or JEPA/profile obligations by inference.
+
+## Dependencies
+
+- **001-cross-family-kernel**: defines the Signal, Outcome, and Outcome Definition contracts that any eventually-collected corpus row must populate, and the commensurability test (§5.6) this feature's exclusion reasoning cites directly.
+- **002-stage1-corpus-admission**: defines the adequacy floor and prediction-time allowlist this feature's Screens 1 and 4 check against, and the admission gates that will later consume this feature's predeclaration and screening outputs. 002 MUST NOT be modified to accommodate a specific candidate discovered under this feature; a candidate failing 002's eventual gates is rejected, not the standard.
 
 ## Readiness Gate
 
