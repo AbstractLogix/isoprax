@@ -51,8 +51,11 @@ def test_screen_candidates_records_every_outcome_and_fail_order() -> None:
     records = screen_candidates(candidates, adequacy_floor=20)
     assert len(records) == 3
     assert records[0].disqualifying_screen == "commit_supply"
+    assert len(records[0].screen_results) == 1
     assert records[1].disqualifying_screen == "licence_terms"
+    assert len(records[1].screen_results) == 2
     assert records[2].eligible is True
+    assert len(records[2].screen_results) == 4
     assert records[1].screen_results[0].passed is True
     assert records[1].screen_results[1].passed is False
 
@@ -162,7 +165,7 @@ def test_exclusion_entries_stay_structural_not_pending() -> None:
     no_change = record_exclusion_entry(
         "dataset-no-change",
         exclusion_type="structural_no_change_events",
-        reason="This dataset has no Change-family event exists to condition on; it is excluded structurally and remains available only as a baseline reference.",
+        reason="This dataset is structurally excluded because no Change-family event exists to condition on; it remains available only as a baseline reference.",
         residual_use="Structural-conformance baseline reference",
         pending=False,
     )

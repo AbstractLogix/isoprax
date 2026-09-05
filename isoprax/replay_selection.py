@@ -96,12 +96,20 @@ class PredeclarationArtifact:
             raise ValueError("artifact_id is required")
         if not self.content.strip():
             raise ValueError("artifact content is required")
+        if not self.soak_duration.strip():
+            raise ValueError("soak_duration is required")
         if not self.soak_duration_rule.strip():
             raise ValueError("soak_duration_rule is required")
         if not self.positive_event_definition.strip():
             raise ValueError("positive_event_definition is required")
+        if not isinstance(self.positive_event_thresholds, dict) or not self.positive_event_thresholds:
+            raise ValueError("positive_event_thresholds is required")
         if not self.censoring_rule.strip():
             raise ValueError("censoring_rule is required")
+        if not isinstance(self.split_boundaries, dict) or not self.split_boundaries:
+            raise ValueError("split_boundaries is required")
+        if self.adequacy_floor < 0:
+            raise ValueError("adequacy_floor must be non-negative")
         if not self.ablation_comparison_plan.strip():
             raise ValueError("ablation_comparison_plan is required")
 
@@ -155,11 +163,11 @@ class ExclusionEntry:
         reason_lower = self.reason.lower()
         if self.pending or "pending" in reason_lower or "deferred" in reason_lower:
             raise ValueError("exclusion entries must not describe a pending or deferred path")
-        if self.exclusion_type == "structural_no_change_events" and _NO_CHANGE_EVENT_SENTINEL not in self.reason:
+        if self.exclusion_type == "structural_no_change_events" and _NO_CHANGE_EVENT_SENTINEL.lower() not in reason_lower:
             raise ValueError("structural no-change exclusion must state the absence of a Change-family event")
-        if self.exclusion_type == "commensurability_mismatch" and _COMMSURABILITY_SENTINEL not in self.reason:
+        if self.exclusion_type == "commensurability_mismatch" and _COMMSURABILITY_SENTINEL.lower() not in reason_lower:
             raise ValueError("commensurability exclusion must cite Isoprax v0.3 §5.6")
-        if self.exclusion_type == "structural_replay_justification" and _REPLAY_JUSTIFICATION_SENTINEL not in self.reason:
+        if self.exclusion_type == "structural_replay_justification" and _REPLAY_JUSTIFICATION_SENTINEL.lower() not in reason_lower:
             raise ValueError("replay justification exclusion must state that deterministic replay is structurally justified")
 
 
@@ -267,16 +275,24 @@ def _screen_prediction_metadata(candidate: Mapping[str, Any]) -> tuple[bool, str
     return True, "Screen 4 passed: prediction-time feature allowlist is populatable"
 
 
-def _order_screen_results(candidate: Mapping[str, Any], *, adequacy_floor: int, build_floor: float) -> list[ScreeningResult]:
+def _order_screen_results(
+    candidate: Mapping[str, Any],
+    *,
+    adequacy_floor: int,
+    build_floor: float,
+    allow_clustered_failures: bool = False,
+) -> list[ScreeningResult]:
     screens = (
         ("commit_supply", _screen_commit_supply(candidate, adequacy_floor=adequacy_floor)),
         ("licence_terms", _screen_licence_terms(candidate)),
-        ("build_rate", _screen_build_rate(candidate, build_floor=build_floor)),
+        ("build_rate", _screen_build_rate(candidate, build_floor=build_floor, allow_clustered_failures=allow_clustered_failures)),
         ("prediction_metadata", _screen_prediction_metadata(candidate)),
     )
     results: list[ScreeningResult] = []
     for index, (name, (passed, detail)) in enumerate(screens, start=1):
         results.append(ScreeningResult(screen_name=name, screen_number=index, passed=passed, detail=detail))
+        if not passed:
+            break
     return results
 
 
@@ -294,6 +310,7 @@ def screen_candidate(
         candidate_map,
         adequacy_floor=adequacy_floor,
         build_floor=build_floor,
+        allow_clustered_failures=allow_clustered_failures,
     )
     first_failure = next((result for result in results if not result.passed), None)
     if first_failure is not None:
@@ -479,15 +496,19 @@ def _ancestor_check(
         for commit in corpora:
             visited: set[str] = set()
             stack = [commit]
+            found = False
             while stack:
                 current = stack.pop()
                 if current in visited:
                     continue
                 visited.add(current)
                 if current == predeclaration_commit:
-                    return True
+                    found = True
+                    break
                 stack.extend(ancestry_graph.get(current, ()))
-        return False
+            if not found:
+                return False
+        return True
     predecl_time = _infer_commit_time(predeclaration_commit, timestamps=timestamps)
     for commit in corpora:
         commit_time = _infer_commit_time(commit, timestamps=timestamps)
@@ -584,11 +605,12 @@ def record_exclusion_entry(
         pending=pending,
         cited_spec=cited_spec,
     )
-    if exclusion_type == "structural_no_change_events" and _NO_CHANGE_EVENT_SENTINEL not in reason:
+    reason_lower = reason.lower()
+    if exclusion_type == "structural_no_change_events" and _NO_CHANGE_EVENT_SENTINEL.lower() not in reason_lower:
         raise ValueError("structural no-change exclusion must state the absence of a Change-family event")
-    if exclusion_type == "commensurability_mismatch" and _COMMSURABILITY_SENTINEL not in reason:
+    if exclusion_type == "commensurability_mismatch" and _COMMSURABILITY_SENTINEL.lower() not in reason_lower:
         raise ValueError("commensurability exclusion must cite Isoprax v0.3 §5.6")
-    if exclusion_type == "structural_replay_justification" and _REPLAY_JUSTIFICATION_SENTINEL not in reason:
+    if exclusion_type == "structural_replay_justification" and _REPLAY_JUSTIFICATION_SENTINEL.lower() not in reason_lower:
         raise ValueError("replay justification exclusion must state that deterministic replay is structurally justified")
     return entry
 
@@ -602,11 +624,18 @@ def build_replay_justification_exclusion(
     paired_dataset_available: bool = False,
     shared_observation_process: bool = True,
 ) -> ExclusionEntry:
-    reason = (
-        "Deterministic replay remains structurally justified because both families share one observation process; "
-        "calibration does not change the conclusion. The justification is independent of paired-public-dataset scarcity "
-        "and survives future large paired datasets unless that dataset also derives both families' labels from one observation process."
-    )
+    if shared_observation_process:
+        reason = (
+            "Deterministic replay remains structurally justified because both families share one observation process; "
+            "calibration does not change the conclusion. The justification is independent of paired-public-dataset scarcity "
+            "and survives future large paired datasets unless that dataset also derives both families' labels from one observation process."
+        )
+    else:
+        reason = (
+            "Deterministic replay remains structurally justified only when both families share one observation process; "
+            "here they do not, so this replay-justification exclusion is not applicable. Calibration does not change the conclusion. "
+            "The justification is independent of paired-public-dataset scarcity and survives future large paired datasets unless that dataset also derives both families' labels from one observation process."
+        )
     if paired_dataset_available and not shared_observation_process:
         reason += " A later paired dataset does not rescue the exclusion unless it also shares one observation process across both families."
     return ExclusionEntry(
