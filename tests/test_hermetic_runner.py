@@ -169,6 +169,38 @@ def test_retains_process_and_artifact_evidence_without_conflating_them():
         assert censored.status == "censored"
 
 
+def test_blocks_invalid_backend_contract_data():
+    prepared = prepared_sample()
+    config = configuration()
+
+    invalid_controls = run_prepared_execution(
+        prepared,
+        "commit-a",
+        config,
+        lambda *_: RunnerBackendResult(None, False, "unavailable", "offline", 0, {}),
+    )
+    invalid_artifacts = run_prepared_execution(
+        prepared,
+        "commit-a",
+        config,
+        lambda *_: RunnerBackendResult(
+            controls(config), True, "success", "completed", 0, None
+        ),
+    )
+    invalid_outcome = run_prepared_execution(
+        prepared,
+        "commit-a",
+        config,
+        lambda *_: RunnerBackendResult(
+            controls(config), True, object(), "completed", 0, {}
+        ),
+    )
+
+    assert invalid_controls.status == "blocked-before-compilation"
+    assert invalid_artifacts.status == "blocked-before-compilation"
+    assert invalid_outcome.status == "blocked-before-compilation"
+
+
 def test_identity_changes_for_material_changes_and_backend_errors_are_retained():
     prepared = prepared_sample()
     config = configuration()

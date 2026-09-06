@@ -71,6 +71,7 @@ class ExecutionEvidenceRecord:
 
 
 RunnerBackend = Callable[[str, str, ApprovedRunnerConfiguration], RunnerBackendResult]
+_VALID_OUTCOMES = {"success", "build_failed", "timeout", "interrupted", "unavailable"}
 
 
 def _canonical(value: object) -> str:
@@ -277,6 +278,14 @@ def run_prepared_execution(
             reason="runner returned an invalid result",
         )
     controls = result.effective_controls
+    if not isinstance(controls, EffectiveRunnerControls):
+        return _record(
+            preparation,
+            commit,
+            configuration,
+            status="blocked-before-compilation",
+            reason="runner effective controls are invalid",
+        )
     if not _controls_match(configuration, controls):
         return _record(
             preparation,
@@ -318,6 +327,28 @@ def run_prepared_execution(
             controls=controls,
             duration_ms=result.duration_ms,
         )
+    if not isinstance(result.artifact_payloads, Mapping):
+        return _record(
+            preparation,
+            commit,
+            configuration,
+            status="blocked-before-compilation",
+            reason="runner artifact payloads are invalid",
+            controls=controls,
+            duration_ms=result.duration_ms,
+            command_started=result.command_started,
+        )
+    if not isinstance(result.outcome, str) or result.outcome not in _VALID_OUTCOMES:
+        return _record(
+            preparation,
+            commit,
+            configuration,
+            status="blocked-before-compilation",
+            reason="runner outcome is invalid",
+            controls=controls,
+            duration_ms=result.duration_ms,
+            command_started=result.command_started,
+        )
     if not result.command_started:
         return _record(
             preparation,
@@ -327,6 +358,7 @@ def run_prepared_execution(
             reason=result.reason or "runner command did not start",
             controls=controls,
             duration_ms=result.duration_ms,
+            command_started=False,
         )
     artifacts = _artifacts(configuration, result.artifact_payloads)
     status = "success" if result.outcome == "success" else "censored"
