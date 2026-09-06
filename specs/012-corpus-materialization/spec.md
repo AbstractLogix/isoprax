@@ -1,6 +1,6 @@
 # Feature Specification: Reproducible Public Corpus Materialization
 
-**Feature Branch**: `012-corpus-materialization`  
+**Feature Branch**: `012-corpus-materialization`
 **Status**: Draft
 
 ## Overview

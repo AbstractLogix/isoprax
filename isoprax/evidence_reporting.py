@@ -49,8 +49,12 @@ class EvidenceReportProfile:
             (self.published_artifacts, "published artifacts"),
             (self.required_evidence_categories, "required evidence categories"),
         ):
-            if not values or len(set(values)) != len(values) or any(
-                not isinstance(value, str) or not value.strip() for value in values
+            if (
+                not values
+                or len(set(values)) != len(values)
+                or any(
+                    not isinstance(value, str) or not value.strip() for value in values
+                )
             ):
                 raise ValueError(f"{name} must be non-empty and unique")
 
@@ -97,7 +101,9 @@ class EvidenceReport:
             "counts": self.counts,
             "provenance": self.provenance,
             "gates": [gate.__dict__ for gate in self.gates],
-            "unavailable_evidence": [item.__dict__ for item in self.unavailable_evidence],
+            "unavailable_evidence": [
+                item.__dict__ for item in self.unavailable_evidence
+            ],
             "claim_boundary": self.claim_boundary,
             "claim_scope": self.claim_scope,
         }
@@ -125,7 +131,10 @@ def _validate_profile(
         raise ValueError("published artifacts do not match admission")
     if admission.manifest.get("release_scope") != profile.release_scope:
         raise ValueError("admission report release scope does not match")
-    if tuple(admission.manifest.get("published_artifacts", ())) != profile.published_artifacts:
+    if (
+        tuple(admission.manifest.get("published_artifacts", ()))
+        != profile.published_artifacts
+    ):
         raise ValueError("admission report artifacts do not match")
     predeclaration = admission_profile.predeclaration_evidence
     if (
@@ -168,7 +177,9 @@ def _capture_summary(capture: ReplayCaptureRecord) -> tuple[dict[str, Any], set[
         available.add("build_qualification")
     if capture.execution_identity.strip():
         available.add("runner_execution")
-    if artifact_states and all(item["state"] == "collected" for item in artifact_states):
+    if artifact_states and all(
+        item["state"] == "collected" for item in artifact_states
+    ):
         available.add("capture_artifacts")
     return (
         {
@@ -189,7 +200,10 @@ def _validated_captures(
 ) -> tuple[tuple[dict[str, Any], ...], set[str]]:
     by_lane: dict[str, ReplayCaptureRecord] = {}
     for capture in captures:
-        if not isinstance(capture, ReplayCaptureRecord) or capture.lane_identity in by_lane:
+        if (
+            not isinstance(capture, ReplayCaptureRecord)
+            or capture.lane_identity in by_lane
+        ):
             raise ValueError("capture records must be unique and valid")
         by_lane[capture.lane_identity] = capture
     summaries: list[dict[str, Any]] = []
@@ -241,18 +255,28 @@ def build_evidence_report(
         status = "inconclusive"
     else:
         status = "admission_evidence"
-    counts = {"accepted_rows": len(assembly.rows), "rejected_inputs": len(assembly.rejections)}
+    counts = {
+        "accepted_rows": len(assembly.rows),
+        "rejected_inputs": len(assembly.rejections),
+    }
     counts.update({key: int(value) for key, value in sorted(assembly.counts.items())})
     provenance = admission_profile.corpus_provenance
     public = {
         "status": status,
         "assembly_profile_identity": assembly.profile_identity,
         "release_scope": profile.release_scope,
-        "predeclaration": {"artifact_hash": profile.predeclaration_artifact_hash, "anchor_reference": profile.predeclaration_anchor_reference},
+        "predeclaration": {
+            "artifact_hash": profile.predeclaration_artifact_hash,
+            "anchor_reference": profile.predeclaration_anchor_reference,
+        },
         "published_artifacts": list(profile.published_artifacts),
         "capture_evidence": capture_evidence,
         "counts": counts,
-        "provenance": {"source_system": provenance.source_system, "uses_private_production_data": False, "uses_privileged_telemetry": False},
+        "provenance": {
+            "source_system": provenance.source_system,
+            "uses_private_production_data": False,
+            "uses_privileged_telemetry": False,
+        },
         "gates": [gate.__dict__ for gate in gates],
         "unavailable_evidence": [item.__dict__ for item in unavailable],
         "claim_boundary": _CLAIM_BOUNDARY,

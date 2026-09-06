@@ -28,4 +28,5 @@ repos:
         entry: uv run pytest tests -q
         language: system
         pass_filenames: false
-        stages: [pre-push]
+        always_run: true
+        stages: [pre-commit, pre-push]

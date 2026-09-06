@@ -1,6 +1,6 @@
 # Feature Specification: Public VCS/CI Evidence Adapter
 
-**Feature Branch**: `010-public-vcs-ci-adapter`  
+**Feature Branch**: `010-public-vcs-ci-adapter`
 **Status**: Draft
 
 ## Overview
