@@ -161,7 +161,7 @@ def _capture_summary(capture: ReplayCaptureRecord) -> tuple[dict[str, Any], set[
             "sha256": artifact.sha256,
             "byte_count": artifact.byte_count,
         }
-        for artifact in capture.artifacts
+        for artifact in sorted(capture.artifacts, key=lambda artifact: artifact.path)
     )
     available: set[str] = set()
     if capture.qualification_report_hash.strip():
