@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 
 import pytest
@@ -12,6 +13,7 @@ from isoprax.admission import (
     evaluate_admission,
 )
 from isoprax.commensurability import OutcomeDefinition
+from isoprax.evaluation import CONFORMANCE_MIN_EVENTS
 from isoprax.per_family_evaluation import (
     PerFamilyEvaluationProfile,
     evaluate_per_family,
@@ -151,20 +153,77 @@ def admitted_rows() -> list[CorpusRow]:
     ]
 
 
+def calibrated_gate_rows() -> list[CorpusRow]:
+    """Enough calibration-gate events to satisfy the library conformance minimum."""
+    return [
+        row(
+            f"gate-{index:03d}",
+            "calibration_gate",
+            "2026-01-15T00:00:00+00:00",
+            "observed_positive" if index % 2 == 0 else "observed_negative",
+            0.5,
+        )
+        for index in range(CONFORMANCE_MIN_EVENTS)
+    ]
+
+
+def calibrated_rows() -> list[CorpusRow]:
+    return [
+        item for item in admitted_rows() if item.split != "calibration_gate"
+    ] + calibrated_gate_rows()
+
+
+def calibrated_profile() -> AdmissionProfile:
+    return replace(
+        profile(),
+        calibration_evidence=CalibrationEvidence(
+            ("fit-1",), tuple(item.row_id for item in calibrated_gate_rows())
+        ),
+    )
+
+
 def test_deterministic_per_family_evaluation_for_admitted_rows():
-    rows = admitted_rows()
-    admission = evaluate_admission(rows, profile())
-    left = evaluate_per_family(rows, profile(), admission, evaluation_profile())
+    rows = calibrated_rows()
+    admission_profile = calibrated_profile()
+    admission = evaluate_admission(rows, admission_profile)
+    left = evaluate_per_family(rows, admission_profile, admission, evaluation_profile())
     right = evaluate_per_family(
-        list(reversed(rows)), profile(), admission, evaluation_profile()
+        list(reversed(rows)), admission_profile, admission, evaluation_profile()
     )
 
     assert left == right
     assert left.status == "evaluation_evidence"
+    assert left.calibration["status"] == "calibrated"
+    assert left.unavailable_evidence == ()
     assert left.family == "change"
     assert left.outcome_definition_id == "defect_linked_fix"
     assert "Semantic" in left.claim_boundary
     assert set(left.metrics) == {"brier_score", "ece", "positive_rate"}
+
+
+def test_report_evidence_mappings_are_read_only():
+    rows = calibrated_rows()
+    admission_profile = calibrated_profile()
+    report = evaluate_per_family(
+        rows,
+        admission_profile,
+        evaluate_admission(rows, admission_profile),
+        evaluation_profile(),
+    )
+
+    with pytest.raises(TypeError):
+        report.metrics["brier_score"] = 0.0
+    with pytest.raises(TypeError):
+        report.counts["rows"] = 0
+    with pytest.raises(TypeError):
+        report.calibration["passes"] = True
+    with pytest.raises(TypeError):
+        report.uncertainty["positive_rate_ci_low"] = 0.0
+
+    serialized = report.to_dict()
+    serialized["counts"]["rows"] = 0
+    assert report.counts["rows"] == len(rows)
+    assert json.loads(json.dumps(report.to_dict()))["counts"]["rows"] == len(rows)
 
 
 def test_returns_blocked_when_admission_fails():
@@ -345,25 +404,12 @@ def test_additional_fail_closed_paths_and_report_serialization():
 def test_inconclusive_and_uncalibrated_when_calibration_or_test_evidence_missing():
     rows = admitted_rows()
     good_profile = profile()
-    admission = evaluate_admission(rows, good_profile)
-
-    no_calibration = evaluate_per_family(
-        rows,
-        replace(good_profile, calibration_evidence=None),
-        admission,
-        evaluation_profile(),
-    )
-    assert no_calibration.status == "inconclusive"
-    assert {item.category for item in no_calibration.unavailable_evidence} >= {
-        "calibration_fit_rows",
-        "calibration_gate_rows",
-    }
 
     no_test_rows = [item for item in rows if item.split != "test"]
     no_test_report = evaluate_per_family(
         no_test_rows,
         good_profile,
-        admission,
+        evaluate_admission(no_test_rows, good_profile),
         evaluation_profile(),
     )
     assert no_test_report.status == "inconclusive"
@@ -380,7 +426,7 @@ def test_inconclusive_and_uncalibrated_when_calibration_or_test_evidence_missing
     gate_censored_report = evaluate_per_family(
         gate_censored_rows,
         good_profile,
-        admission,
+        evaluate_admission(gate_censored_rows, good_profile),
         evaluation_profile(),
     )
     assert gate_censored_report.status == "inconclusive"
@@ -389,3 +435,168 @@ def test_inconclusive_and_uncalibrated_when_calibration_or_test_evidence_missing
         item.category == "calibration_diagnostics"
         for item in gate_censored_report.unavailable_evidence
     )
+
+
+def test_calibration_applies_library_minimum_event_rule():
+    rows = admitted_rows()
+    admission = evaluate_admission(rows, profile())
+
+    report = evaluate_per_family(rows, profile(), admission, evaluation_profile())
+
+    assert report.calibration["passes"] is False
+    assert report.calibration["status"] == "uncalibrated"
+    assert "insufficient labeled events" in report.calibration["reason"]
+    assert report.calibration["n_events"] == 2
+    assert report.status == "inconclusive"
+    assert any(
+        item.category == "calibration_conformance"
+        for item in report.unavailable_evidence
+    )
+
+
+def test_rejects_duplicate_rows_without_calibration_evidence():
+    rows = admitted_rows()
+    no_evidence_profile = replace(profile(), calibration_evidence=None)
+    admission = evaluate_admission(rows, no_evidence_profile)
+
+    with pytest.raises(ValueError, match="must be unique"):
+        evaluate_per_family(
+            rows + [rows[4]], no_evidence_profile, admission, evaluation_profile()
+        )
+
+
+def test_blocks_corpora_whose_admission_lacks_calibration_evidence():
+    rows = admitted_rows()
+    no_evidence_profile = replace(profile(), calibration_evidence=None)
+
+    report = evaluate_per_family(
+        rows,
+        no_evidence_profile,
+        evaluate_admission(rows, no_evidence_profile),
+        evaluation_profile(),
+    )
+
+    assert report.status == "blocked"
+    assert any(
+        item.category == "admission_report" for item in report.unavailable_evidence
+    )
+
+
+def test_rejects_boolean_score_field():
+    rows = admitted_rows()
+    admission = evaluate_admission(rows, profile())
+
+    with pytest.raises(ValueError, match="score field must be numeric"):
+        evaluate_per_family(
+            [
+                replace(
+                    rows[4], prediction_fields={"risk_score": True, "diff_size": 1}
+                ),
+                *rows[:4],
+                *rows[5:],
+            ],
+            profile(),
+            admission,
+            evaluation_profile(),
+        )
+
+
+def test_omits_uncertainty_without_observed_test_outcomes():
+    rows = [
+        replace(item, outcome_class="censored", censor_reason="artifact missing")
+        if item.split == "test"
+        else item
+        for item in admitted_rows()
+    ]
+    admission = evaluate_admission(rows, profile())
+
+    report = evaluate_per_family(rows, profile(), admission, evaluation_profile())
+
+    assert report.uncertainty == {}
+    assert report.counts["censored"] == 2
+
+
+def test_evaluation_identity_binds_corpus_and_profile():
+    rows = admitted_rows()
+    admission = evaluate_admission(rows, profile())
+    baseline = evaluate_per_family(rows, profile(), admission, evaluation_profile())
+
+    unused_train_score = [
+        replace(item, prediction_fields={"risk_score": 0.6, "diff_size": 1})
+        if item.split == "train"
+        else item
+        for item in rows
+    ]
+    rescored = evaluate_per_family(
+        unused_train_score,
+        profile(),
+        evaluate_admission(unused_train_score, profile()),
+        evaluation_profile(),
+    )
+
+    assert rescored.metrics == baseline.metrics
+    assert rescored.evaluation_identity != baseline.evaluation_identity
+
+    other_field = evaluate_per_family(
+        rows,
+        profile(),
+        admission,
+        evaluation_profile(predeclared_metrics=("brier_score",)),
+    )
+    assert other_field.evaluation_identity != baseline.evaluation_identity
+
+
+def test_blocked_identity_and_counts_reflect_the_corpus():
+    rows = admitted_rows()
+    bad_profile = replace(profile(), adequacy_min_positives=2)
+    full_report = evaluate_per_family(
+        rows, bad_profile, evaluate_admission(rows, bad_profile), evaluation_profile()
+    )
+
+    fewer = [item for item in rows if item.row_id != "test-2"]
+    fewer_report = evaluate_per_family(
+        fewer, bad_profile, evaluate_admission(fewer, bad_profile), evaluation_profile()
+    )
+
+    assert full_report.counts["test_rows"] == 2
+    assert fewer_report.counts["test_rows"] == 1
+    assert set(full_report.counts) == {"rows", "test_rows", "test_observed", "censored"}
+    assert full_report.evaluation_identity != fewer_report.evaluation_identity
+
+
+def test_rejects_admission_report_not_bound_to_rows_and_profile():
+    rows = admitted_rows()
+    foreign = evaluate_admission(
+        [item for item in rows if item.split != "test"], profile()
+    )
+
+    with pytest.raises(ValueError, match="admission report does not match"):
+        evaluate_per_family(rows, profile(), foreign, evaluation_profile())
+
+    tainted = [replace(rows[4], system_id="svc-b"), *rows[:4], *rows[5:]]
+    assert evaluate_admission(tainted, profile()).admissible is False
+    with pytest.raises(ValueError, match="admission report does not match"):
+        evaluate_per_family(
+            tainted,
+            profile(),
+            evaluate_admission(rows, profile()),
+            evaluation_profile(),
+        )
+
+
+def test_rejects_duplicate_calibration_evidence_row_ids():
+    rows = admitted_rows()
+    duplicated = replace(
+        profile(),
+        calibration_evidence=CalibrationEvidence(
+            ("fit-1",), ("gate-1", "gate-1", "gate-2")
+        ),
+    )
+
+    with pytest.raises(ValueError, match="calibration evidence row ids must be unique"):
+        evaluate_per_family(
+            rows,
+            duplicated,
+            evaluate_admission(rows, duplicated),
+            evaluation_profile(),
+        )
