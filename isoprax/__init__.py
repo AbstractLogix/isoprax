@@ -74,6 +74,12 @@ from .hermetic_runner import (
     run_prepared_execution,
 )
 from .kb import KnowledgeBase, Outcome, SQLiteKB
+from .per_family_evaluation import (
+    PerFamilyEvaluationProfile,
+    PerFamilyEvaluationReport,
+    UnavailableEvaluationEvidence,
+    evaluate_per_family,
+)
 from .predeclaration import (
     ExclusionEntry,
     PredeclarationArtifact,
