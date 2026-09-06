@@ -48,6 +48,8 @@ class Event:
             raise ValueError("Event.source is required")
         if not isinstance(self.timestamp, str) or not self.timestamp:
             raise ValueError("Event.timestamp must be RFC 3339 UTC")
+        if len(self.timestamp) < 20 or self.timestamp[10] != "T":
+            raise ValueError("Event.timestamp must be RFC 3339 UTC")
         normalized = (
             self.timestamp[:-1] + "+00:00"
             if self.timestamp.endswith("Z")
