@@ -1,6 +1,7 @@
 # Feature Specification: Stage 1 Per-Family Evaluation
 
-**Feature Branch**: `013-stage1-per-family-evaluation`  
+**Feature Branch**: `013-stage1-per-family-evaluation`
+**Created**: 2026-09-06
 **Status**: Draft
 
 ## Overview
@@ -19,11 +20,14 @@ summaries from an admitted corpus.
 
 **Acceptance Scenarios**:
 
-1. Equivalent admitted inputs yield identical evaluation manifests and metrics.
-2. Non-admitted, split-leaking, inadequate, or missing calibration evidence is
-   rejected or reported inconclusive.
-3. Every result identifies its family, outcome definition, uncertainty, and
-   explicit non-pooling claim boundary.
+1. **Given** equivalent admitted inputs, **When** evaluation runs, **Then** it
+  produces identical evaluation manifests and metric summaries.
+2. **Given** non-admitted inputs, split leakage, or missing/inadequate
+  calibration evidence, **When** evaluation runs, **Then** it is rejected or
+  reported as inconclusive.
+3. **Given** any produced result, **When** it is published, **Then** it
+  identifies its family, outcome definition, uncertainty, and an explicit
+  non-pooling claim boundary.
 
 ## Requirements
 
@@ -35,8 +39,8 @@ summaries from an admitted corpus.
   censoring counts, uncertainty, and unavailable evidence explicitly.
 - **FR-004**: Reject pooled cross-family metrics, post-hoc thresholds, missing
   predeclaration, and non-admitted corpora.
-- **FR-005**: Fix the claim boundary below Semantic/Full Conformance and model
-  efficacy beyond the observed, scoped evidence.
+- **FR-005**: Fix the claim boundary below Semantic/Full Conformance and
+  prohibit model-efficacy claims beyond the observed, scoped evidence.
 
 ## Success Criteria
 
