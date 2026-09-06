@@ -96,7 +96,10 @@ def test_invalid_or_unverified_controls_block_before_backend_invocation():
     )
     for config in invalid_configs:
         record = run_prepared_execution(
-            prepared, "commit-a", config, lambda *_: AssertionError("must not run")
+            prepared,
+            "commit-a",
+            config,
+            lambda *_: (_ for _ in ()).throw(AssertionError("must not run")),
         )
         assert record.status == "blocked-before-compilation"
         assert record.command_started is False
@@ -252,10 +255,19 @@ def test_blocks_invalid_duration_and_command_not_started():
             controls(config), False, "unavailable", "offline", 0, {}
         ),
     )
+    invalid_started = run_prepared_execution(
+        prepared,
+        "commit-a",
+        config,
+        lambda *_: RunnerBackendResult(
+            controls(config), 1, "success", "bad", 0, {}
+        ),
+    )
 
     assert negative.status == "blocked-before-compilation"
     assert not_started.status == "blocked-before-compilation"
     assert not_started.duration_ms == 0
+    assert invalid_started.status == "blocked-before-compilation"
     assert (
         run_prepared_execution(prepared, "commit-a", config, lambda *_: None).status
         == "blocked-before-compilation"

@@ -43,7 +43,7 @@ class RunnerBackendResult:
     outcome: str
     reason: str
     duration_ms: int
-    artifact_payloads: Mapping[str, bytes | None]
+    artifact_payloads: Mapping[str, object]
 
 
 @dataclass(frozen=True)
@@ -155,7 +155,7 @@ def _controls_match(
 
 
 def _artifacts(
-    configuration: ApprovedRunnerConfiguration, payloads: Mapping[str, bytes | None]
+    configuration: ApprovedRunnerConfiguration, payloads: Mapping[str, object]
 ) -> tuple[ArtifactEvidence, ...]:
     records = []
     for path in configuration.declared_artifacts:
@@ -307,6 +307,16 @@ def run_prepared_execution(
             status="blocked-before-compilation",
             reason="runner duration is invalid",
             controls=controls,
+        )
+    if not isinstance(result.command_started, bool):
+        return _record(
+            preparation,
+            commit,
+            configuration,
+            status="blocked-before-compilation",
+            reason="runner command_started is invalid",
+            controls=controls,
+            duration_ms=result.duration_ms,
         )
     if not result.command_started:
         return _record(
