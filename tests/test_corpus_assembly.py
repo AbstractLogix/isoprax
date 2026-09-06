@@ -176,6 +176,17 @@ def test_profile_and_remaining_invalid_contract_paths_are_fail_closed():
         profile(expected_system_id="")
     with pytest.raises(ValueError, match="published"):
         profile(published_artifacts=())
+    with pytest.raises(ValueError, match="must not overlap"):
+        profile(
+            split_definitions=(
+                SplitDefinition(
+                    "train",
+                    "2026-09-01T00:00:00+00:00",
+                    "2026-09-11T00:00:00+00:00",
+                ),
+                *profile().split_definitions[1:],
+            )
+        )
 
     too_late = item(
         capture(

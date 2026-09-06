@@ -40,6 +40,11 @@ class CorpusAssemblyProfile:
             raise ValueError("assembly profile metadata is required")
         if tuple(split.name for split in self.split_definitions) != _SPLIT_NAMES:
             raise ValueError("split definitions must be canonical")
+        for previous, current in zip(
+            self.split_definitions, self.split_definitions[1:]
+        ):
+            if _parse_time(previous.end) > _parse_time(current.start):
+                raise ValueError("split definitions must not overlap")
         if not self.published_artifacts or not all(
             artifact.strip() for artifact in self.published_artifacts
         ):
