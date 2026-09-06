@@ -8,15 +8,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.14"]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v3
@@ -24,11 +30,24 @@ jobs:
       - name: Sync dependencies
         run: uv sync --group dev
 
+      - name: Verify lockfile
+        run: uv lock --check
+
+      - name: Dependency audit
+        run: uv run pip-audit
+
       - name: Lint
         run: uv run ruff check .
 
       - name: Tests
-        run: uv run pytest tests -q
+        run: uv run pytest tests -q --cov-report=xml
+
+      - name: Per-module coverage
+        run: uv run coverage json -o coverage.json && uv run python scripts/check_module_coverage.py coverage.json --minimum 95
+
+      - name: Diff coverage
+        if: github.event_name == 'pull_request'
+        run: uv run diff-cover coverage.xml --compare-branch origin/${{ github.base_ref }} --fail-under 95
 
       - name: Demo smoke test
         run: uv run python examples/demo_cross_family.py

@@ -3,6 +3,8 @@ from typing import TypeAlias
 
 import pytest
 
+import isoprax.admission as admission
+import isoprax.replay_constraints as replay_constraints
 from isoprax.admission import (
     AdmissionProfile,
     CalibrationEvidence,
@@ -12,9 +14,15 @@ from isoprax.admission import (
     SplitDefinition,
     evaluate_admission,
 )
-from isoprax.corpus_manifest import build_corpus_manifest, validate_corpus_manifest
+from isoprax.corpus_manifest import (
+    CorpusManifest,
+    build_corpus_manifest,
+    validate_corpus_manifest,
+)
 from isoprax.replay_constraints import (
+    ReplayConstraint,
     ReplayConstraintError,
+    build_replay_constraints,
     validate_replay_constraints,
     validate_replay_constraints_dict,
 )
@@ -501,4 +509,248 @@ def test_validate_replay_constraints_dict_accepts_manifest_splits(
     }
     validate_replay_constraints_dict(
         rows, manifest=manifest, expected_system_id="svc-a"
+    )
+
+
+@pytest.mark.parametrize(
+    "kwargs, reason",
+    (
+        ({"release_scope": None}, "release_scope_metadata"),
+        ({"threshold_frozen": False}, "threshold_freeze"),
+        ({"horizon_frozen": False}, "frozen_split_boundaries"),
+    ),
+)
+def test_replay_constraints_reject_missing_frozen_metadata(
+    profile: AdmissionProfile, kwargs: dict[str, object], reason: str
+) -> None:
+    arguments: dict[str, object] = {"release_scope": "manifest-only"}
+    arguments.update(kwargs)
+    with pytest.raises(ReplayConstraintError, match=reason):
+        validate_replay_constraints([_row()], split_definitions=None, **arguments)
+
+
+def test_replay_constraint_dict_rejects_invalid_split_shapes(
+    profile: AdmissionProfile,
+) -> None:
+    with pytest.raises(ValueError, match="list-like"):
+        validate_replay_constraints_dict(
+            [_row()], manifest={"splits": "invalid", "release_scope": "scope"}
+        )
+    with pytest.raises(ValueError, match="instances or dicts"):
+        validate_replay_constraints_dict(
+            [_row()], manifest={"splits": [object()], "release_scope": "scope"}
+        )
+
+
+def test_manifest_validation_rejects_missing_and_bad_typed_metadata() -> None:
+    with pytest.raises(ValueError, match="missing required"):
+        validate_corpus_manifest({})
+    with pytest.raises(TypeError, match="mapping"):
+        validate_corpus_manifest("not-a-manifest")  # type: ignore[arg-type]
+
+
+def test_corpus_manifest_model_and_mapping_validation_cover_invalid_metadata(
+    profile: AdmissionProfile,
+) -> None:
+    manifest = build_corpus_manifest(
+        [], profile, source_system="svc-a", published_artifacts=("manifest.json",)
+    )
+    for kwargs, message in (
+        ({"source_system": ""}, "source_system"),
+        ({"release_scope": ""}, "release_scope"),
+        ({"horizon_rule": ""}, "horizon_rule"),
+        ({"split_definitions": ()}, "split_definitions"),
+        ({"published_artifacts": ()}, "published_artifacts"),
+        ({"counts_by_split": {}}, "counts_by_split"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            CorpusManifest(**{**manifest.__dict__, **kwargs})
+
+    payload = manifest.to_dict()
+    for key, value, message in (
+        ("source_system", "", "source_system"),
+        ("release_scope", "", "release_scope"),
+        ("horizon_rule", "", "horizon_rule"),
+        ("split_definitions", "bad", "split_definitions"),
+        ("counts_by_split", "bad", "counts_by_split"),
+    ):
+        invalid = {**payload, key: value}
+        with pytest.raises(ValueError, match=message):
+            validate_corpus_manifest(invalid)
+
+
+def test_manifest_and_replay_constraint_edge_cases(
+    profile: AdmissionProfile, split_definitions: SplitDefs
+) -> None:
+    row = _row()
+    manifest = build_corpus_manifest(
+        [row], profile, source_system="svc-a", published_artifacts=("manifest.json",)
+    )
+    assert validate_corpus_manifest(manifest)
+    with pytest.raises(ValueError, match="source_system"):
+        build_corpus_manifest([row], profile, source_system=" ")
+    with pytest.raises(ValueError, match="release_scope"):
+        build_corpus_manifest([row], profile, source_system="svc-a", release_scope=" ")
+    broken_counts = manifest.to_dict()
+    broken_counts["counts_by_split"] = {
+        name: {"observed_positive": 0, "observed_negative": 0, "censored": 0}
+        for name in ("train", "calibration_fit", "calibration_gate", "test")
+    }
+    broken_counts["counts_by_split"]["train"] = []
+    with pytest.raises(ValueError, match="must be a mapping"):
+        validate_corpus_manifest(broken_counts)
+    with pytest.raises(ValueError, match="ReplayConstraint.name"):
+        ReplayConstraint(" ", "description")
+    with pytest.raises(ReplayConstraintError, match="expected_system_id"):
+        validate_replay_constraints(
+            [_row(system_id="other")], expected_system_id="svc-a", release_scope="scope"
+        )
+    with pytest.raises(ReplayConstraintError, match="cross-system"):
+        validate_replay_constraints(
+            [_row(), _row(row_id="r2", system_id="other")], release_scope="scope"
+        )
+    with pytest.raises(ReplayConstraintError, match="missing required"):
+        validate_replay_constraints(
+            [row], split_definitions=split_definitions, release_scope="scope"
+        )
+    with pytest.raises(ReplayConstraintError, match="span multiple"):
+        validate_replay_constraints(
+            [row, _row(row_id="r2", split="test", change_id="c1")],
+            split_definitions=(split_definitions[0], split_definitions[-1]),
+            release_scope="scope",
+        )
+    with pytest.raises(ValueError, match="list-like"):
+        validate_replay_constraints_dict(
+            [row], manifest={"split_definitions": "bad", "release_scope": "scope"}
+        )
+
+
+def test_admission_model_and_gate_edge_cases(
+    profile: AdmissionProfile, split_definitions: SplitDefs
+) -> None:
+    with pytest.raises(ValueError, match="invalid split"):
+        SplitDefinition("bad", "2026-01-01T00:00:00+00:00", "2026-01-02T00:00:00+00:00")
+    with pytest.raises(ValueError, match="before"):
+        SplitDefinition(
+            "train", "2026-01-02T00:00:00+00:00", "2026-01-01T00:00:00+00:00"
+        )
+    with pytest.raises(ValueError, match="invalid row split"):
+        _row(split="bad")
+    with pytest.raises(ValueError, match="invalid outcome"):
+        _row(outcome_class="bad")
+    with pytest.raises(ValueError, match="canonical order"):
+        replace(profile, split_definitions=tuple(reversed(split_definitions)))
+    with pytest.raises(ValueError, match="not overlap"):
+        replace(
+            profile,
+            split_definitions=(
+                split_definitions[0],
+                replace(split_definitions[1], start="2026-01-06T00:00:00+00:00"),
+                *split_definitions[2:],
+            ),
+        )
+    assert not admission._gate_lineage_and_linkage([_row(linkage_bases=())]).passed
+    assert not admission._gate_prediction_time_fields(
+        [_row(prediction_fields={"bad": 1})], profile
+    ).passed
+    assert not admission._gate_prediction_time_fields(
+        [
+            replace(
+                _row(prediction_fields={"diff_size": 1}),
+                prediction_field_observed_at={},
+            )
+        ],
+        profile,
+    ).passed
+    assert not admission._gate_outcome_classes_and_censoring(
+        [_row(build_succeeded=False)]
+    ).passed
+    assert not admission._gate_outcome_classes_and_censoring(
+        [_row(outcome_class="censored")]
+    ).passed
+    assert not admission._gate_split_and_followup(
+        [_row(score_time="2026-02-01T00:00:00+00:00")], profile
+    ).passed
+    assert not admission._gate_horizon_and_threshold_freeze(
+        [_row(threshold_version="")], profile
+    ).passed
+    assert not admission._gate_calibration_evidence([], profile).passed
+    assert not admission._gate_provenance_and_predeclaration(profile).passed
+    assert not admission._gate_single_system_boundary(
+        [_row(system_id="other")], profile
+    ).passed
+    assert not admission._gate_cluster_by_change(
+        [_row(), _row(row_id="r2", split="test")]
+    ).passed
+    assert not admission._gate_adequacy(
+        [], replace(profile, adequacy_min_positives=1)
+    ).passed
+    assert not admission._gate_manifest_metadata(profile).passed
+
+
+def test_admission_remaining_fail_closed_branches(profile: AdmissionProfile) -> None:
+    with pytest.raises(ValueError, match="horizon_rule"):
+        replace(profile, horizon_rule="")
+    with pytest.raises(ValueError, match="adequacy"):
+        replace(profile, adequacy_min_positives=-1)
+    with pytest.raises(ValueError, match="release_scope"):
+        replace(profile, release_scope="")
+    assert not admission._gate_lineage_and_linkage(
+        [replace(_row(), deployment_id="")]
+    ).passed
+    assert not admission._gate_prediction_time_fields(
+        [
+            replace(
+                _row(),
+                prediction_field_observed_at={
+                    "diff_size": "bad",
+                    "files_touched": "bad",
+                },
+            )
+        ],
+        profile,
+    ).passed
+    assert not admission._gate_horizon_and_threshold_freeze(
+        [_row(horizon_rule_used="other")], profile
+    ).passed
+    assert not admission._gate_calibration_evidence(
+        [],
+        replace(
+            profile,
+            calibration_evidence=CalibrationEvidence(("missing",), ("also-missing",)),
+        ),
+    ).passed
+    assert not admission._gate_calibration_evidence(
+        [_row()],
+        replace(profile, calibration_evidence=CalibrationEvidence(("r1",), ("r1",))),
+    ).passed
+    provenance = CorpusProvenance("svc-a", False, False)
+    assert not admission._gate_provenance_and_predeclaration(
+        replace(profile, corpus_provenance=provenance)
+    ).passed
+    assert not admission._gate_provenance_and_predeclaration(
+        replace(
+            profile,
+            corpus_provenance=provenance,
+            predeclaration_evidence=PredeclarationEvidence("", "", "bad", "bad"),
+        )
+    ).passed
+    assert not admission._gate_single_system_boundary(
+        [_row(), _row(row_id="r2", system_id="other")],
+        replace(profile, expected_system_id=None),
+    ).passed
+    assert admission._gate_manifest_metadata(
+        replace(profile, published_artifacts=("manifest.json",))
+    ).passed
+    assert len(build_replay_constraints()) == 5
+    assert replay_constraints._coerce_split_definitions(None) is None
+    assert replay_constraints._coerce_split_definitions(profile.split_definitions[0])
+    assert replay_constraints._coerce_split_definitions(
+        [
+            {
+                "name": "train",
+                "start": "2026-01-01T00:00:00+00:00",
+                "end": "2026-01-02T00:00:00+00:00",
+            }
+        ]
     )

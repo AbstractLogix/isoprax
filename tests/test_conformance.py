@@ -7,9 +7,12 @@ Run with: PYTHONPATH=. python3 -m pytest tests/ -q
 import pytest
 
 from isoprax import (
+    AnomalySignal,
     CalibrationStatus,
+    Calibrator,
     ChangeEvent,
     DistributionAnomalyStrategy,
+    Event,
     Family,
     ForecastSignal,
     HeuristicRiskStrategy,
@@ -17,6 +20,7 @@ from isoprax import (
     MetricSample,
     Outcome,
     OutcomeDefinition,
+    OutcomeDefinitionRegistry,
     RiskSignal,
     RunEvent,
     SQLiteKB,
@@ -25,8 +29,12 @@ from isoprax import (
 )
 from isoprax.baseline_strategies import DEFECT_LINKED_FIX, JOB_RUN_FAILURE
 from isoprax.evaluation import (
+    CrossFamilyReport,
+    brier_score,
     check_calibration_conformance,
+    expected_calibration_error,
     paired_comparison,
+    reliability_curve,
     time_sliced_split,
 )
 
@@ -65,6 +73,19 @@ def test_event_rejects_missing_id_or_source():
         ChangeEvent(repo="r", change_ref="x", source="")
 
 
+def test_event_base_and_subtype_guards_are_fail_closed():
+    with pytest.raises(ValueError, match="must be a"):
+        Event()
+    with pytest.raises(ValueError, match="timestamp"):
+        ChangeEvent(repo="r", change_ref="x", timestamp=1)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="timestamp"):
+        ChangeEvent(repo="r", change_ref="x", timestamp="2026-01-01Tnope+00:00")
+    with pytest.raises(ValueError, match="job_type"):
+        RunEvent(exit_status="ok")
+    with pytest.raises(ValueError, match="resource_id"):
+        MetricSample(resource_type="cpu")
+
+
 def test_extension_field_preserved(tmp_path):
     kb = SQLiteKB(str(tmp_path / "t.db"))
     e = ChangeEvent(repo="r", change_ref="x", features={"vendor_key": 42})
@@ -97,6 +118,21 @@ def test_signal_requires_nonempty_explanation():
             strategy_version="0",
             family=Family.CHANGE,
         )
+
+
+@pytest.mark.parametrize("field", ["strategy_id", "strategy_version"])
+def test_signal_requires_strategy_provenance(field):
+    kwargs = {
+        "score": 0.5,
+        "explanation": "x",
+        "strategy_id": "s",
+        "strategy_version": "1",
+        "family": Family.CHANGE,
+        "outcome_definition_id": "d",
+    }
+    kwargs[field] = ""
+    with pytest.raises(ValueError, match=field):
+        RiskSignal(**kwargs)
 
 
 def test_forecast_signal_requires_technique():
@@ -169,6 +205,152 @@ def test_uncalibrated_declared_by_default():
     assert sig.calibration_status == CalibrationStatus.UNCALIBRATED
 
 
+def test_calibrator_is_honest_when_unfitted_and_transforms_after_fit():
+    calibrator = Calibrator().fit([0.2, 0.8], [1, 1])
+    assert not calibrator.is_fitted
+    assert calibrator.transform(0.3) == 0.3
+
+    fitted = Calibrator().fit([0.1, 0.9], [0, 1])
+    assert fitted.is_fitted
+    assert 0.0 <= fitted.transform(0.5) <= 1.0
+
+
+def test_outcome_definition_registry_rejects_conflicts_and_unknown_ids():
+    registry = OutcomeDefinitionRegistry()
+    definition = _defn(id="registered")
+    assert registry.register(definition) == definition
+    assert registry.resolve("registered") == definition
+    assert "registered" in registry and registry.ids() == ["registered"]
+    with pytest.raises(ValueError, match="different content"):
+        registry.register(_defn(id="registered", event="different"))
+    with pytest.raises(KeyError, match="unresolvable"):
+        registry.resolve("missing")
+
+
+def test_baseline_strategies_cover_risk_factors_and_sparse_anomaly_history():
+    risk = HeuristicRiskStrategy(fragile_paths=("core/",))
+    event = ChangeEvent(
+        repo="r",
+        change_ref="x",
+        timestamp="2026-01-01T23:00:00+00:00",
+        loc_added=600,
+        loc_removed=500,
+        files_touched=["core/a.py"] * 9,
+    )
+    assert risk.score(event, {}).score == 1.0
+    anomaly = DistributionAnomalyStrategy(history_by_jobtype={})
+    assert (
+        "no duration"
+        in anomaly.evaluate(RunEvent(job_type="x", exit_status="ok"), {}).explanation
+    )
+    assert (
+        "insufficient history"
+        in anomaly.evaluate(
+            RunEvent(job_type="x", exit_status="ok", duration=1), {}
+        ).explanation
+    )
+
+
+def test_baseline_strategies_cover_calibration_and_distribution_history():
+    calibrator = Calibrator().fit([0.1, 0.9], [0, 1])
+    risk = HeuristicRiskStrategy(
+        calibrator=calibrator, outcome_definition=_defn(id="risk")
+    )
+    assert (
+        risk.score(
+            ChangeEvent(
+                repo="r",
+                change_ref="x",
+                loc_added=60,
+                timestamp="2026-01-01T12:00:00+00:00",
+            ),
+            {},
+        ).calibration_status
+        == CalibrationStatus.CALIBRATED
+    )
+    malformed = ChangeEvent(repo="r", change_ref="x")
+    malformed.timestamp = "bad"
+    assert HeuristicRiskStrategy()._raw_score(malformed)[0] == 0.0
+    assert (
+        DistributionAnomalyStrategy(
+            outcome_definition=_defn(id="override")
+        ).outcome_definition.id
+        == "override"
+    )
+    anomaly = DistributionAnomalyStrategy(
+        history_by_jobtype={"job": [1, 2, 3, 4, 5]}, calibrator=calibrator
+    )
+    assert (
+        anomaly.evaluate(
+            RunEvent(job_type="job", exit_status="ok", duration=20), {}
+        ).calibration_status
+        == CalibrationStatus.CALIBRATED
+    )
+
+
+def test_signal_family_interval_and_serialization_guards():
+    with pytest.raises(ValueError, match="RiskSignal family"):
+        RiskSignal(
+            score=0.5,
+            explanation="x",
+            strategy_id="s",
+            strategy_version="1",
+            family=Family.OPERATIONAL,
+            outcome_definition_id="d",
+        )
+    with pytest.raises(ValueError, match="AnomalySignal family"):
+        AnomalySignal(
+            score=0.5,
+            explanation="x",
+            strategy_id="s",
+            strategy_version="1",
+            family=Family.CHANGE,
+            outcome_definition_id="d",
+        )
+    with pytest.raises(ValueError, match="interval_low"):
+        ForecastSignal(
+            explanation="x",
+            strategy_id="s",
+            strategy_version="1",
+            family=Family.OPERATIONAL,
+            interval_confidence=0.5,
+            interval_low=2,
+            interval_high=1,
+            technique="arima",
+        )
+    assert (
+        RiskSignal(
+            score=0.5,
+            explanation="x",
+            strategy_id="s",
+            strategy_version="1",
+            family=Family.CHANGE,
+            outcome_definition_id="d",
+            calibration_status=CalibrationStatus.CALIBRATED,
+        ).to_dict()["calibration_status"]
+        == "calibrated"
+    )
+    raw_status = RiskSignal(
+        score=0.5,
+        explanation="x",
+        strategy_id="s",
+        strategy_version="1",
+        family=Family.CHANGE,
+        outcome_definition_id="d",
+    )
+    raw_status.calibration_status = "declared"  # type: ignore[assignment]
+    assert raw_status.to_dict()["calibration_status"] == "declared"
+    with pytest.raises(ValueError, match="ForecastSignal family"):
+        ForecastSignal(
+            explanation="x",
+            strategy_id="s",
+            strategy_version="1",
+            family=Family.CHANGE,
+            interval_confidence=0.5,
+            technique="arima",
+        )
+
+
 # --- Section 6/7: KB + feedback linkage MUSTs ---
 
 
@@ -235,6 +417,24 @@ def test_time_ordered_retrieval(tmp_path):
     got = kb.query_events(family=Family.OPERATIONAL)
     ts = [g["timestamp"] for g in got]
     assert ts == sorted(ts)  # spec 6: time-ordered
+
+
+def test_sqlite_kb_lifecycle_and_query_filters_fail_closed(tmp_path):
+    path = str(tmp_path / "lifecycle.db")
+    with SQLiteKB(path) as kb:
+        event = ChangeEvent(
+            repo="r", change_ref="x", timestamp="2026-01-02T00:00:00+00:00"
+        )
+        kb.store_event(event)
+        assert kb.query_events(
+            event_type="ChangeEvent", start="2026-01-01", end="2026-01-03"
+        )
+        with pytest.raises(KeyError, match="unknown event"):
+            kb.store_signal("missing", HeuristicRiskStrategy().score(event, {}))
+        with pytest.raises(KeyError, match="originating event signal"):
+            kb.store_outcome(Outcome("missing", "s", True, DEFECT_LINKED_FIX.id))
+    assert kb.conn is None
+    kb.close()
 
 
 # --- Section 3.3: cross-family conformance ---
@@ -396,3 +596,26 @@ def test_time_sliced_and_paired_evaluation_utilities_reject_invalid_inputs():
     assert paired_comparison([0.4, 0.3], [0.2, 0.1]).candidate_brier < 0.4
     with pytest.raises(ValueError, match="equal-length"):
         paired_comparison([0.1], [0.1, 0.2])
+
+
+def test_evaluation_reports_all_calibration_and_rendering_paths():
+    assert brier_score([0, 1], [0, 1]) == 0
+    bins = reliability_curve([0, 1], [0, 1], n_bins=2)
+    assert len(bins) == 2 and expected_calibration_error([], []) == 0
+    assert (
+        check_calibration_conformance([], [], min_events=0).as_declaration()
+        == "uncalibrated"
+    )
+    assert (
+        check_calibration_conformance([0, 1], [0, 1], min_events=2).as_declaration()
+        == "calibrated"
+    )
+    with pytest.raises(ValueError, match="scores must"):
+        check_calibration_conformance([-1], [0])
+    better = paired_comparison([1] * 10, [0] * 10)
+    worse = paired_comparison([0] * 10, [1] * 10)
+    assert "better" in better.verdict and "worse" in worse.verdict
+    assert not check_calibration_conformance([1, 1], [0, 0], min_events=2).passes
+    withheld = CrossFamilyReport("a", "b", "d1", "d2", False, "no", 0, 0, 1, 1)
+    pooled = CrossFamilyReport("a", "b", "d1", "d2", True, "yes", 0, 0, 1, 1, 0.1)
+    assert "WITHHELD" in withheld.render() and "pooled ECE" in pooled.render()

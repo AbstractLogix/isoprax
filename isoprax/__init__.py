@@ -1,6 +1,5 @@
 """Isoprax reference implementation (proof-of-concept)."""
 
-from . import evaluation
 from .admission import (
     AdmissionProfile,
     AdmissionReport,

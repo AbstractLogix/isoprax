@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import subprocess
+from dataclasses import replace
 
 import pytest
 
+import isoprax.replay_selection as replay
 from isoprax import (
     PredeclarationArtifact,
     build_replay_justification_exclusion,
@@ -364,3 +366,320 @@ def test_early_screen_requires_governing_terms_and_hermeticity_without_build_rat
     )
     assert conventional.disqualifying_screen == "replay_readiness"
     assert len(conventional.screen_results) == 3
+
+
+def test_screening_guards_cover_malformed_boundary_evidence() -> None:
+    assert replay._screen_commit_supply({})[0] is False
+    assert replay._screen_commit_supply({"commit_supply": "bad"})[0] is False
+    assert (
+        replay._screen_commit_supply(
+            {"commit_supply": 100, "observed_positive_rate": "bad"}, adequacy_floor=1
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_commit_supply(
+            {"commit_supply": 100, "estimated_positive_event_rate": 0.2},
+            adequacy_floor=20,
+        )[0]
+        is True
+    )
+    assert replay._screen_build_rate({}, build_floor=0.9)[0] is False
+    assert (
+        replay._screen_build_rate(
+            {"sampled_build_success_rate": "bad"}, build_floor=0.9
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_build_rate(
+            {"sampled_build_success_rate": 0.9, "build_attempts": "bad"},
+            build_floor=0.9,
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_build_rate(
+            {
+                "sampled_build_success_rate": 0.9,
+                "build_attempts": 1,
+                "build_failures_clustered": True,
+            },
+            build_floor=0.9,
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_prediction_metadata(
+            {}, prediction_time_feature_allowlist=frozenset({"ok"})
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_prediction_metadata(
+            {"sampled_prediction_fields": {"": {"ok": 1}}},
+            prediction_time_feature_allowlist=frozenset({"ok"}),
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_prediction_metadata(
+            {"sampled_prediction_fields": {"c": {"ok": 1}}},
+            prediction_time_feature_allowlist=frozenset(),
+        )[0]
+        is False
+    )
+    assert replay._screen_estimated_buildable_window({}, adequacy_floor=1)[0] is False
+    assert (
+        replay._screen_estimated_buildable_window(
+            {"estimated_buildable_window_commits": 2, "observed_positive_rate": 0.1},
+            adequacy_floor=1,
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_governing_legal_terms({"legal_instruments": "LICENSE"})[0]
+        is False
+    )
+    assert (
+        replay._screen_governing_legal_terms(
+            {"legal_instruments": [{"governs_source_built_artifact": True}]}
+        )[0]
+        is False
+    )
+    assert (
+        replay._screen_replay_readiness({"replay_readiness_evidence": []})[0] is False
+    )
+    assert (
+        replay._screen_replay_readiness(
+            {"replay_readiness_evidence": {"hermeticity_class": "hermetic_build"}}
+        )[0]
+        is False
+    )
+
+
+def test_replay_utility_errors_and_compatibility_aliases() -> None:
+    with pytest.raises(TypeError):
+        replay._coerce_mapping(object())
+    assert replay._as_bool("allowed") is True
+    assert replay._as_bool(None, default=True) is True
+    with pytest.raises(ValueError, match="system_id"):
+        replay.CandidateRecord("", True, None)
+    with pytest.raises(ValueError, match="reference_project_id"):
+        derive_build_floor([0.9] * 200, reference_project_id=" ")
+    with pytest.raises(ValueError, match="numeric"):
+        derive_build_floor(["bad"] * 200, reference_project_id="other")
+    with pytest.raises(ValueError, match="within"):
+        derive_build_floor([2] * 200, reference_project_id="other")
+    candidate = {
+        "system_id": "candidate",
+        "commit_supply": 200,
+        "observed_positive_rate": 0.2,
+        "sampled_build_success_rate": 1,
+        "build_attempts": 1,
+        "sampled_prediction_fields": {"c": {"ok": 1}},
+    }
+    with pytest.raises(ValueError, match="unrelated"):
+        replay.screen_candidate(
+            candidate,
+            adequacy_floor=1,
+            reference_build_success_rates=[1] * 200,
+            reference_project_id="candidate",
+            prediction_time_feature_allowlist={"ok"},
+        )
+    with pytest.deprecated_call():
+        assert replay.evaluate_candidate_screening(
+            [candidate],
+            adequacy_floor=1,
+            reference_build_success_rates=[1] * 200,
+            reference_project_id="other",
+            prediction_time_feature_allowlist={"ok"},
+        )
+    with pytest.deprecated_call():
+        assert replay.screen_candidate_system(
+            candidate,
+            adequacy_floor=1,
+            reference_build_success_rates=[1] * 200,
+            reference_project_id="other",
+            prediction_time_feature_allowlist={"ok"},
+        ).eligible
+
+
+def test_predeclaration_mapping_and_provenance_fail_closed() -> None:
+    raw = {
+        "artifact_id": "map",
+        "content": "frozen",
+        "soak_duration": "7d",
+        "soak_duration_rule": "training-only",
+        "positive_event_definition": "observed",
+        "positive_event_thresholds": {"minimum": 1},
+        "censoring_rule": "drop",
+        "drift_threshold": 0.1,
+        "anchor_threshold": 0.1,
+        "split_boundaries": {"train": {"start": "a", "end": "b"}},
+        "adequacy_floor": 1,
+        "ablation_comparison_plan": "compare",
+    }
+    assert validate_predeclaration_artifact(raw)
+    assert replay.hash_predeclaration_artifact(
+        raw
+    ) == replay.hash_predeclaration_artifact(dict(reversed(list(raw.items()))))
+    with pytest.raises(ValueError, match="exactly two"):
+        validate_predeclaration_artifact({**raw, "split_boundaries": {"train": ["a"]}})
+    with pytest.raises(ValueError, match="sequence or mapping"):
+        validate_predeclaration_artifact({**raw, "split_boundaries": {"train": 1}})
+    with pytest.raises(ValueError, match="observation window"):
+        validate_predeclaration_artifact(
+            {**raw, "soak_duration_rule": "observation derived"},
+            observation_window="test",
+        )
+    with pytest.raises(ValueError, match="predeclaration_commit"):
+        evaluate_predeclaration_provenance(
+            raw,
+            external_anchor={
+                "type": "x",
+                "reference": "r",
+                "independent_of_repository_and_clock": True,
+            },
+        )
+    with pytest.raises(ValueError, match="independent"):
+        evaluate_predeclaration_provenance(
+            raw,
+            predeclaration_commit="p",
+            external_anchor={"type": "x", "reference": "r"},
+        )
+    with pytest.raises(ValueError, match="remote push"):
+        evaluate_predeclaration_provenance(
+            raw,
+            predeclaration_commit="p",
+            external_anchor={
+                "type": "remote_push",
+                "reference": "r",
+                "independent_of_repository_and_clock": True,
+            },
+        )
+    with pytest.raises(ValueError, match="ancestor"):
+        evaluate_predeclaration_provenance(
+            raw,
+            predeclaration_commit="p",
+            corpus_data_commits=("c",),
+            external_anchor={
+                "type": "x",
+                "reference": "r",
+                "independent_of_repository_and_clock": True,
+            },
+            repository_path=".",
+            git_runner=lambda _command, _path: False,
+        )
+    assert replay._ancestor_check("p", (), repository_path=None) is True
+    assert replay._ancestor_check("", ("c",), repository_path=".") is False
+    with pytest.raises(ValueError, match="repository_path"):
+        replay._ancestor_check("p", ("c",), repository_path=None)
+    assert replay._infer_commit_time("p", timestamps={"p": "bad"}) is None
+
+
+def test_exclusion_validation_and_later_dataset_justification() -> None:
+    with pytest.raises(ValueError, match="dataset_id"):
+        replay.ExclusionEntry(
+            "", "structural_no_change_events", replay._NO_CHANGE_EVENT_SENTINEL
+        )
+    with pytest.raises(ValueError, match="unsupported"):
+        record_exclusion_entry("x", exclusion_type="unknown", reason="reason")
+    with pytest.raises(ValueError, match="pending"):
+        record_exclusion_entry(
+            "x",
+            exclusion_type="structural_no_change_events",
+            reason=replay._NO_CHANGE_EVENT_SENTINEL,
+            pending=True,
+        )
+    assert (
+        "later paired"
+        in build_replay_justification_exclusion(
+            "x", paired_dataset_available=True
+        ).reason.lower()
+    )
+
+
+def test_predeclaration_value_objects_reject_each_missing_required_field() -> None:
+    artifact = PredeclarationArtifact(
+        artifact_id="id",
+        content="content",
+        soak_duration="7d",
+        soak_duration_rule="training-only",
+        positive_event_definition="observed",
+        positive_event_thresholds={"x": 1},
+        censoring_rule="drop",
+        drift_threshold=0.1,
+        anchor_threshold=0.1,
+        split_boundaries={"train": ("a", "b")},
+        adequacy_floor=1,
+        ablation_comparison_plan="compare",
+    )
+    for field, value in (
+        ("artifact_id", ""),
+        ("content", ""),
+        ("soak_duration", ""),
+        ("soak_duration_rule", ""),
+        ("positive_event_definition", ""),
+        ("positive_event_thresholds", {}),
+        ("censoring_rule", ""),
+        ("split_boundaries", {}),
+        ("adequacy_floor", -1),
+        ("ablation_comparison_plan", ""),
+    ):
+        with pytest.raises(ValueError):
+            replace(artifact, **{field: value})
+    assert artifact.to_dict()["split_boundaries"]["train"] == ["a", "b"]
+    mapping = artifact.to_dict()
+    mapping["split_boundaries"] = {"train": ["a", "b"]}
+    assert validate_predeclaration_artifact(mapping)
+
+
+def test_provenance_timestamp_and_exclusion_failures_are_not_silenced() -> None:
+    artifact = PredeclarationArtifact(
+        artifact_id="id",
+        content="content",
+        soak_duration="7d",
+        soak_duration_rule="training-only",
+        positive_event_definition="observed",
+        positive_event_thresholds={"x": 1},
+        censoring_rule="drop",
+        drift_threshold=0.1,
+        anchor_threshold=0.1,
+        split_boundaries={"train": ("a", "b")},
+        adequacy_floor=1,
+        ablation_comparison_plan="compare",
+    )
+    anchor = {
+        "type": "x",
+        "reference": "r",
+        "independent_of_repository_and_clock": True,
+    }
+    with pytest.raises(ValueError, match="hash mismatch"):
+        evaluate_predeclaration_provenance(
+            artifact,
+            artifact_hash="expected",
+            observed_hash="observed",
+            predeclaration_commit="p",
+            external_anchor=anchor,
+        )
+    with pytest.raises(ValueError, match="predates"):
+        evaluate_predeclaration_provenance(
+            artifact,
+            predeclaration_commit="p",
+            corpus_data_commits=("c",),
+            external_anchor=anchor,
+            repository_path=".",
+            git_runner=lambda _command, _path: True,
+            commit_timestamps={
+                "p": "2026-02-01T00:00:00+00:00",
+                "c": "2026-01-01T00:00:00+00:00",
+            },
+        )
+    for exclusion_type in (
+        "structural_no_change_events",
+        "commensurability_mismatch",
+        "structural_replay_justification",
+    ):
+        with pytest.raises(ValueError):
+            record_exclusion_entry("x", exclusion_type=exclusion_type, reason="wrong")
