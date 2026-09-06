@@ -40,7 +40,10 @@ class PublicObservationRecord:
 def _time(value: str) -> datetime:
     if not isinstance(value, str) or not value.endswith("Z"):
         raise ValueError("timestamp must be RFC 3339 UTC")
-    return datetime.fromisoformat(f"{value[:-1]}+00:00")
+    try:
+        return datetime.fromisoformat(f"{value[:-1]}+00:00")
+    except ValueError as error:
+        raise ValueError("timestamp must be RFC 3339 UTC") from error
 
 
 def normalize_public_observations(
