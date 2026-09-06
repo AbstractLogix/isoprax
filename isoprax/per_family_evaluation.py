@@ -4,11 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from math import sqrt
-from typing import Any, Iterable
+from types import MappingProxyType
+from typing import Any, Iterable, Mapping
 
-from .admission import AdmissionProfile, AdmissionReport, CorpusRow
+from .admission import (
+    AdmissionProfile,
+    AdmissionReport,
+    CorpusRow,
+    evaluate_admission,
+)
 from .commensurability import OutcomeDefinition
 from .evaluation import (
     brier_score,
@@ -65,10 +71,10 @@ class PerFamilyEvaluationReport:
     family: str
     outcome_definition_id: str
     declarable_class: str
-    metrics: dict[str, float]
-    calibration: dict[str, Any]
-    counts: dict[str, int]
-    uncertainty: dict[str, float]
+    metrics: Mapping[str, float]
+    calibration: Mapping[str, Any]
+    counts: Mapping[str, int]
+    uncertainty: Mapping[str, float]
     unavailable_evidence: tuple[UnavailableEvaluationEvidence, ...]
     claim_boundary: str = _CLAIM_BOUNDARY
     claim_scope: str = "stage1_per_family_evaluation_only"
@@ -76,6 +82,8 @@ class PerFamilyEvaluationReport:
     def __post_init__(self) -> None:
         if self.status not in _ALLOWED_STATUSES:
             raise ValueError("evaluation status is invalid")
+        for name in ("metrics", "calibration", "counts", "uncertainty"):
+            object.__setattr__(self, name, MappingProxyType(dict(getattr(self, name))))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -84,10 +92,10 @@ class PerFamilyEvaluationReport:
             "family": self.family,
             "outcome_definition_id": self.outcome_definition_id,
             "declarable_class": self.declarable_class,
-            "metrics": self.metrics,
-            "calibration": self.calibration,
-            "counts": self.counts,
-            "uncertainty": self.uncertainty,
+            "metrics": dict(self.metrics),
+            "calibration": dict(self.calibration),
+            "counts": dict(self.counts),
+            "uncertainty": dict(self.uncertainty),
             "unavailable_evidence": [
                 item.__dict__ for item in self.unavailable_evidence
             ],
@@ -115,7 +123,7 @@ def _score(row: CorpusRow, score_field: str) -> float:
     if score_field not in row.prediction_fields:
         raise ValueError(f"missing predeclared score field '{score_field}'")
     value = row.prediction_fields[score_field]
-    if not isinstance(value, int | float):
+    if isinstance(value, bool) or not isinstance(value, int | float):
         raise ValueError("score field must be numeric")
     score = float(value)
     if score < 0.0 or score > 1.0:
@@ -131,11 +139,38 @@ def _observed_outcome_value(row: CorpusRow) -> int | None:
     return None
 
 
+def _test_counts(rows: tuple[CorpusRow, ...]) -> dict[str, int]:
+    test_rows = [row for row in rows if row.split == "test"]
+    observed = [row for row in test_rows if _observed_outcome_value(row) is not None]
+    return {
+        "rows": len(rows),
+        "test_rows": len(test_rows),
+        "test_observed": len(observed),
+        "censored": len(test_rows) - len(observed),
+    }
+
+
+def _identity_payload(
+    profile: PerFamilyEvaluationProfile,
+    corpus_digest: str,
+    **fields: object,
+) -> dict[str, object]:
+    return {
+        "family": profile.family,
+        "outcome_definition_id": profile.outcome_definition.id,
+        "score_field": profile.score_field,
+        "predeclared_threshold_version": profile.predeclared_threshold_version,
+        "predeclared_metrics": list(profile.predeclared_metrics),
+        "corpus_digest": corpus_digest,
+        "claim_boundary": _CLAIM_BOUNDARY,
+        "claim_scope": "stage1_per_family_evaluation_only",
+        **fields,
+    }
+
+
 def _wilson_interval(
     successes: int, total: int, z: float = 1.96
 ) -> tuple[float, float]:
-    if total <= 0:
-        return 0.0, 0.0
     p = successes / total
     denom = 1.0 + (z * z / total)
     center = (p + (z * z) / (2 * total)) / denom
@@ -145,12 +180,15 @@ def _wilson_interval(
 
 def _split_checked_rows(
     rows: tuple[CorpusRow, ...],
+    row_by_id: dict[str, CorpusRow],
     admission_profile: AdmissionProfile,
 ) -> tuple[list[CorpusRow], list[CorpusRow], list[CorpusRow]]:
     evidence = admission_profile.calibration_evidence
     if evidence is None:
         return [], [], [row for row in rows if row.split == "test"]
-    row_by_id = _row_by_id(rows)
+    for row_ids in (evidence.fitted_row_ids, evidence.gated_row_ids):
+        if len(set(row_ids)) != len(row_ids):
+            raise ValueError("calibration evidence row ids must be unique")
     try:
         fit_rows = [row_by_id[row_id] for row_id in evidence.fitted_row_ids]
         gate_rows = [row_by_id[row_id] for row_id in evidence.gated_row_ids]
@@ -180,18 +218,20 @@ def evaluate_per_family(
         raise ValueError("post-hoc thresholds or horizon are forbidden")
     if admission_profile.predeclaration_evidence is None:
         raise ValueError("predeclaration evidence is required")
+    row_by_id = _row_by_id(ordered_rows)
+    corpus_digest = _hash([asdict(row) for row in ordered_rows])
     if not admission_report.admissible:
         blocked = (
             UnavailableEvaluationEvidence("admission_report", "admission did not pass"),
         )
-        payload = {
-            "status": "blocked",
-            "family": profile.family,
-            "outcome_definition_id": profile.outcome_definition.id,
-            "unavailable_evidence": [item.__dict__ for item in blocked],
-            "claim_boundary": _CLAIM_BOUNDARY,
-            "claim_scope": "stage1_per_family_evaluation_only",
-        }
+        blocked_counts = _test_counts(ordered_rows)
+        payload = _identity_payload(
+            profile,
+            corpus_digest,
+            status="blocked",
+            counts=blocked_counts,
+            unavailable_evidence=[item.__dict__ for item in blocked],
+        )
         return PerFamilyEvaluationReport(
             evaluation_identity=_hash(payload),
             status="blocked",
@@ -200,7 +240,7 @@ def evaluate_per_family(
             declarable_class="Blocked admission evidence; no conformance class assigned",
             metrics={},
             calibration={},
-            counts={"rows": len(ordered_rows), "censored": 0, "test_rows": 0},
+            counts=blocked_counts,
             uncertainty={},
             unavailable_evidence=blocked,
         )
@@ -211,8 +251,10 @@ def evaluate_per_family(
         _score(row, profile.score_field)
 
     fit_rows, gate_rows, test_rows = _split_checked_rows(
-        ordered_rows, admission_profile
+        ordered_rows, row_by_id, admission_profile
     )
+    if evaluate_admission(list(ordered_rows), admission_profile) != admission_report:
+        raise ValueError("admission report does not match these rows and profile")
 
     unavailable: list[UnavailableEvaluationEvidence] = []
     if not fit_rows:
@@ -243,11 +285,9 @@ def evaluate_per_family(
 
     test_scores: list[float] = []
     test_outcomes: list[int] = []
-    censored = 0
     for row in test_rows:
         observed = _observed_outcome_value(row)
         if observed is None:
-            censored += 1
             continue
         test_scores.append(_score(row, profile.score_field))
         test_outcomes.append(observed)
@@ -271,11 +311,7 @@ def evaluate_per_family(
         }
 
     if gate_outcomes:
-        cal = check_calibration_conformance(
-            gate_scores,
-            gate_outcomes,
-            min_events=max(2, len(gate_outcomes)),
-        )
+        cal = check_calibration_conformance(gate_scores, gate_outcomes)
         calibration = {
             "status": cal.as_declaration(),
             "passes": cal.passes,
@@ -284,6 +320,10 @@ def evaluate_per_family(
             "n_events": cal.n_events,
             "reason": cal.reason,
         }
+        if not cal.passes:
+            unavailable.append(
+                UnavailableEvaluationEvidence("calibration_conformance", cal.reason)
+            )
     else:
         calibration = {
             "status": "uncalibrated",
@@ -299,31 +339,26 @@ def evaluate_per_family(
             )
         )
 
-    lower, upper = _wilson_interval(sum(test_outcomes), len(test_outcomes))
-    uncertainty = {
-        "positive_rate_ci_low": float(lower),
-        "positive_rate_ci_high": float(upper),
-    }
+    uncertainty: dict[str, float] = {}
+    if test_outcomes:
+        lower, upper = _wilson_interval(sum(test_outcomes), len(test_outcomes))
+        uncertainty = {
+            "positive_rate_ci_low": float(lower),
+            "positive_rate_ci_high": float(upper),
+        }
 
     status = "inconclusive" if unavailable else "evaluation_evidence"
-    counts = {
-        "rows": len(ordered_rows),
-        "test_rows": len(test_rows),
-        "test_observed": len(test_outcomes),
-        "censored": censored,
-    }
-    payload = {
-        "status": status,
-        "family": profile.family,
-        "outcome_definition_id": profile.outcome_definition.id,
-        "metrics": metrics,
-        "calibration": calibration,
-        "counts": counts,
-        "uncertainty": uncertainty,
-        "unavailable_evidence": [item.__dict__ for item in unavailable],
-        "claim_boundary": _CLAIM_BOUNDARY,
-        "claim_scope": "stage1_per_family_evaluation_only",
-    }
+    counts = _test_counts(ordered_rows)
+    payload = _identity_payload(
+        profile,
+        corpus_digest,
+        status=status,
+        metrics=metrics,
+        calibration=calibration,
+        counts=counts,
+        uncertainty=uncertainty,
+        unavailable_evidence=[item.__dict__ for item in unavailable],
+    )
     return PerFamilyEvaluationReport(
         evaluation_identity=_hash(payload),
         status=status,
