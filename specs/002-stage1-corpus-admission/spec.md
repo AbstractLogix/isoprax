@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-stage1-corpus-admission`
 **Created**: 2026-09-05
-**Status**: Ready for Planning
+**Status**: Complete
 **Input**: Extend Isoprax beyond Stage 0 synthetic proof using a real paired corpus admission gate, reusing compatible archived decision records without importing JEPA/profile scope.
 
 ## Overview

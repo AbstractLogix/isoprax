@@ -30,3 +30,11 @@
 
 - [x] T012 Update the Stage 0 run and claim boundary in `README.md`
 - [x] T013 Record plan, data model, contract, quickstart, and convergence evidence under `specs/001-cross-family-kernel/`
+
+## Phase 7: Convergence
+
+- [x] T014 CRITICAL Enforce non-empty IDs and sources, RFC 3339 UTC timestamps, and accepted concrete event types, with malformed/non-UTC rejection tests per FR-001 and FR-002 (contradicts).
+- [x] T015 CRITICAL Keep the Stage 0 cross-family report Structural-only and reject Semantic or Full declarations from synthetic inputs per FR-008, FR-009, and Constitution II (contradicts).
+- [x] T016 Add focused calibration conformance tests and explicit input validation for empty, unequal, and single-class labels per FR-006 and SC-003 (partial).
+- [x] T017 Add focused time-sliced and paired-comparison tests, including rejection paths, per FR-008 and SC-001 (partial).
+- [x] T018 Update the completed feature status and convergence evidence with the obtained validation result per T013 (partial).

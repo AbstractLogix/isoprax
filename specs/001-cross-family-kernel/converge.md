@@ -22,6 +22,17 @@
 - No Full Conformance claim is available: only two of three strategy types are
   implemented and all evidence is synthetic.
 
+## Convergence update (2026-09-05)
+
+- Events now reject blank identifiers/sources and malformed or non-UTC RFC 3339
+  timestamps before entering the Stage 0 flow.
+- Calibration checks reject unequal/non-binary inputs and declare one-class
+  evidence uncalibrated; focused tests cover those edge cases.
+- The Stage 0 report remains Structural even when synthetic inputs share a
+  commensurable definition; it cannot declare Semantic or Full Conformance.
+- Time-sliced and paired-comparison utilities now have focused acceptance and
+  rejection coverage.
+
 ## Continuation backlog (reuse-first)
 
 Next specification work should reuse prior archive decisions where compatible,

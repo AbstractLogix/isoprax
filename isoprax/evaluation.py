@@ -160,6 +160,12 @@ def check_calibration_conformance(
 
     Parameters are reported back so conformance claims stay auditable.
     """
+    if len(scores) != len(outcomes):
+        raise ValueError("scores and outcomes must have equal length")
+    if any(score < 0.0 or score > 1.0 for score in scores):
+        raise ValueError("scores must be in [0, 1]")
+    if any(outcome not in {0, 1} for outcome in outcomes):
+        raise ValueError("outcomes must be binary 0 or 1")
     n = len(scores)
     ece = expected_calibration_error(scores, outcomes, n_bins) if n else 1.0
     brier = brier_score(scores, outcomes) if n else 1.0
@@ -173,6 +179,16 @@ def check_calibration_conformance(
             max_ece,
             f"insufficient labeled events ({n} < {min_events}) "
             f"-> MUST declare uncalibrated",
+        )
+    if len(set(outcomes)) < 2:
+        return CalibrationConformance(
+            False,
+            ece,
+            brier,
+            n,
+            n_bins,
+            max_ece,
+            "only one observed outcome class -> MUST declare uncalibrated",
         )
     if ece > max_ece:
         return CalibrationConformance(
@@ -274,12 +290,9 @@ def cross_family_report(
             list(left_outcomes) + list(right_outcomes),
         )
 
-    if res.commensurable and calibrated and all_strategy_types:
-        cls = "Full Conformance"
-    elif res.commensurable:
-        cls = "Cross-Family Conformance (Semantic)"
-    else:
-        cls = "Cross-Family Conformance (Structural)"
+    cls = "Cross-Family Conformance (Structural)"
+    if res.commensurable:
+        cls += ", commensurability established but Semantic/Full claims are outside Stage 0"
     if not calibrated:
         cls += ", uncalibrated"
 

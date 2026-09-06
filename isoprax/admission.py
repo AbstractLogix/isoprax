@@ -8,7 +8,7 @@ Semantic or Full conformance claim.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
@@ -34,6 +34,27 @@ class SplitDefinition:
 
 
 @dataclass(frozen=True)
+class CalibrationEvidence:
+    fitted_row_ids: tuple[str, ...]
+    gated_row_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PredeclarationEvidence:
+    artifact_hash: str
+    external_anchor_reference: str
+    predeclared_at: str
+    corpus_collection_started_at: str
+
+
+@dataclass(frozen=True)
+class CorpusProvenance:
+    source_system: str
+    uses_private_production_data: bool
+    uses_privileged_telemetry: bool
+
+
+@dataclass(frozen=True)
 class AdmissionProfile:
     allowed_prediction_fields: frozenset[str]
     forbidden_prediction_fields: frozenset[str]
@@ -47,6 +68,10 @@ class AdmissionProfile:
     release_scope: str
     thresholds_frozen: bool
     expected_system_id: str | None = None
+    calibration_evidence: CalibrationEvidence | None = None
+    predeclaration_evidence: PredeclarationEvidence | None = None
+    corpus_provenance: CorpusProvenance | None = None
+    published_artifacts: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.horizon_rule.strip():
@@ -84,6 +109,10 @@ class CorpusRow:
     threshold_version: str
     change_group_id: str | None = None
     censor_reason: str | None = None
+    prediction_field_observed_at: dict[str, str] = field(default_factory=dict)
+    build_succeeded: bool = True
+    deployment_succeeded: bool = True
+    monitoring_complete: bool = True
 
     def __post_init__(self) -> None:
         if self.split not in _ALLOWED_SPLITS:
@@ -125,6 +154,8 @@ def evaluate_admission(
         _gate_outcome_classes_and_censoring(ordered_rows),
         _gate_split_and_followup(ordered_rows, profile),
         _gate_horizon_and_threshold_freeze(ordered_rows, profile),
+        _gate_calibration_evidence(ordered_rows, profile),
+        _gate_provenance_and_predeclaration(profile),
         _gate_single_system_boundary(ordered_rows, profile),
         _gate_cluster_by_change(ordered_rows),
         _gate_adequacy(ordered_rows, profile),
@@ -143,6 +174,14 @@ def evaluate_admission(
         "release_scope": profile.release_scope,
         "thresholds_frozen": profile.thresholds_frozen,
         "expected_system_id": profile.expected_system_id,
+        "calibration_evidence": _calibration_evidence_dict(
+            profile.calibration_evidence
+        ),
+        "predeclaration_evidence": _predeclaration_evidence_dict(
+            profile.predeclaration_evidence
+        ),
+        "corpus_provenance": _corpus_provenance_dict(profile.corpus_provenance),
+        "published_artifacts": profile.published_artifacts,
     }
     admissible = all(g.passed for g in gates)
     return AdmissionReport(
@@ -194,6 +233,17 @@ def _gate_prediction_time_fields(
         if keys & set(profile.forbidden_prediction_fields):
             failed.append(r.row_id)
             continue
+        if set(r.prediction_field_observed_at) != keys:
+            failed.append(r.row_id)
+            continue
+        try:
+            if any(
+                _parse_iso(observed_at) > _parse_iso(r.score_time)
+                for observed_at in r.prediction_field_observed_at.values()
+            ):
+                failed.append(r.row_id)
+        except (TypeError, ValueError):
+            failed.append(r.row_id)
     if failed:
         return GateResult(
             gate_id="prediction_time_fields",
@@ -209,6 +259,12 @@ def _gate_prediction_time_fields(
 def _gate_outcome_classes_and_censoring(rows: list[CorpusRow]) -> GateResult:
     failed: list[str] = []
     for r in rows:
+        evidence_incomplete = not (
+            r.build_succeeded and r.deployment_succeeded and r.monitoring_complete
+        )
+        if evidence_incomplete and r.outcome_class != "censored":
+            failed.append(r.row_id)
+            continue
         if r.outcome_class == "observed_negative" and not r.outcome_window_complete:
             failed.append(r.row_id)
         if r.outcome_class == "censored" and (
@@ -273,6 +329,113 @@ def _gate_horizon_and_threshold_freeze(
     return GateResult(
         "horizon_threshold_freeze", True, "horizon/threshold freeze gate passed"
     )
+
+
+def _gate_calibration_evidence(
+    rows: list[CorpusRow], profile: AdmissionProfile
+) -> GateResult:
+    evidence = profile.calibration_evidence
+    if evidence is None or not evidence.fitted_row_ids or not evidence.gated_row_ids:
+        return GateResult(
+            "calibration_evidence",
+            False,
+            "calibration-fit and calibration-gate evidence are required",
+        )
+    row_by_id = {row.row_id: row for row in rows}
+    try:
+        fitted = [row_by_id[row_id] for row_id in evidence.fitted_row_ids]
+        gated = [row_by_id[row_id] for row_id in evidence.gated_row_ids]
+    except KeyError:
+        return GateResult(
+            "calibration_evidence",
+            False,
+            "calibration evidence references unknown rows",
+        )
+    if (
+        set(evidence.fitted_row_ids) & set(evidence.gated_row_ids)
+        or any(row.split != "calibration_fit" for row in fitted)
+        or any(row.split != "calibration_gate" for row in gated)
+    ):
+        return GateResult(
+            "calibration_evidence",
+            False,
+            "calibration fitting must use calibration_fit and gate checks calibration_gate only",
+        )
+    return GateResult(
+        "calibration_evidence", True, "calibration fit/gate evidence is split-separated"
+    )
+
+
+def _gate_provenance_and_predeclaration(profile: AdmissionProfile) -> GateResult:
+    provenance = profile.corpus_provenance
+    predeclaration = profile.predeclaration_evidence
+    if provenance is None or not provenance.source_system.strip():
+        return GateResult("provenance", False, "corpus provenance is required")
+    if provenance.uses_private_production_data or provenance.uses_privileged_telemetry:
+        return GateResult(
+            "provenance",
+            False,
+            "private production data and privileged telemetry are forbidden",
+        )
+    if predeclaration is None:
+        return GateResult(
+            "provenance", False, "anchored predeclaration evidence is required"
+        )
+    if (
+        not predeclaration.artifact_hash.strip()
+        or not predeclaration.external_anchor_reference.strip()
+    ):
+        return GateResult(
+            "provenance", False, "predeclaration hash and external anchor are required"
+        )
+    try:
+        if _parse_iso(predeclaration.predeclared_at) >= _parse_iso(
+            predeclaration.corpus_collection_started_at
+        ):
+            return GateResult(
+                "provenance", False, "predeclaration must precede corpus collection"
+            )
+    except (TypeError, ValueError):
+        return GateResult(
+            "provenance", False, "predeclaration timestamps must be valid"
+        )
+    return GateResult("provenance", True, "provenance and predeclaration gate passed")
+
+
+def _calibration_evidence_dict(
+    evidence: CalibrationEvidence | None,
+) -> dict[str, tuple[str, ...]] | None:
+    if evidence is None:
+        return None
+    return {
+        "fitted_row_ids": evidence.fitted_row_ids,
+        "gated_row_ids": evidence.gated_row_ids,
+    }
+
+
+def _predeclaration_evidence_dict(
+    evidence: PredeclarationEvidence | None,
+) -> dict[str, str] | None:
+    if evidence is None:
+        return None
+    return {
+        "artifact_hash": evidence.artifact_hash,
+        "external_anchor_reference": evidence.external_anchor_reference,
+        "predeclared_at": evidence.predeclared_at,
+        "corpus_collection_started_at": evidence.corpus_collection_started_at,
+    }
+
+
+def _corpus_provenance_dict(
+    provenance: CorpusProvenance | None,
+) -> dict[str, Any] | None:
+    if provenance is None:
+        return None
+    return {
+        "source_system": provenance.source_system,
+        "uses_private_production_data": provenance.uses_private_production_data,
+        "uses_privileged_telemetry": provenance.uses_privileged_telemetry,
+    }
 
 
 def _gate_single_system_boundary(
@@ -352,6 +515,14 @@ def _gate_manifest_metadata(profile: AdmissionProfile) -> GateResult:
             gate_id="manifest_metadata",
             passed=False,
             message="release_scope metadata is required",
+        )
+    if not profile.published_artifacts or not all(
+        artifact.strip() for artifact in profile.published_artifacts
+    ):
+        return GateResult(
+            gate_id="manifest_metadata",
+            passed=False,
+            message="publishable artifact metadata is required",
         )
     return GateResult("manifest_metadata", True, "manifest metadata gate passed")
 
