@@ -44,6 +44,13 @@ from .commensurability import (
     check_commensurable,
     require_commensurable,
 )
+from .corpus_assembly import (
+    AssemblyRejection,
+    CorpusAssemblyProfile,
+    CorpusAssemblyReport,
+    ReplayCaptureInput,
+    assemble_corpus,
+)
 from .corpus_manifest import (
     CorpusManifest,
     build_corpus_manifest,
