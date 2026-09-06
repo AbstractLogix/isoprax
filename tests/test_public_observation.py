@@ -25,7 +25,17 @@ def test_incomplete_or_invalid_observations_are_censored(changes, reason):
     assert reason in record.censor_reason
 
 
-@pytest.mark.parametrize("changes", [{"source_reference": "https://token@bad"}, {"uses_private_data": True}, {"uses_privileged_telemetry": True}, {"window_end": "2026-09-05T00:00:00Z"}, {"artifacts": ()}])
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"source_reference": "https://token@bad"},
+        {"source_reference": "https://example.test/observation?token=bad"},
+        {"uses_private_data": True},
+        {"uses_privileged_telemetry": True},
+        {"window_end": "2026-09-05T00:00:00Z"},
+        {"artifacts": ()},
+    ],
+)
 def test_rejects_unsafe_or_invalid_observations(changes):
     with pytest.raises(ValueError):
         normalize_public_observations([snapshot(**changes)])
