@@ -75,6 +75,16 @@ from .predeclaration import (
     validate_predeclaration_artifact,
     validate_predeclaration_provenance,
 )
+from .replay_capture import (
+    DeploymentEvidence,
+    ObservationArtifactEvidence,
+    ObservationEvidence,
+    ReplayCaptureBackend,
+    ReplayCaptureBackendResult,
+    ReplayCaptureRecord,
+    ReplayLaneDefinition,
+    capture_replay_lane,
+)
 from .replay_constraints import (
     ReplayConstraint,
     ReplayConstraintError,
