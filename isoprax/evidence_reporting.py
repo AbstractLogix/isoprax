@@ -193,7 +193,7 @@ def _validated_captures(
             raise ValueError("capture records must be unique and valid")
         by_lane[capture.lane_identity] = capture
     summaries: list[dict[str, Any]] = []
-    available: set[str] = set()
+    available: set[str] | None = None
     if len(by_lane) != len(assembly.rows):
         raise ValueError("accepted rows must have exactly one capture")
     for row in assembly.rows:
@@ -209,8 +209,11 @@ def _validated_captures(
             raise ValueError("capture does not match accepted row")
         summary, present = _capture_summary(capture)
         summaries.append(summary)
-        available.update(present)
-    return tuple(sorted(summaries, key=lambda item: item["lane_identity"])), available
+        available = present if available is None else available & present
+    return (
+        tuple(sorted(summaries, key=lambda item: item["lane_identity"])),
+        (available or set()),
+    )
 
 
 def build_evidence_report(
