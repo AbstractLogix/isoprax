@@ -94,6 +94,11 @@ from .public_evidence import (
     PublicEvidenceSnapshot,
     normalize_public_evidence,
 )
+from .public_observation import (
+    PublicObservationRecord,
+    PublicObservationSnapshot,
+    normalize_public_observations,
+)
 from .replay_capture import (
     DeploymentEvidence,
     ObservationArtifactEvidence,
