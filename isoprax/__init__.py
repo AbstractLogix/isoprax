@@ -89,6 +89,11 @@ from .predeclaration import (
     validate_predeclaration_artifact,
     validate_predeclaration_provenance,
 )
+from .public_evidence import (
+    PublicEvidenceRecord,
+    PublicEvidenceSnapshot,
+    normalize_public_evidence,
+)
 from .replay_capture import (
     DeploymentEvidence,
     ObservationArtifactEvidence,
