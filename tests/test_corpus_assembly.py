@@ -25,14 +25,22 @@ def profile(**changes):
         allowed_prediction_fields=frozenset({"diff_size"}),
         forbidden_prediction_fields=frozenset({"future"}),
         split_definitions=(
-            SplitDefinition("train", "2026-09-01T00:00:00Z", "2026-09-10T00:00:00Z"),
             SplitDefinition(
-                "calibration_fit", "2026-09-10T00:00:00Z", "2026-09-15T00:00:00Z"
+                "train", "2026-09-01T00:00:00+00:00", "2026-09-10T00:00:00+00:00"
             ),
             SplitDefinition(
-                "calibration_gate", "2026-09-15T00:00:00Z", "2026-09-20T00:00:00Z"
+                "calibration_fit",
+                "2026-09-10T00:00:00+00:00",
+                "2026-09-15T00:00:00+00:00",
             ),
-            SplitDefinition("test", "2026-09-20T00:00:00Z", "2026-09-30T00:00:00Z"),
+            SplitDefinition(
+                "calibration_gate",
+                "2026-09-15T00:00:00+00:00",
+                "2026-09-20T00:00:00+00:00",
+            ),
+            SplitDefinition(
+                "test", "2026-09-20T00:00:00+00:00", "2026-09-30T00:00:00+00:00"
+            ),
         ),
         published_artifacts=("manifest.json",),
     )

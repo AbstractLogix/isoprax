@@ -75,6 +75,11 @@ def _parse_time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def _admission_timestamp(value: str) -> str:
+    """Normalize a validated capture timestamp for the Python 3.10 row contract."""
+    return _parse_time(value).isoformat()
+
+
 def _hash(value: object) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode()
@@ -196,7 +201,7 @@ def _row(
         deployment_id=capture.deployment.evidence_reference,
         observation_id=capture.lane_identity,
         split=split.name,
-        score_time=lane.score_time,
+        score_time=_admission_timestamp(lane.score_time),
         outcome_class=capture.outcome_class,
         prediction_fields=dict(value.prediction_fields),
         linkage_bases=("immutable_capture_lineage",),
@@ -205,7 +210,10 @@ def _row(
         threshold_version=lane.outcome_threshold_rule,
         change_group_id=lane.commit,
         censor_reason=capture.censor_reason,
-        prediction_field_observed_at=dict(value.field_observed_at),
+        prediction_field_observed_at={
+            name: _admission_timestamp(timestamp)
+            for name, timestamp in value.field_observed_at.items()
+        },
         build_succeeded=capture.outcome_class != "censored",
         deployment_succeeded=capture.deployment.disposition == "succeeded",
         monitoring_complete=capture.observation.monitoring_complete,
