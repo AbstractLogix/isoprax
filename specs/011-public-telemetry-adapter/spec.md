@@ -18,6 +18,8 @@ data as an observed negative outcome.
 A reviewer receives a canonical public observation record with its window,
 threshold metadata, artifact availability, freshness, and explicit censoring.
 
+**Independent Test**: Reduce the same valid snapshot twice (including with reordered fields) and verify the canonical public record and identity are identical; submit a snapshot with private/privileged material and verify it is rejected or retained only as explicit unavailability/censoring.
+
 **Acceptance Scenarios**:
 
 1. Equivalent snapshots produce identical public records and identities.
