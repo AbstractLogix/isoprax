@@ -50,6 +50,15 @@ from .corpus_manifest import (
     validate_corpus_manifest,
 )
 from .events import ChangeEvent, Event, Family, MetricSample, RunEvent
+from .hermetic_runner import (
+    ApprovedRunnerConfiguration,
+    ArtifactEvidence,
+    EffectiveRunnerControls,
+    ExecutionEvidenceRecord,
+    RunnerBackend,
+    RunnerBackendResult,
+    run_prepared_execution,
+)
 from .kb import KnowledgeBase, Outcome, SQLiteKB
 from .predeclaration import (
     ExclusionEntry,
