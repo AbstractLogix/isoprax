@@ -31,6 +31,9 @@ _KNOWN_EXCLUSION_TYPES = {
     "commensurability_mismatch",
     "structural_replay_justification",
 }
+_ACCEPTED_HERMETICITY_CLASSES = frozenset(
+    {"pinned_distribution", "hermetic_build", "pinned_container_toolchain"}
+)
 
 
 def _coerce_mapping(candidate: Any) -> Mapping[str, Any]:
@@ -343,6 +346,164 @@ def _screen_prediction_metadata(
             "Screen 4 failed: prediction-time feature allowlist cannot be populated at sampled commits",
         )
     return True, "Screen 4 passed: prediction-time feature allowlist is populatable"
+
+
+def _screen_estimated_buildable_window(
+    candidate: Mapping[str, Any], *, adequacy_floor: int
+) -> tuple[bool, str]:
+    window = _pick(
+        candidate,
+        "estimated_buildable_window_commits",
+        "estimated_recent_buildable_window_commits",
+    )
+    if window is None:
+        return False, "Screen 1 failed: estimated recent buildable window is missing"
+    candidate_with_window = dict(candidate)
+    candidate_with_window["commit_supply"] = window
+    passed, _ = _screen_commit_supply(
+        candidate_with_window, adequacy_floor=adequacy_floor
+    )
+    if not passed:
+        return (
+            False,
+            "Screen 1 failed: estimated recent buildable window cannot support the adequacy floor",
+        )
+    return (
+        True,
+        "Screen 1 passed: estimated recent buildable window supports the adequacy floor",
+    )
+
+
+def _screen_governing_legal_terms(
+    candidate: Mapping[str, Any],
+) -> tuple[bool, str, Mapping[str, Any] | None]:
+    instruments = _pick(candidate, "legal_instruments", "terms_instruments", default=())
+    if not isinstance(instruments, Sequence) or isinstance(instruments, (str, bytes)):
+        return False, "Screen 2 failed: legal instruments are required", None
+    governing = [
+        item
+        for item in instruments
+        if isinstance(item, Mapping)
+        and item.get("governs_source_built_artifact") is True
+    ]
+    if len(governing) != 1:
+        return (
+            False,
+            "Screen 2 failed: exactly one governing source-built legal instrument is required",
+            None,
+        )
+    instrument = governing[0]
+    if (
+        not str(instrument.get("instrument_type", "")).strip()
+        or not str(instrument.get("reference", "")).strip()
+    ):
+        return (
+            False,
+            "Screen 2 failed: governing legal instrument requires type and retrievable reference",
+            None,
+        )
+    if _as_bool(instrument.get("forbids_publication")) or _as_bool(
+        instrument.get("forbids_redistribution")
+    ):
+        return (
+            False,
+            "Screen 2 failed: governing legal instrument forbids benchmark publication or derived-metric redistribution",
+            instrument,
+        )
+    return (
+        True,
+        "Screen 2 passed: governing legal instrument permits the intended use",
+        instrument,
+    )
+
+
+def _screen_replay_readiness(
+    candidate: Mapping[str, Any],
+) -> tuple[bool, str, str | None]:
+    evidence = _pick(
+        candidate, "replay_readiness_evidence", "hermeticity_evidence", default={}
+    )
+    if not isinstance(evidence, Mapping):
+        return False, "Screen 2.5 failed: replay-readiness evidence is required", None
+    hermeticity_class = str(evidence.get("hermeticity_class", "")).strip()
+    if hermeticity_class not in _ACCEPTED_HERMETICITY_CLASSES:
+        return (
+            False,
+            "Screen 2.5 failed: an accepted hermeticity class is required",
+            None,
+        )
+    if not str(evidence.get("evidence_reference", "")).strip():
+        return (
+            False,
+            "Screen 2.5 failed: hermeticity evidence reference is required",
+            None,
+        )
+    return (
+        True,
+        "Screen 2.5 passed: replay-readiness evidence is accepted",
+        hermeticity_class,
+    )
+
+
+def screen_early_candidate(
+    candidate: Any,
+    *,
+    adequacy_floor: int,
+    prediction_time_feature_allowlist: Iterable[str],
+) -> CandidateRecord:
+    """Screen early eligibility without executing or interpreting historical builds."""
+    candidate_map = _coerce_mapping(candidate)
+    system_id = str(
+        _pick(candidate_map, "system_id", "candidate_id", default="candidate")
+    ).strip()
+    allowlist = frozenset(
+        str(field) for field in prediction_time_feature_allowlist if str(field).strip()
+    )
+    results: list[ScreeningResult] = []
+    governing_instrument: Mapping[str, Any] | None = None
+    hermeticity_class: str | None = None
+    screen_calls = (
+        (
+            "estimated_buildable_window",
+            lambda: _screen_estimated_buildable_window(
+                candidate_map, adequacy_floor=adequacy_floor
+            ),
+        ),
+        ("governing_legal_terms", lambda: _screen_governing_legal_terms(candidate_map)),
+        ("replay_readiness", lambda: _screen_replay_readiness(candidate_map)),
+        (
+            "prediction_metadata",
+            lambda: _screen_prediction_metadata(
+                candidate_map, prediction_time_feature_allowlist=allowlist
+            ),
+        ),
+    )
+    for index, (name, check) in enumerate(screen_calls, start=1):
+        result = check()
+        passed, detail = result[:2]
+        if name == "governing_legal_terms":
+            governing_instrument = result[2]
+        if name == "replay_readiness":
+            hermeticity_class = result[2]
+        results.append(ScreeningResult(name, index, passed, detail))
+        if not passed:
+            metadata: dict[str, Any] = {"adequacy_floor": adequacy_floor}
+            if governing_instrument is not None:
+                metadata["governing_legal_instrument"] = dict(governing_instrument)
+            return CandidateRecord(system_id, False, name, tuple(results), metadata)
+    return CandidateRecord(
+        system_id,
+        True,
+        None,
+        tuple(results),
+        {
+            "adequacy_floor": adequacy_floor,
+            "governing_legal_instrument": dict(governing_instrument or {}),
+            "hermeticity_class": hermeticity_class,
+            "historical_build_rate_qualification": "deferred_to_replay_environment",
+            "prediction_time_feature_allowlist": tuple(sorted(allowlist)),
+        },
+    )
 
 
 def _order_screen_results(
@@ -817,6 +978,7 @@ __all__ = [
     "hash_predeclaration_artifact",
     "record_exclusion_entry",
     "screen_candidate",
+    "screen_early_candidate",
     "screen_candidate_system",
     "screen_candidates",
     "validate_exclusion_entry",

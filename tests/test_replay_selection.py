@@ -12,6 +12,7 @@ from isoprax import (
     evaluate_predeclaration_provenance,
     record_exclusion_entry,
     screen_candidates,
+    screen_early_candidate,
     validate_predeclaration_artifact,
 )
 
@@ -291,3 +292,75 @@ def test_exclusion_entries_stay_structural_not_pending() -> None:
     )
     assert replay_justification.cited_spec == "Isoprax v0.3 §5.6"
     assert "paired dataset" in replay_justification.reason.lower()
+
+
+def test_early_screen_requires_governing_terms_and_hermeticity_without_build_rate() -> (
+    None
+):
+    base = {
+        "system_id": "early-candidate",
+        "estimated_buildable_window_commits": 200,
+        "observed_positive_rate": 0.2,
+        "sampled_prediction_fields": {"commit-a": {"allowed": 1}},
+        "sampled_build_success_rate": 0.0,
+        "legal_instruments": [
+            {
+                "instrument_type": "license",
+                "reference": "LICENSE",
+                "governs_source_built_artifact": True,
+                "forbids_publication": False,
+                "forbids_redistribution": False,
+            }
+        ],
+        "replay_readiness_evidence": {
+            "hermeticity_class": "pinned_container_toolchain",
+            "evidence_reference": "Containerfile.lock",
+        },
+    }
+    eligible = screen_early_candidate(
+        base, adequacy_floor=20, prediction_time_feature_allowlist={"allowed"}
+    )
+    assert eligible.eligible is True
+    assert len(eligible.screen_results) == 4
+    assert (
+        eligible.metadata["historical_build_rate_qualification"]
+        == "deferred_to_replay_environment"
+    )
+
+    missing_terms = screen_early_candidate(
+        {**base, "legal_instruments": []},
+        adequacy_floor=20,
+        prediction_time_feature_allowlist={"allowed"},
+    )
+    assert missing_terms.disqualifying_screen == "governing_legal_terms"
+    assert len(missing_terms.screen_results) == 2
+
+    restricted = screen_early_candidate(
+        {
+            **base,
+            "legal_instruments": [
+                {
+                    **base["legal_instruments"][0],
+                    "forbids_publication": True,
+                }
+            ],
+        },
+        adequacy_floor=20,
+        prediction_time_feature_allowlist={"allowed"},
+    )
+    assert restricted.disqualifying_screen == "governing_legal_terms"
+    assert restricted.metadata["governing_legal_instrument"]["reference"] == "LICENSE"
+
+    conventional = screen_early_candidate(
+        {
+            **base,
+            "replay_readiness_evidence": {
+                "hermeticity_class": "conventional",
+                "evidence_reference": "README.md",
+            },
+        },
+        adequacy_floor=20,
+        prediction_time_feature_allowlist={"allowed"},
+    )
+    assert conventional.disqualifying_screen == "replay_readiness"
+    assert len(conventional.screen_results) == 3
