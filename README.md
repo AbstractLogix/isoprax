@@ -63,11 +63,14 @@ that rejects overclaiming.
 ## Run
 
 ```sh
-uv sync --group dev
-uv run pytest tests -q
-uv run python examples/demo_cross_family.py
-uv run pre-commit install
+make sync
+make test
+make demo
+make hooks
 ```
+
+Run `make help` to list quick developer actions. `make check` runs lint,
+format verification, the coverage-enforced test suite, and the demo.
 
 ## Guardrails
 

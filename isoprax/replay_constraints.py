@@ -92,8 +92,7 @@ def validate_replay_constraints(
         missing = sorted(required_splits - observed_splits)
         if missing:
             raise ReplayConstraintError(
-                "frozen_split_boundaries: missing required split assignments "
-                f"{missing}"
+                f"frozen_split_boundaries: missing required split assignments {missing}"
             )
 
         split_by_change: dict[str, set[str]] = {}
@@ -138,7 +137,9 @@ def _coerce_split_definitions(
                     )
                 )
                 continue
-            raise ValueError("split_definitions must be SplitDefinition instances or dicts")
+            raise ValueError(
+                "split_definitions must be SplitDefinition instances or dicts"
+            )
         return tuple(converted)
     if isinstance(split_definitions, SplitDefinition):
         return (split_definitions,)

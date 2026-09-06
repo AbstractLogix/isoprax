@@ -99,6 +99,21 @@ class SQLiteKB(KnowledgeBase):
         self.conn.row_factory = sqlite3.Row
         self._init_schema()
 
+    def close(self) -> None:
+        """Release the SQLite connection owned by this reference store."""
+        if self.conn is not None:
+            self.conn.close()
+            self.conn = None
+
+    def __enter__(self) -> "SQLiteKB":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        self.close()
+
     def _init_schema(self) -> None:
         c = self.conn.cursor()
         c.executescript(

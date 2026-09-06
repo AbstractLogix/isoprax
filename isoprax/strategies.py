@@ -14,9 +14,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-import numpy as np
-from sklearn.isotonic import IsotonicRegression
-
 from .events import ChangeEvent, MetricSample, RunEvent
 from .signals import (
     AnomalySignal,
@@ -36,13 +33,16 @@ class Calibrator:
     method_name = "isotonic"
 
     def __init__(self) -> None:
-        self._iso: Optional[IsotonicRegression] = None
+        self._iso: Optional[Any] = None
 
     def fit(self, raw_scores: list[float], outcomes: list[int]) -> "Calibrator":
         if len(set(outcomes)) < 2:
             # Not enough signal to calibrate; leave unfitted (honest).
             self._iso = None
             return self
+        import numpy as np
+        from sklearn.isotonic import IsotonicRegression
+
         self._iso = IsotonicRegression(out_of_bounds="clip")
         self._iso.fit(np.asarray(raw_scores), np.asarray(outcomes))
         return self
