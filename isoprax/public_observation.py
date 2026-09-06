@@ -57,6 +57,7 @@ def normalize_public_observations(
             or not item.threshold_rule.strip()
             or not item.source_reference.startswith("https://")
             or "@" in item.source_reference
+            or "?token=" in item.source_reference
             or item.uses_private_data
             or item.uses_privileged_telemetry
             or not item.artifacts
