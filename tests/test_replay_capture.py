@@ -1,5 +1,7 @@
 from dataclasses import replace
 
+import pytest
+
 from isoprax.build_qualification import (
     BuildRowResult,
     BuildSample,
@@ -331,3 +333,84 @@ def test_unqualified_commit_row_or_mismatched_evidence_scope_is_censored():
     assert "successful build qualification" in failed_build.censor_reason
     assert wrong_scope.outcome_class == "censored"
     assert "scope" in wrong_scope.censor_reason
+
+
+@pytest.mark.parametrize(
+    "changes, message",
+    (
+        ({"score_time": "2026-09-06T00:01:00Z"}, "score_time"),
+        ({"window_end": "2026-09-06T00:00:00Z"}, "ordered"),
+        ({"window_end": "not-a-time"}, "RFC 3339"),
+    ),
+)
+def test_lane_rejects_invalid_frozen_times(changes, message):
+    with pytest.raises(ValueError, match=message):
+        lane(**changes)
+
+
+def test_unsuccessful_execution_and_malformed_deployment_are_censored():
+    preparation, report = qualification_report()
+    execution = replace(successful_execution(preparation), status="censored")
+    failed_execution = capture_replay_lane(
+        lane(), report, execution, lambda *_: successful_result()
+    )
+    malformed_deployments = (
+        "not-a-deployment",
+        replace(successful_result().deployment, target_id=""),
+        replace(
+            successful_result().deployment,
+            started_at="2026-09-06T00:00:03Z",
+        ),
+        replace(successful_result().deployment, completed_at="not-a-time"),
+        replace(successful_result().deployment, evidence_reference=""),
+    )
+
+    assert failed_execution.outcome_class == "censored"
+    assert "execution" in failed_execution.censor_reason
+    for deployment in malformed_deployments:
+        record = capture(ReplayCaptureBackendResult(deployment))
+        assert record.outcome_class == "censored"
+
+
+def test_malformed_observation_and_artifact_states_are_censored_or_retained():
+    missing_artifact = capture(
+        successful_result(
+            observation=replace(
+                successful_result().observation,
+                artifact_payloads={"metrics.json": b"metrics"},
+            )
+        )
+    )
+    invalid_payload_mapping = capture(
+        successful_result(
+            observation=replace(successful_result().observation, artifact_payloads=[])
+        )
+    )
+    invalid_time = capture(
+        successful_result(
+            observation=replace(
+                successful_result().observation, window_start="not-a-time"
+            )
+        )
+    )
+    invalid_reason = capture(
+        successful_result(
+            observation=replace(successful_result().observation, reason=None)
+        )
+    )
+    invalid_observation = capture(
+        ReplayCaptureBackendResult(successful_result().deployment, "bad")
+    )
+
+    assert [artifact.state for artifact in missing_artifact.artifacts] == [
+        "collected",
+        "missing",
+    ]
+    assert missing_artifact.outcome_class == "observed_positive"
+    for record in (
+        invalid_payload_mapping,
+        invalid_time,
+        invalid_reason,
+        invalid_observation,
+    ):
+        assert record.outcome_class == "censored"

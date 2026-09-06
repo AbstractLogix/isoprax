@@ -139,7 +139,11 @@ def _lane_payload(lane: ReplayLaneDefinition) -> dict[str, object]:
 
 
 def _deployment_payload(deployment: DeploymentEvidence | None) -> object:
-    return None if deployment is None else deployment.__dict__.copy()
+    if deployment is None:
+        return None
+    if not isinstance(deployment, DeploymentEvidence):
+        return {"invalid_type": type(deployment).__name__}
+    return deployment.__dict__.copy()
 
 
 def _artifact_records(
@@ -179,6 +183,8 @@ def _observation_payload(
 ) -> object:
     if observation is None:
         return None
+    if not isinstance(observation, ObservationEvidence):
+        return {"invalid_type": type(observation).__name__}
     return {
         "score_time": observation.score_time,
         "window_start": observation.window_start,
