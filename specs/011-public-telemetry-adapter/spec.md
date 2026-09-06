@@ -28,17 +28,11 @@ threshold metadata, artifact availability, freshness, and explicit censoring.
 
 ## Requirements
 
-- **FR-001**: Accept only supplied public observation metadata and perform no
-  network access.
-- **FR-002**: Require a frozen window, threshold rule, source reference,
-  provenance, and public artifact declaration.
-- **FR-003**: Reject private production data, privileged telemetry,
-  credential-bearing references, post-window material, and contradictory
-  timestamps.
-- **FR-004**: Preserve unavailable/incomplete evidence as explicit censoring or
-  availability state, never an inferred observed-negative outcome.
-- **FR-005**: State an observation-evidence-only claim boundary; do not grant
-  replay completion, admission, or conformance.
+- **FR-001**: The system MUST accept only supplied public observation metadata and MUST perform no network access.
+- **FR-002**: The system MUST require a frozen window, threshold rule, source reference, provenance, and public artifact declaration.
+- **FR-003**: The system MUST reject private production data, privileged telemetry, credential-bearing references, post-window material, and contradictory timestamps.
+- **FR-004**: The system MUST preserve unavailable/incomplete evidence as explicit censoring or availability state, and MUST NOT infer an observed-negative outcome.
+- **FR-005**: The system MUST state an observation-evidence-only claim boundary and MUST NOT grant replay completion, admission, or conformance.
 
 ## Success Criteria
 
