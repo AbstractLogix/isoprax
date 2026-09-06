@@ -50,7 +50,7 @@ demo: ## Run the synthetic structural-conformance demonstration.
 
 hooks: ## Install the repository pre-commit hooks.
 
-	uv run pre-commit install
+	uv run pre-commit install --hook-type pre-commit --hook-type pre-push
 
 pre-commit: ## Run all pre-commit hooks without installing them.
 

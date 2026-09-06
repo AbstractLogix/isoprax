@@ -291,9 +291,7 @@ def test_blocks_invalid_duration_and_command_not_started():
         prepared,
         "commit-a",
         config,
-        lambda *_: RunnerBackendResult(
-            controls(config), 1, "success", "bad", 0, {}
-        ),
+        lambda *_: RunnerBackendResult(controls(config), 1, "success", "bad", 0, {}),
     )
 
     assert negative.status == "blocked-before-compilation"

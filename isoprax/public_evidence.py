@@ -63,12 +63,29 @@ def normalize_public_evidence(
         except ValueError as error:
             raise ValueError("observed timestamp is invalid") from error
         if item.ci_reference is not None:
-            if not _valid_reference(item.ci_reference) or item.ci_revision != item.revision:
+            if (
+                not _valid_reference(item.ci_reference)
+                or item.ci_revision != item.revision
+            ):
                 raise ValueError("CI evidence does not match immutable revision")
             available, reason = True, None
         else:
             available, reason = False, "public CI evidence is unavailable"
-        payload = {"system_id": item.system_id, "revision": item.revision, "source_reference": item.source_reference, "ci_reference": item.ci_reference, "observed_at": item.observed_at, "available": available, "unavailable_reason": reason}
-        records.append(PublicEvidenceRecord(hashlib.sha256(_canonical(payload).encode()).hexdigest(), **payload))
+        payload = {
+            "system_id": item.system_id,
+            "revision": item.revision,
+            "source_reference": item.source_reference,
+            "ci_reference": item.ci_reference,
+            "observed_at": item.observed_at,
+            "available": available,
+            "unavailable_reason": reason,
+        }
+        records.append(
+            PublicEvidenceRecord(
+                hashlib.sha256(_canonical(payload).encode()).hexdigest(), **payload
+            )
+        )
         seen.add(key)
-    return tuple(sorted(records, key=lambda record: (record.system_id, record.revision)))
+    return tuple(
+        sorted(records, key=lambda record: (record.system_id, record.revision))
+    )

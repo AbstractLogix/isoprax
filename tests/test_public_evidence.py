@@ -6,7 +6,17 @@ from isoprax.public_evidence import PublicEvidenceSnapshot, normalize_public_evi
 
 
 def snapshot(**changes):
-    return replace(PublicEvidenceSnapshot("system-a", "a" * 40, "https://example.test/source", "https://example.test/ci", "a" * 40, "2026-09-06T00:00:00Z"), **changes)
+    return replace(
+        PublicEvidenceSnapshot(
+            "system-a",
+            "a" * 40,
+            "https://example.test/source",
+            "https://example.test/ci",
+            "a" * 40,
+            "2026-09-06T00:00:00Z",
+        ),
+        **changes,
+    )
 
 
 def test_normalizes_deterministically_without_payloads():
@@ -17,12 +27,23 @@ def test_normalizes_deterministically_without_payloads():
 
 
 def test_missing_ci_is_explicitly_unavailable():
-    record = normalize_public_evidence([snapshot(ci_reference=None, ci_revision=None)])[0]
+    record = normalize_public_evidence([snapshot(ci_reference=None, ci_revision=None)])[
+        0
+    ]
     assert not record.available
     assert record.unavailable_reason
 
 
-@pytest.mark.parametrize("changes", [{"revision": "main"}, {"source_reference": "https://token@bad"}, {"uses_private_data": True}, {"ci_revision": "b" * 40}, {"observed_at": "bad"}])
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"revision": "main"},
+        {"source_reference": "https://token@bad"},
+        {"uses_private_data": True},
+        {"ci_revision": "b" * 40},
+        {"observed_at": "bad"},
+    ],
+)
 def test_rejects_unsafe_or_contradictory_input(changes):
     with pytest.raises(ValueError):
         normalize_public_evidence([snapshot(**changes)])

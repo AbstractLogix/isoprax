@@ -12,14 +12,14 @@ and fixes the claim boundary at admission evidence only.
 
 ## Technical Context
 
-**Language/Version**: Python 3.10–3.14  
-**Primary Dependencies**: Python standard library; existing Isoprax dataclasses  
-**Storage**: N/A; callers own persistence/publication  
-**Testing**: pytest with repository coverage gate  
-**Target Platform**: Offline Python library  
-**Project Type**: Single-package reference library  
-**Performance Goals**: Deterministic reduction of one in-memory corpus without network I/O  
-**Constraints**: No raw prediction/deployment/observation payloads; no conformance upgrade; deterministic canonical output; fail closed on contradictory lineage or private/privileged provenance  
+**Language/Version**: Python 3.10–3.14
+**Primary Dependencies**: Python standard library; existing Isoprax dataclasses
+**Storage**: N/A; callers own persistence/publication
+**Testing**: pytest with repository coverage gate
+**Target Platform**: Offline Python library
+**Project Type**: Single-package reference library
+**Performance Goals**: Deterministic reduction of one in-memory corpus without network I/O
+**Constraints**: No raw prediction/deployment/observation payloads; no conformance upgrade; deterministic canonical output; fail closed on contradictory lineage or private/privileged provenance
 **Scale/Scope**: One assembled single-system corpus and its bounded replay-capture evidence per report
 
 ## Constitution Check

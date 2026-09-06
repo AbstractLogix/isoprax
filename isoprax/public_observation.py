@@ -79,7 +79,25 @@ def normalize_public_observations(
             outcome, reason = "censored", "public observation is invalid"
         else:
             outcome, reason = "censored", "public observation artifacts are incomplete"
-        payload = {"system_id": item.system_id, "source_reference": item.source_reference, "threshold_rule": item.threshold_rule, "score_time": item.score_time, "window_end": item.window_end, "outcome_class": outcome, "censor_reason": reason, "artifact_count": len(item.artifacts)}
-        records.append(PublicObservationRecord(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest(), **payload))
+        payload = {
+            "system_id": item.system_id,
+            "source_reference": item.source_reference,
+            "threshold_rule": item.threshold_rule,
+            "score_time": item.score_time,
+            "window_end": item.window_end,
+            "outcome_class": outcome,
+            "censor_reason": reason,
+            "artifact_count": len(item.artifacts),
+        }
+        records.append(
+            PublicObservationRecord(
+                hashlib.sha256(
+                    json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+                ).hexdigest(),
+                **payload,
+            )
+        )
         seen.add(key)
-    return tuple(sorted(records, key=lambda record: (record.system_id, record.score_time)))
+    return tuple(
+        sorted(records, key=lambda record: (record.system_id, record.score_time))
+    )

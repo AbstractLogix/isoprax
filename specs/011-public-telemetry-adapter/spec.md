@@ -1,6 +1,6 @@
 # Feature Specification: Public Operational Evidence Adapter
 
-**Feature Branch**: `011-public-telemetry-adapter`  
+**Feature Branch**: `011-public-telemetry-adapter`
 **Status**: Draft
 
 ## Overview

@@ -89,6 +89,11 @@ from .predeclaration import (
     validate_predeclaration_artifact,
     validate_predeclaration_provenance,
 )
+from .public_corpus import (
+    PublicCorpusRecord,
+    PublicCorpusSnapshot,
+    normalize_public_corpus,
+)
 from .public_evidence import (
     PublicEvidenceRecord,
     PublicEvidenceSnapshot,
