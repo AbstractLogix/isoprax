@@ -57,6 +57,13 @@ from .corpus_manifest import (
     validate_corpus_manifest,
 )
 from .events import ChangeEvent, Event, Family, MetricSample, RunEvent
+from .evidence_reporting import (
+    EvidenceReport,
+    EvidenceReportProfile,
+    GateSummary,
+    UnavailableEvidence,
+    build_evidence_report,
+)
 from .hermetic_runner import (
     ApprovedRunnerConfiguration,
     ArtifactEvidence,
