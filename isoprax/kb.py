@@ -20,7 +20,14 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from .events import Event, Family
-from .signals import ProbabilitySignal, Signal
+from .signals import (
+    AnomalySignal,
+    CalibrationStatus,
+    ForecastSignal,
+    ProbabilitySignal,
+    RiskSignal,
+    Signal,
+)
 
 
 @dataclass
@@ -59,6 +66,8 @@ class KnowledgeBase(ABC):
     def store_outcome(self, outcome: Outcome) -> None: ...
 
     def get_event(self, event_id: str) -> Optional[dict[str, Any]]: ...
+
+    def get_signal(self, event_id: str, strategy_id: str) -> Optional[Signal]: ...
 
     @abstractmethod
     def query_events(
@@ -139,7 +148,7 @@ class SQLiteKB(KnowledgeBase):
                 strategy_id TEXT NOT NULL,
                 strategy_version TEXT,
                 family TEXT,
-                score REAL NOT NULL,
+                score REAL,
                 explanation TEXT NOT NULL,
                 calibration_status TEXT,
                 payload TEXT NOT NULL,
@@ -192,13 +201,34 @@ class SQLiteKB(KnowledgeBase):
                 d["strategy_id"],
                 d["strategy_version"],
                 d["family"],
-                d["score"],
+                d.get("score"),
                 d["explanation"],
-                d["calibration_status"],
+                d.get("calibration_status"),
                 json.dumps(d),
             ),
         )
         self.conn.commit()
+
+    def get_signal(self, event_id: str, strategy_id: str) -> Optional[Signal]:
+        row = self.conn.execute(
+            "SELECT payload FROM signals WHERE event_id=? AND strategy_id=? "
+            "ORDER BY rowid DESC LIMIT 1",
+            (event_id, strategy_id),
+        ).fetchone()
+        if row is None:
+            return None
+        payload = json.loads(row["payload"])
+        payload["family"] = Family(payload["family"])
+        if "calibration_status" in payload:
+            payload["calibration_status"] = CalibrationStatus(
+                payload["calibration_status"]
+            )
+        if "predicted_value" in payload:
+            return ForecastSignal(**payload)
+        signal_type = (
+            RiskSignal if payload["family"] == Family.CHANGE else AnomalySignal
+        )
+        return signal_type(**payload)
 
     def store_outcome(self, outcome: Outcome) -> None:
         rows = self.conn.execute(

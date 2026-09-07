@@ -192,9 +192,12 @@ def test_deterministic_per_family_evaluation_for_admitted_rows():
     )
 
     assert left == right
-    assert left.status == "evaluation_evidence"
-    assert left.calibration["status"] == "calibrated"
-    assert left.unavailable_evidence == ()
+    assert left.status == "inconclusive"
+    assert left.calibration["status"] == "uncalibrated"
+    assert any(
+        item.category == "calibration_conformance" and "discrimination" in item.reason
+        for item in left.unavailable_evidence
+    )
     assert left.family == "change"
     assert left.outcome_definition_id == "defect_linked_fix"
     assert "Semantic" in left.claim_boundary

@@ -16,6 +16,7 @@ from typing import Optional
 
 import numpy as np
 from scipy import stats
+from sklearn.metrics import roc_auc_score
 
 
 def brier_score(scores: list[float], outcomes: list[int]) -> float:
@@ -138,6 +139,11 @@ class CalibrationConformance:
     n_bins: int
     max_ece: float
     reason: str
+    auc: float | None = None
+    score_variance: float = 0.0
+    positive_events: int = 0
+    negative_events: int = 0
+    discrimination_passes: bool = False
 
     def as_declaration(self) -> str:
         """The calibration qualifier an implementation MUST declare (spec 3.3)."""
@@ -167,6 +173,19 @@ def check_calibration_conformance(
     if any(outcome not in {0, 1} for outcome in outcomes):
         raise ValueError("outcomes must be binary 0 or 1")
     n = len(scores)
+    score_array = np.asarray(scores, dtype=float)
+    outcome_array = np.asarray(outcomes, dtype=int)
+    score_variance = float(score_array.var()) if n else 0.0
+    positive_events = int(outcome_array.sum()) if n else 0
+    negative_events = n - positive_events
+    auc = (
+        float(roc_auc_score(outcome_array, score_array))
+        if positive_events and negative_events
+        else None
+    )
+    discrimination_passes = (
+        auc is not None and np.isfinite(auc) and score_variance > 0.0
+    )
     ece = expected_calibration_error(scores, outcomes, n_bins) if n else 1.0
     brier = brier_score(scores, outcomes) if n else 1.0
     if n < min_events:
@@ -179,6 +198,11 @@ def check_calibration_conformance(
             max_ece,
             f"insufficient labeled events ({n} < {min_events}) "
             f"-> MUST declare uncalibrated",
+            auc,
+            score_variance,
+            positive_events,
+            negative_events,
+            discrimination_passes,
         )
     if len(set(outcomes)) < 2:
         return CalibrationConformance(
@@ -189,6 +213,11 @@ def check_calibration_conformance(
             n_bins,
             max_ece,
             "only one observed outcome class -> MUST declare uncalibrated",
+            auc,
+            score_variance,
+            positive_events,
+            negative_events,
+            discrimination_passes,
         )
     if ece > max_ece:
         return CalibrationConformance(
@@ -199,6 +228,27 @@ def check_calibration_conformance(
             n_bins,
             max_ece,
             f"ECE {ece:.4f} exceeds {max_ece} -> MUST declare uncalibrated",
+            auc,
+            score_variance,
+            positive_events,
+            negative_events,
+            discrimination_passes,
+        )
+    if not discrimination_passes:
+        return CalibrationConformance(
+            False,
+            ece,
+            brier,
+            n,
+            n_bins,
+            max_ece,
+            "calibration passed but discrimination is degenerate or unavailable "
+            "-> MUST NOT declare calibrated",
+            auc,
+            score_variance,
+            positive_events,
+            negative_events,
+            False,
         )
     return CalibrationConformance(
         True,
@@ -207,7 +257,12 @@ def check_calibration_conformance(
         n,
         n_bins,
         max_ece,
-        f"ECE {ece:.4f} <= {max_ece} over {n} events -> calibrated",
+        f"ECE {ece:.4f} <= {max_ece} and AUC {auc:.4f} over {n} events -> calibrated",
+        auc,
+        score_variance,
+        positive_events,
+        negative_events,
+        True,
     )
 
 
@@ -236,6 +291,7 @@ class CrossFamilyReport:
     right_n: int
     pooled_ece: Optional[float] = None  # None when non-commensurable
     declarable_class: str = ""
+    commensurability_level: str = "irreducible"
 
     def render(self) -> str:
         lines = [
@@ -244,6 +300,7 @@ class CrossFamilyReport:
             f"  {self.right_family:12s} def={self.right_definition_id} "
             f"ECE={self.right_ece:.4f} n={self.right_n}",
             f"  commensurable: {self.commensurable} — {self.commensurability_reason}",
+            f"  commensurability level: {self.commensurability_level}",
         ]
         if self.pooled_ece is None:
             lines.append(
@@ -307,6 +364,7 @@ def cross_family_report(
         right_ece=r_ece,
         left_n=len(left_scores),
         right_n=len(right_scores),
+        commensurability_level=res.level,
         pooled_ece=pooled,
         declarable_class=cls,
     )

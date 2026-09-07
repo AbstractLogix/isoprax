@@ -14,6 +14,7 @@ from .admission import (
 from .baseline_strategies import (
     DistributionAnomalyStrategy,
     HeuristicRiskStrategy,
+    HistoricalMeanForecastStrategy,
 )
 from .build_qualification import (
     BuildPreparation,
@@ -37,10 +38,14 @@ from .candidate_selection import (
     screen_early_candidate,
 )
 from .commensurability import (
+    Attestation,
     CommensurabilityResult,
     IncommensurableError,
+    ObservationProcess,
     OutcomeDefinition,
     OutcomeDefinitionRegistry,
+    Threshold,
+    Window,
     check_commensurable,
     require_commensurable,
 )
@@ -57,6 +62,7 @@ from .corpus_manifest import (
     validate_corpus_manifest,
 )
 from .events import ChangeEvent, Event, Family, MetricSample, RunEvent
+from .evidence import PoolingHarmEvidence, build_pooling_harm_evidence
 from .evidence_reporting import (
     EvidenceReport,
     EvidenceReportProfile,
@@ -74,6 +80,7 @@ from .hermetic_runner import (
     run_prepared_execution,
 )
 from .kb import KnowledgeBase, Outcome, SQLiteKB
+from .normative import NormativeCitation, resolve_citations, unresolved_citations
 from .per_family_evaluation import (
     PerFamilyEvaluationProfile,
     PerFamilyEvaluationReport,
@@ -104,6 +111,13 @@ from .public_evidence import (
     PublicEvidenceRecord,
     PublicEvidenceSnapshot,
     normalize_public_evidence,
+)
+from .public_label_evidence import (
+    PublicLabelEvidenceManifest,
+    PublicLabelEvidenceRecord,
+    PublicLabelSource,
+    PublicLabelStatus,
+    reduce_public_label_evidence,
 )
 from .public_observation import (
     PublicObservationRecord,

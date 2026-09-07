@@ -1,56 +1,176 @@
-"""
-Outcome Definitions and the commensurability test (spec Section 5.6).
-
-This module exists because a `score` is meaningless without a declared answer
-to "probability of *what*". Calibration aligns a number with a frequency
-WITHIN an event definition; it says nothing about whether two numbers describe
-the same event. Two perfectly calibrated forecasts of different events are both
-correct and remain incommensurable -- and the arithmetic gives no warning.
-
-So the event definition is made an explicit object, and cross-family comparison
-is made conditional on a mechanical test rather than an assertion.
-"""
+"""Outcome Definitions and graded commensurability (spec Section 5.6)."""
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Mapping
 
 
 class IncommensurableError(ValueError):
-    """Raised when scores from non-commensurable Outcome Definitions would be
-    compared, aggregated, or jointly ranked (spec 5.6.3)."""
+    """Raised when non-commensurable scores would be jointly reasoned about."""
+
+
+@dataclass(frozen=True)
+class ObservationProcess:
+    kind: str
+    parameters: tuple[tuple[str, str], ...] = ()
+    raw: str = ""
+
+    @classmethod
+    def from_value(
+        cls, value: "ObservationProcess | str | Mapping[str, Any]"
+    ) -> "ObservationProcess":
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, Mapping):
+            parameters = value.get("parameters", {})
+            if isinstance(parameters, list):
+                params = tuple((str(item[0]), str(item[1])) for item in parameters)
+            else:
+                params = tuple(sorted((str(k), str(v)) for k, v in parameters.items()))
+            return cls(
+                str(value.get("kind", "")).strip().lower(),
+                params,
+                str(value.get("raw", "")),
+            )
+        raw = str(value).strip()
+        return cls(kind=raw.lower(), raw=raw)
+
+    def canonical(self) -> tuple[Any, ...]:
+        return (self.kind.strip().lower(), self.parameters, self.raw.strip().lower())
+
+
+@dataclass(frozen=True)
+class Window:
+    duration: float | None
+    unit: str
+    anchor: str
+    raw: str = ""
+
+    @classmethod
+    def from_value(cls, value: "Window | str | Mapping[str, Any]") -> "Window":
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, Mapping):
+            duration = value.get("duration")
+            return cls(
+                None if duration is None else float(duration),
+                str(value.get("unit", "")).strip().lower(),
+                str(value.get("anchor", "")).strip().lower(),
+                str(value.get("raw", "")),
+            )
+        raw = str(value).strip()
+        return cls(None, "", raw.lower(), raw)
+
+    def canonical(self) -> tuple[Any, ...]:
+        return (self.duration, self.unit.strip().lower(), self.anchor.strip().lower())
+
+
+@dataclass(frozen=True)
+class Threshold:
+    metric: str
+    operator: str
+    value: float | str | None
+    sustain: float | None = None
+    sustain_unit: str = ""
+    raw: str = ""
+
+    @classmethod
+    def from_value(cls, value: "Threshold | str | Mapping[str, Any]") -> "Threshold":
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, Mapping):
+            return cls(
+                str(value.get("metric", "")).strip().lower(),
+                str(value.get("operator", "")).strip(),
+                value.get("value"),
+                None if value.get("sustain") is None else float(value["sustain"]),
+                str(value.get("sustain_unit", "")).strip().lower(),
+                str(value.get("raw", "")),
+            )
+        raw = str(value).strip()
+        return cls(metric=raw.lower(), operator="", value=None, raw=raw)
+
+    def canonical(self) -> tuple[Any, ...]:
+        return (
+            self.metric.strip().lower(),
+            self.operator.strip(),
+            self.value,
+            self.sustain,
+            self.sustain_unit.strip().lower(),
+        )
+
+
+@dataclass(frozen=True)
+class Attestation:
+    attestor: str
+    justification: str
+    left_definition_id: str
+    right_definition_id: str
+    provenance: str
+
+    def validate(self, left: str, right: str) -> None:
+        if not all(
+            value.strip()
+            for value in (
+                self.attestor,
+                self.justification,
+                self.provenance,
+                self.left_definition_id,
+                self.right_definition_id,
+            )
+        ):
+            raise ValueError("attestation requires named provenance and justification")
+        if {self.left_definition_id, self.right_definition_id} != {left, right}:
+            raise ValueError("attestation definitions do not match comparison")
+
+
+def _coerce_thresholds(
+    value: str | list[Any] | tuple[Any, ...],
+) -> tuple[Threshold, ...]:
+    if isinstance(value, str):
+        return () if not value.strip() else (Threshold.from_value(value),)
+    return tuple(Threshold.from_value(item) for item in value)
 
 
 @dataclass(frozen=True)
 class OutcomeDefinition:
-    """Specifies WHICH event a score is the probability of (spec 5.6.1).
-
-    Commensurability turns on `event`, `observation_process`, `window`, and
-    `thresholds` -- NOT on `id` or `description`, which are labels for humans.
-    Two definitions may differ freely in what CONDITIONS the prediction (that
-    is the Change/Operational distinction); they must not differ in what is
-    PREDICTED.
-    """
+    """Declares the event a probability describes (spec 5.6.1)."""
 
     id: str
-    event: str  # the adverse event, precisely stated
-    observation_process: str  # how occurrence is detected
-    window: str  # observation period, relative to the event
-    thresholds: str = ""  # parameters the process applies, if any
-    description: str = ""  # human note; not part of the test
+    event: str
+    observation_process: ObservationProcess | str | Mapping[str, Any]
+    window: Window | str | Mapping[str, Any]
+    thresholds: tuple[Threshold, ...] | list[Any] | str = ()
+    description: str = ""
 
-    def comparison_key(self) -> tuple[str, str, str, str]:
-        """The tuple the commensurability test compares (spec 5.6.2)."""
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "event", self.event.strip().lower())
+        object.__setattr__(
+            self,
+            "observation_process",
+            ObservationProcess.from_value(self.observation_process),
+        )
+        object.__setattr__(self, "window", Window.from_value(self.window))
+        object.__setattr__(self, "thresholds", _coerce_thresholds(self.thresholds))
+
+    def comparison_key(self) -> tuple[Any, ...]:
         return (
-            self.event.strip().lower(),
-            self.observation_process.strip().lower(),
-            self.window.strip().lower(),
-            self.thresholds.strip().lower(),
+            self.event,
+            self.observation_process.canonical(),
+            self.window.canonical(),
+            tuple(sorted(threshold.canonical() for threshold in self.thresholds)),
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "id": self.id,
+            "event": self.event,
+            "observation_process": asdict(self.observation_process),
+            "window": asdict(self.window),
+            "thresholds": [asdict(threshold) for threshold in self.thresholds],
+            "description": self.description,
+        }
 
 
 @dataclass
@@ -60,74 +180,91 @@ class CommensurabilityResult:
     right_id: str
     differing_fields: list[str] = field(default_factory=list)
     reason: str = ""
+    level: str = "irreducible"
+    pooling_allowed: bool = False
+    attestation: Attestation | None = None
 
 
 def check_commensurable(
-    a: OutcomeDefinition, b: OutcomeDefinition
+    a: OutcomeDefinition,
+    b: OutcomeDefinition,
+    *,
+    attestation: Attestation | None = None,
+    retained_observations: bool = False,
 ) -> CommensurabilityResult:
-    """Mechanical commensurability test (spec 5.6.2).
+    """Compare definitions and classify the mismatch instead of flattening it."""
 
-    MUST be evaluated, not asserted, and the result MUST be exposed.
-    """
     fields = ("event", "observation_process", "window", "thresholds")
-    ka, kb = a.comparison_key(), b.comparison_key()
-    differing = [f for f, x, y in zip(fields, ka, kb) if x != y]
+    left = a.comparison_key()
+    right = b.comparison_key()
+    differing = [name for name, x, y in zip(fields, left, right) if x != y]
     if not differing:
         return CommensurabilityResult(
-            True,
+            True, a.id, b.id, [], "same structured definition", "direct", True
+        )
+
+    if attestation is not None:
+        attestation.validate(a.id, b.id)
+        if set(differing).issubset({"window", "thresholds"}):
+            return CommensurabilityResult(
+                True,
+                a.id,
+                b.id,
+                differing,
+                "attested equivalent definitions",
+                "attested",
+                True,
+                attestation,
+            )
+
+    if set(differing).issubset({"window", "thresholds"}):
+        return CommensurabilityResult(
+            False,
             a.id,
             b.id,
-            [],
-            "same event, process, window and thresholds -> comparable",
+            differing,
+            "window/threshold mismatch may be re-derived from retained observations",
+            "bridgeable",
+            bool(retained_observations),
+            attestation,
         )
+
     return CommensurabilityResult(
         False,
         a.id,
         b.id,
         differing,
-        "differ in "
-        + ", ".join(differing)
-        + " -> scores denote different events and MUST NOT be compared "
-        "(spec 5.6.3); calibration does not lift this",
+        "event or observation process mismatch is irreducible; calibration does not lift this",
+        "irreducible",
+        False,
+        attestation,
     )
 
 
 def require_commensurable(a: OutcomeDefinition, b: OutcomeDefinition) -> None:
-    """Guard for any operation that would jointly reason over two families'
-    scores. Raises IncommensurableError when the test fails (spec 5.6.3)."""
-    res = check_commensurable(a, b)
-    if not res.commensurable:
-        raise IncommensurableError(res.reason)
+    result = check_commensurable(a, b)
+    if not result.pooling_allowed:
+        raise IncommensurableError(result.reason)
 
 
 class OutcomeDefinitionRegistry:
-    """Resolves the `outcome_definition_id` carried on Signals (spec 5.2, 6).
-
-    The KB contract requires stored scores to remain interpretable after the
-    Strategy that produced them is gone, so definitions are persisted
-    separately from the Strategies that reference them.
-    """
+    """Resolves persisted Outcome Definitions carried by Signals (spec 6)."""
 
     def __init__(self) -> None:
         self._defs: dict[str, OutcomeDefinition] = {}
 
-    def register(self, d: OutcomeDefinition) -> OutcomeDefinition:
-        existing = self._defs.get(d.id)
-        if existing is not None and existing != d:
+    def register(self, definition: OutcomeDefinition) -> OutcomeDefinition:
+        existing = self._defs.get(definition.id)
+        if existing is not None and existing != definition:
             raise ValueError(
-                f"outcome definition id '{d.id}' already registered with "
-                "different content; ids MUST be stable"
+                f"outcome definition id '{definition.id}' already registered with different content"
             )
-        self._defs[d.id] = d
-        return d
+        self._defs[definition.id] = definition
+        return definition
 
     def resolve(self, definition_id: str) -> OutcomeDefinition:
         if definition_id not in self._defs:
-            raise KeyError(
-                f"unresolvable outcome_definition_id '{definition_id}': a score "
-                "without a resolvable Outcome Definition is uninterpretable "
-                "(spec 5.2)"
-            )
+            raise KeyError(f"unresolvable outcome_definition_id '{definition_id}'")
         return self._defs[definition_id]
 
     def __contains__(self, definition_id: object) -> bool:

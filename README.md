@@ -19,8 +19,10 @@ withholds pooled scores and makes no Semantic or Full Conformance claim.
 - **Stage 1 admission extension spec (in this repo):**
   `specs/002-stage1-corpus-admission/spec.md`
 - **Authoritative Isoprax v0.3 POC reference:**
-  Maintained externally and reflected here through the tracked Stage 0
-  specification and implementation artifacts.
+  Vendored at [`docs/isoprax-v0.3-poc.md`](docs/isoprax-v0.3-poc.md), with
+  source provenance recorded in
+  [`docs/isoprax-v0.3-poc-provenance.md`](docs/isoprax-v0.3-poc-provenance.md).
+  Normative implementation citations are checked against that document.
 
 In this repository, the runnable POC-aligned implementation is the code under
 `isoprax/` plus `examples/demo_cross_family.py` and

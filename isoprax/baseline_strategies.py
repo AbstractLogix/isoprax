@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Any
 
 from .commensurability import OutcomeDefinition
-from .events import ChangeEvent, RunEvent
-from .signals import AnomalySignal, CalibrationStatus, RiskSignal
-from .strategies import AnomalyStrategy, Calibrator, RiskStrategy
+from .events import ChangeEvent, MetricSample, RunEvent
+from .signals import AnomalySignal, CalibrationStatus, ForecastSignal, RiskSignal
+from .strategies import AnomalyStrategy, Calibrator, ForecastStrategy, RiskStrategy
 
 # --- Outcome Definitions for the baselines (spec 5.6.1) ---------------------
 # These two are deliberately NON-COMMENSURABLE, and the demo self-reports
@@ -179,4 +179,39 @@ class DistributionAnomalyStrategy(AnomalyStrategy):
             outcome_definition_id=self.outcome_definition.id,
             calibration_status=status,
             calibration_method=method,
+        )
+
+
+class HistoricalMeanForecastStrategy(ForecastStrategy):
+    """Deterministic forecast over MetricSample history.
+
+    This deliberately emits interval coverage rather than a probability score;
+    it exists to exercise the third Strategy type and its distinct Signal
+    contract through the knowledge base.
+    """
+
+    strategy_id = "baseline.historical_mean_forecast"
+    strategy_version = "0.1"
+
+    def forecast(
+        self, history: list[MetricSample], context: dict[str, Any]
+    ) -> ForecastSignal:
+        if not history:
+            raise ValueError("forecast history must contain at least one MetricSample")
+        values = [sample.value for sample in history]
+        import numpy as np
+
+        mean = float(np.mean(values))
+        spread = float(np.std(values))
+        margin = 1.96 * spread
+        return ForecastSignal(
+            predicted_value=mean,
+            interval_low=mean - margin,
+            interval_high=mean + margin,
+            interval_confidence=0.95,
+            technique="historical_mean_plus_95_percent_interval",
+            explanation=f"mean of {len(values)} samples with observed spread {spread:.4f}",
+            strategy_id=self.strategy_id,
+            strategy_version=self.strategy_version,
+            family=history[-1].family,
         )
