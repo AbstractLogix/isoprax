@@ -14,7 +14,9 @@
 
 ## Remaining gates
 
-- Stage 1 real-data validation is not implemented.
+- Stage 1 real-data validation is implemented in Feature 016 as a separate
+  public-data adapter/report slice; this Stage 0 convergence record remains
+  limited to the synthetic kernel.
 - Semantic conformance needs a shared Outcome Definition from a deterministic
   replay corpus; external candidate screening, predeclaration, and
   JEPA/profile work are

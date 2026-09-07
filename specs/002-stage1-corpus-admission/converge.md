@@ -14,10 +14,10 @@
 
 ## Remaining gates
 
-- Decide first production admission profile values (final horizon rule/value and
-  adequacy thresholds) for real corpus execution.
-- Validate full repository checks and keep convergence evidence current as Stage
-  1 implementation expands.
+- Expand beyond the bounded ApacheJIT/Google Trace public run with additional
+  licensed sources and sensitivity analyses.
+- Keep any adaptive model retraining, model-version lineage, and interpretation
+  stability evidence explicit in future runs.
 
 ## Validation evidence (2026-09-05)
 
@@ -39,3 +39,12 @@
   collection, and at least one declared publishable artifact.
 - These records are included in the deterministic admission manifest. Passing
   admission remains evidence infrastructure, not a Semantic or Full claim.
+
+## Convergence update (2026-09-07)
+
+- Feature 016 executed Stage 1 against ApacheJIT Apache Ignite and Google
+  Cluster Trace v1 using frozen predeclaration and source checksums.
+- Both single-system corpora passed admission and produced separate calibrated
+  per-family reports; the aggregate report withholds cross-family pooling.
+- Reproduction details and the checked-in report are recorded under
+  `specs/016-stage1-public-validation/` and `docs/stage1/`.

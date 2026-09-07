@@ -1,0 +1,356 @@
+{
+  "claim_boundary": "Stage 1 public-data structural validation evidence only; separate family results, no cross-family pooling, no Semantic or Full Conformance claim",
+  "cross_family_pooling": "withheld: Outcome Definitions use different observation processes",
+  "families": [
+    {
+      "adapter_version": "stage1-public-validation-v1",
+      "admission": {
+        "admissible": true,
+        "counts_by_split": {
+          "calibration_fit": {
+            "censored": 0,
+            "observed_negative": 3317,
+            "observed_positive": 782
+          },
+          "calibration_gate": {
+            "censored": 0,
+            "observed_negative": 1415,
+            "observed_positive": 335
+          },
+          "test": {
+            "censored": 0,
+            "observed_negative": 2037,
+            "observed_positive": 1023
+          },
+          "train": {
+            "censored": 0,
+            "observed_negative": 2828,
+            "observed_positive": 299
+          }
+        },
+        "declarable_class": "Admission evidence only; conformance class not assigned",
+        "gates": [
+          {
+            "gate_id": "lineage_linkage",
+            "message": "lineage and linkage gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "prediction_time_fields",
+            "message": "prediction-time field gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "outcome_censoring",
+            "message": "outcome and censoring gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "split_followup",
+            "message": "split/follow-up gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "horizon_threshold_freeze",
+            "message": "horizon/threshold freeze gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "calibration_evidence",
+            "message": "calibration fit/gate evidence is split-separated",
+            "passed": true
+          },
+          {
+            "gate_id": "provenance",
+            "message": "provenance and predeclaration gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "single_system_boundary",
+            "message": "single-system boundary gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "cluster_by_change",
+            "message": "cluster-by-change gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "adequacy",
+            "message": "adequacy gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "manifest_metadata",
+            "message": "manifest metadata gate passed",
+            "passed": true
+          }
+        ]
+      },
+      "evaluation": {
+        "calibration": {
+          "brier": 0.11055433173948584,
+          "ece": 0.04430919745276354,
+          "n_events": 1750,
+          "passes": true,
+          "reason": "ECE 0.0443 <= 0.05 and AUC 0.8434 over 1750 events -> calibrated",
+          "status": "calibrated"
+        },
+        "claim_scope": "stage1_per_family_evaluation_only",
+        "counts": {
+          "censored": 0,
+          "rows": 12036,
+          "test_observed": 3060,
+          "test_rows": 3060
+        },
+        "declarable_class": "Stage 1 per-family evaluation evidence only; Cross-Family Conformance (Structural) unchanged",
+        "evaluation_identity": "3b437b91295f5753f5aee61908928306f879b1c95d7c809b6b1c85d33a95e952",
+        "family": "change",
+        "metrics": {
+          "brier_score": 0.15837000569124418,
+          "ece": 0.050034944934225424,
+          "positive_rate": 0.33431372549019606
+        },
+        "outcome_definition_id": "defect.fix_linkage.v1",
+        "status": "evaluation_evidence",
+        "unavailable_evidence": [],
+        "uncertainty": {
+          "positive_rate_ci_high": 0.35122731469185914,
+          "positive_rate_ci_low": 0.3178156279981285
+        }
+      },
+      "outcome_definition": {
+        "description": "",
+        "event": "commit later linked to a defect fix",
+        "id": "defect.fix_linkage.v1",
+        "observation_process": {
+          "kind": "szz-style-repository-linkage",
+          "parameters": [],
+          "raw": ""
+        },
+        "thresholds": [],
+        "window": {
+          "anchor": "published-bug-label",
+          "duration": null,
+          "raw": "",
+          "unit": "dataset"
+        }
+      },
+      "source_id": "apachejit-zenodo-5907002",
+      "split_definitions": [
+        {
+          "end": "2015-01-01T00:00:00+00:00",
+          "name": "train",
+          "start": "2014-01-01T00:00:00+00:00"
+        },
+        {
+          "end": "2016-01-01T00:00:00+00:00",
+          "name": "calibration_fit",
+          "start": "2015-01-01T00:00:00+00:00"
+        },
+        {
+          "end": "2017-01-01T00:00:00+00:00",
+          "name": "calibration_gate",
+          "start": "2016-01-01T00:00:00+00:00"
+        },
+        {
+          "end": "2020-01-01T00:00:00+00:00",
+          "name": "test",
+          "start": "2017-01-01T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "adapter_version": "stage1-public-validation-v1",
+      "admission": {
+        "admissible": true,
+        "counts_by_split": {
+          "calibration_fit": {
+            "censored": 0,
+            "observed_negative": 361,
+            "observed_positive": 251
+          },
+          "calibration_gate": {
+            "censored": 0,
+            "observed_negative": 325,
+            "observed_positive": 231
+          },
+          "test": {
+            "censored": 0,
+            "observed_negative": 234,
+            "observed_positive": 202
+          },
+          "train": {
+            "censored": 0,
+            "observed_negative": 1483,
+            "observed_positive": 981
+          }
+        },
+        "declarable_class": "Admission evidence only; conformance class not assigned",
+        "gates": [
+          {
+            "gate_id": "lineage_linkage",
+            "message": "lineage and linkage gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "prediction_time_fields",
+            "message": "prediction-time field gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "outcome_censoring",
+            "message": "outcome and censoring gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "split_followup",
+            "message": "split/follow-up gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "horizon_threshold_freeze",
+            "message": "horizon/threshold freeze gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "calibration_evidence",
+            "message": "calibration fit/gate evidence is split-separated",
+            "passed": true
+          },
+          {
+            "gate_id": "provenance",
+            "message": "provenance and predeclaration gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "single_system_boundary",
+            "message": "single-system boundary gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "cluster_by_change",
+            "message": "cluster-by-change gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "adequacy",
+            "message": "adequacy gate passed",
+            "passed": true
+          },
+          {
+            "gate_id": "manifest_metadata",
+            "message": "manifest metadata gate passed",
+            "passed": true
+          }
+        ]
+      },
+      "evaluation": {
+        "calibration": {
+          "brier": 0.16046618202858506,
+          "ece": 0.04294470249547525,
+          "n_events": 556,
+          "passes": true,
+          "reason": "ECE 0.0429 <= 0.05 and AUC 0.7522 over 556 events -> calibrated",
+          "status": "calibrated"
+        },
+        "claim_scope": "stage1_per_family_evaluation_only",
+        "counts": {
+          "censored": 0,
+          "rows": 4068,
+          "test_observed": 436,
+          "test_rows": 436
+        },
+        "declarable_class": "Stage 1 per-family evaluation evidence only; Cross-Family Conformance (Structural) unchanged",
+        "evaluation_identity": "dd0e92150ac6f11b30cfdded4e91f08a92112f6ea3de018f5a0aec537a0b7dd6",
+        "family": "operational",
+        "metrics": {
+          "brier_score": 0.17373120761559155,
+          "ece": 0.01626581643588142,
+          "positive_rate": 0.463302752293578
+        },
+        "outcome_definition_id": "resource.threshold.v1",
+        "status": "evaluation_evidence",
+        "unavailable_evidence": [],
+        "uncertainty": {
+          "positive_rate_ci_high": 0.5102264226604815,
+          "positive_rate_ci_low": 0.417020113365215
+        }
+      },
+      "outcome_definition": {
+        "description": "",
+        "event": "later task resource threshold crossed",
+        "id": "resource.threshold.v1",
+        "observation_process": {
+          "kind": "cluster-task-observation",
+          "parameters": [],
+          "raw": ""
+        },
+        "thresholds": [
+          {
+            "metric": "normalized resource",
+            "operator": ">=",
+            "raw": "",
+            "sustain": null,
+            "sustain_unit": "",
+            "value": 0.005
+          }
+        ],
+        "window": {
+          "anchor": "first-task-observation",
+          "duration": 5,
+          "raw": "",
+          "unit": "minute"
+        }
+      },
+      "source_id": "google-cluster-trace-v1",
+      "split_definitions": [
+        {
+          "end": "2011-05-02T02:40:00+00:00",
+          "name": "train",
+          "start": "2011-05-02T01:00:00+00:00"
+        },
+        {
+          "end": "2011-05-02T04:20:00+00:00",
+          "name": "calibration_fit",
+          "start": "2011-05-02T02:40:00+00:00"
+        },
+        {
+          "end": "2011-05-02T06:00:00+00:00",
+          "name": "calibration_gate",
+          "start": "2011-05-02T04:20:00+00:00"
+        },
+        {
+          "end": "2011-05-02T07:40:00+00:00",
+          "name": "test",
+          "start": "2011-05-02T06:00:00+00:00"
+        }
+      ]
+    }
+  ],
+  "predeclaration": {
+    "local_filename": "predeclaration.json",
+    "sha256": "f75968b9750bf123d9e71161c4f2afe670c758ce2308f468afbda3be16ae16b3"
+  },
+  "report_identity": "sha256:044fced4d3f55d043e53ad494758ec20481a33c465acdccd934515fa17a285b5",
+  "sources": [
+    {
+      "byte_count": 16467692,
+      "license": "CC-BY-4.0",
+      "local_filename": "apachejit_total.csv",
+      "published_checksum": "md5:98e102741020b3b13798d1e10a350689",
+      "sha256": "5097cbbbab8c4611a709b3cf95ac5c9fe5f62e619bab081911a2a247ddbed4e0",
+      "source_id": "apachejit-zenodo-5907002",
+      "source_reference": "https://doi.org/10.5281/zenodo.5907002"
+    },
+    {
+      "byte_count": 31245901,
+      "license": "CC-BY-4.0",
+      "local_filename": "google-cluster-data-1.csv.gz",
+      "published_checksum": "sha1:98c87f059aa1cc37f1e9523ac691ee0fd5629188",
+      "sha256": "f8a55e34a1364425822d6c79ab5d27290c0fa02a7203975434b809293fd8a66c",
+      "source_id": "google-cluster-trace-v1",
+      "source_reference": "https://github.com/google/cluster-data/blob/master/TraceVersion1.md"
+    }
+  ]
+}
