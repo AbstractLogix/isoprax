@@ -8,6 +8,18 @@ conformance claims.
 
 ## Proposed interfaces
 
+### Materialization profile contract
+
+```text
+PublicCorpusMaterializationProfile:
+  profile_identity: str
+  expected_system_id: str
+  release_scope: str
+  horizon_rule: str
+  threshold_version: str
+  published_artifacts: tuple[str, ...]
+```
+
 ### Input snapshot contract
 
 ```text
@@ -54,6 +66,10 @@ PublicCorpusReport:
   withheld: tuple[WithheldEvidenceRecord, ...]
   counts: dict[str, int]
   claim_scope: "public_corpus_evidence_only"
+```
+
+```text
+materialize_public_corpus(profile, snapshots) -> PublicCorpusReport
 ```
 
 ## Behavioral guarantees

@@ -40,6 +40,10 @@ make coverage
 - Public corpus materialization is deterministic and offline.
 - Manifest outputs preserve original observed/censored semantics.
 - Claim boundary remains evidence-only and does not imply conformance upgrade.
+- `materialize_public_corpus()` emits a deterministic report containing included
+  records, explicit withheld evidence, counts, and the fixed claim boundary.
+- Profile and integrity mismatches are withheld with a deterministic reason;
+  they are never converted into observed outcomes.
 
 ## References
 

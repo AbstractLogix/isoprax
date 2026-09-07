@@ -103,8 +103,12 @@ from .predeclaration import (
     validate_predeclaration_provenance,
 )
 from .public_corpus import (
+    PublicCorpusMaterializationProfile,
     PublicCorpusRecord,
+    PublicCorpusReport,
     PublicCorpusSnapshot,
+    WithheldEvidenceRecord,
+    materialize_public_corpus,
     normalize_public_corpus,
 )
 from .public_evidence import (
