@@ -12,9 +12,9 @@
 
 **Purpose**: Align feature pointer and add deterministic test scaffolding.
 
-- [ ] T001 Confirm feature context points to `specs/012-corpus-materialization` in `.specify/feature.json`
-- [ ] T002 [P] Add/update public corpus exports in `isoprax/__init__.py`
-- [ ] T003 [P] Create test scaffold file `tests/test_public_corpus.py`
+- [X] T001 Confirm feature context points to `specs/012-corpus-materialization` in `.specify/feature.json`
+- [X] T002 [P] Add/update public corpus exports in `isoprax/__init__.py`
+- [X] T003 [P] Create test scaffold file `tests/test_public_corpus.py`
 
 ---
 
@@ -22,10 +22,10 @@
 
 **Purpose**: Build shared contracts and deterministic normalization helpers required by all story behavior.
 
-- [ ] T004 Create `PublicCorpusSnapshot` and `PublicCorpusRecord` dataclasses in `isoprax/public_corpus.py`
-- [ ] T005 [P] Implement RFC3339 UTC timestamp parsing helper in `isoprax/public_corpus.py`
-- [ ] T006 [P] Implement canonical payload hashing helper in `isoprax/public_corpus.py`
-- [ ] T007 Implement shared validation guards (public-only scope, private/privileged rejection, artifact integrity) in `isoprax/public_corpus.py`
+- [X] T004 Create `PublicCorpusSnapshot` and `PublicCorpusRecord` dataclasses in `isoprax/public_corpus.py`
+- [X] T005 [P] Implement RFC3339 UTC timestamp parsing helper in `isoprax/public_corpus.py`
+- [X] T006 [P] Implement canonical payload hashing helper in `isoprax/public_corpus.py`
+- [X] T007 Implement shared validation guards (public-only scope, private/privileged rejection, artifact integrity) in `isoprax/public_corpus.py`
 
 **Checkpoint**: Foundational validation and deterministic identity helpers exist.
 
@@ -39,17 +39,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Add deterministic ordering + identity stability tests in `tests/test_public_corpus.py`
-- [ ] T009 [P] [US1] Add censored/unavailable preservation tests in `tests/test_public_corpus.py`
-- [ ] T010 [P] [US1] Add rejection-path tests for private/privileged/credential-bearing/malformed evidence in `tests/test_public_corpus.py`
-- [ ] T011 [P] [US1] Add rejection-path tests for duplicate snapshots and invalid timestamps in `tests/test_public_corpus.py`
+- [X] T008 [P] [US1] Add deterministic ordering + identity stability tests in `tests/test_public_corpus.py`
+- [X] T009 [P] [US1] Add censored/unavailable preservation tests in `tests/test_public_corpus.py`
+- [X] T010 [P] [US1] Add rejection-path tests for private/privileged/credential-bearing/malformed evidence in `tests/test_public_corpus.py`
+- [X] T011 [P] [US1] Add rejection-path tests for duplicate snapshots and invalid timestamps in `tests/test_public_corpus.py`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement `normalize_public_corpus()` in `isoprax/public_corpus.py` using deterministic sort and identity hashing
-- [ ] T013 [US1] Ensure preserved fields (`score_time`, `window_end`, `outcome_class`, `censor_reason`, `split`, `change_group_id`) are copied verbatim in `isoprax/public_corpus.py`
-- [ ] T014 [US1] Add explicit evidence-only claim boundary (`public_corpus_evidence_only`) in `isoprax/public_corpus.py`
-- [ ] T015 [US1] Wire exports for new public corpus types/functions in `isoprax/__init__.py`
+- [X] T012 [US1] Implement `normalize_public_corpus()` in `isoprax/public_corpus.py` using deterministic sort and identity hashing
+- [X] T013 [US1] Ensure preserved fields (`score_time`, `window_end`, `outcome_class`, `censor_reason`, `split`, `change_group_id`) are copied verbatim in `isoprax/public_corpus.py`
+- [X] T014 [US1] Add explicit evidence-only claim boundary (`public_corpus_evidence_only`) in `isoprax/public_corpus.py`
+- [X] T015 [US1] Wire exports for new public corpus types/functions in `isoprax/__init__.py`
 
 **Checkpoint**: User Story 1 is independently testable and deterministic.
 
@@ -59,10 +59,10 @@
 
 **Purpose**: Validate full repository quality gates and update feature docs for implementation traceability.
 
-- [ ] T016 [P] Add implementation notes to `specs/012-corpus-materialization/quickstart.md`
-- [ ] T017 Run focused tests `tests/test_public_corpus.py` and related module tests
-- [ ] T018 Run repository coverage gate (`make coverage`) and ensure >=95% branch-aware thresholds
-- [ ] T019 Run lint checks (`uv run ruff check .`) and resolve any feature-related diagnostics
+- [X] T016 [P] Add implementation notes to `specs/012-corpus-materialization/quickstart.md`
+- [X] T017 Run focused tests `tests/test_public_corpus.py` and related module tests
+- [X] T018 Run repository coverage gate (`make coverage`) and ensure >=95% branch-aware thresholds
+- [X] T019 Run lint checks (`uv run ruff check .`) and resolve any feature-related diagnostics
 
 ---
 

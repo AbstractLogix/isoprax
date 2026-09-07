@@ -3,7 +3,9 @@ from dataclasses import replace
 import pytest
 
 from isoprax.public_corpus import (
+    PublicCorpusMaterializationProfile,
     PublicCorpusSnapshot,
+    materialize_public_corpus,
     normalize_public_corpus,
 )
 
@@ -43,6 +45,11 @@ def test_normalizes_deterministically_and_preserves_ordered_identity():
     assert left[0].system_id == "system-a"
     assert left[0].outcome_class == "observed_positive"
     assert left[0].censor_reason is None
+    assert left[0].score_time == first.score_time
+    assert left[0].window_end == first.window_end
+    assert left[0].split == first.split
+    assert left[0].change_group_id == first.change_group_id
+    assert left[0].artifact_count == 1
 
 
 @pytest.mark.parametrize(
@@ -93,3 +100,52 @@ def test_rejects_invalid_or_duplicate_snapshots():
         normalize_public_corpus([object()])
     with pytest.raises(ValueError):
         normalize_public_corpus([snapshot(), snapshot()])
+
+
+def profile():
+    return PublicCorpusMaterializationProfile(
+        "profile-v1",
+        "system-a",
+        "public synthetic corpus",
+        "PT10M",
+        "threshold-v1",
+        ("manifest.json",),
+    )
+
+
+def test_materialization_report_is_deterministic_and_tracks_withheld_inputs():
+    invalid = snapshot(uses_private_data=True)
+    first = materialize_public_corpus(profile(), [invalid, snapshot()])
+    second = materialize_public_corpus(profile(), [snapshot(), invalid])
+
+    assert first == second
+    assert first.materialization_identity
+    assert first.profile_identity == "profile-v1"
+    assert len(first.records) == 1
+    assert first.counts == {
+        "observed_positive": 1,
+        "observed_negative": 0,
+        "censored": 0,
+    }
+    assert len(first.withheld) == 1
+    assert first.withheld[0].constraint_class == "public_scope"
+    assert first.claim_scope == "public_corpus_evidence_only"
+
+
+def test_materialization_withholds_profile_mismatches_and_rejects_bad_profile():
+    report = materialize_public_corpus(
+        profile(),
+        [snapshot(system_id="other"), snapshot(threshold_rule="threshold-v2")],
+    )
+
+    assert not report.records
+    assert len(report.withheld) == 2
+    assert all(item.constraint_class == "profile_mismatch" for item in report.withheld)
+    with pytest.raises(ValueError, match="profile metadata"):
+        PublicCorpusMaterializationProfile(
+            "", "system-a", "public", "PT10M", "threshold-v1", ("manifest",)
+        )
+    with pytest.raises(ValueError, match="published"):
+        PublicCorpusMaterializationProfile(
+            "profile-v1", "system-a", "public", "PT10M", "threshold-v1", ()
+        )
