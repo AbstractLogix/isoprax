@@ -117,10 +117,16 @@ from .public_evidence import (
     normalize_public_evidence,
 )
 from .public_label_evidence import (
+    PublicLabelComparison,
+    PublicLabelComparisonStatus,
+    PublicLabelDefinition,
     PublicLabelEvidenceManifest,
     PublicLabelEvidenceRecord,
+    PublicLabelProcedure,
+    PublicLabelSemanticsReport,
     PublicLabelSource,
     PublicLabelStatus,
+    build_public_label_semantics_report,
     reduce_public_label_evidence,
 )
 from .public_observation import (
