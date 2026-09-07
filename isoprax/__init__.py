@@ -159,6 +159,7 @@ from .signals import (
     RiskSignal,
     Signal,
 )
+from .stage1_public_validation import build_stage1_public_validation_report
 from .strategies import (
     AnomalyStrategy,
     Calibrator,

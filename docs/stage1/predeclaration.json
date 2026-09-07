@@ -1,0 +1,40 @@
+{
+  "predeclaration_id": "isoprax-stage1-public-validation-v1",
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "collection_start": "2026-01-02T00:00:00+00:00",
+  "claim_scope": "stage1_per_family_evaluation_only",
+  "sources": [
+    {
+      "source_id": "apachejit-zenodo-5907002",
+      "reference": "https://doi.org/10.5281/zenodo.5907002",
+      "license": "CC-BY-4.0",
+      "file": "apachejit_total.csv",
+      "published_checksum": "md5:98e102741020b3b13798d1e10a350689",
+      "system": "apache/ignite"
+    },
+    {
+      "source_id": "google-cluster-trace-v1",
+      "reference": "https://github.com/google/cluster-data/blob/master/TraceVersion1.md",
+      "license": "CC-BY-4.0",
+      "file": "google-cluster-data-1.csv.gz",
+      "published_checksum": "sha1:98c87f059aa1cc37f1e9523ac691ee0fd5629188",
+      "system": "google-cluster-v1"
+    }
+  ],
+  "split_rules": {
+    "apachejit": [
+      ["train", "2014-01-01T00:00:00+00:00", "2015-01-01T00:00:00+00:00"],
+      ["calibration_fit", "2015-01-01T00:00:00+00:00", "2016-01-01T00:00:00+00:00"],
+      ["calibration_gate", "2016-01-01T00:00:00+00:00", "2017-01-01T00:00:00+00:00"],
+      ["test", "2017-01-01T00:00:00+00:00", "2020-01-01T00:00:00+00:00"]
+    ],
+    "google_trace_v1_seconds_since_2011_05_01": [90000, 96000, 102000, 108000, 114000]
+  },
+  "outcomes": {
+    "apachejit": "published buggy label; no relabeling",
+    "google_trace_v1": "later task observation crosses normalized cores or memory threshold >= 0.005"
+  },
+  "calibration": "isotonic fit on calibration_fit only; calibration_gate is held out",
+  "cross_family_pooling": "prohibited",
+  "claim_boundary": "No Semantic/Full Conformance or predictive efficacy claim"
+}

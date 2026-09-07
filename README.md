@@ -96,23 +96,33 @@ format verification, the coverage-enforced test suite, and the demo.
 ## Next steps
 
 1. Add adapters for real VCS/CI and operational telemetry backends.
-2. Run Stage 1 per-family validation on public datasets with explicit,
-   separately-scoped reporting.
+2. Expand Stage 1 with additional licensed public sources and sensitivity
+   analyses while preserving separately-scoped reporting.
 3. Build a deterministic replay corpus with predeclared thresholds and shared
    observation semantics to enable Semantic conformance evaluation.
 4. Expand the conformance suite and publish repeatable evidence artifacts.
 
 ## Stage 1 status (admission extension)
 
-This repository now includes a Stage 1 admission-gate module
-(`isoprax/admission.py`) and conformance tests (`tests/test_stage1_admission.py`)
-that validate lineage integrity, censoring discipline, prediction-time leakage
-controls, split freezing, adequacy checks, and deterministic evidence reports.
+This repository includes a Stage 1 admission-gate module
+(`isoprax/admission.py`), per-family evaluation, and a reproducible public-data
+run over ApacheJIT Apache Ignite and Google Cluster Trace v1. The generated
+aggregate evidence is checked in at
+[`docs/stage1/stage1-public-validation.json`](docs/stage1/stage1-public-validation.json),
+with the frozen inputs and rerun command documented in
+[`specs/016-stage1-public-validation/quickstart.md`](specs/016-stage1-public-validation/quickstart.md).
+
+The completed run passes admission for both single-system families and records
+calibrated per-family gate results. Apache Ignite reports 1,750 calibration-gate
+events with ECE 0.0443 and AUC 0.8434; Google Trace reports 556 events with ECE
+0.0429 and AUC 0.7522. These are scoped evaluation diagnostics, not a pooled
+metric or a cross-family efficacy claim.
 
 Passing Stage 1 admission gates is **not** a conformance-class upgrade by
 itself; it is evidence infrastructure only.
 
-Stage 1 currently freezes split boundaries and change-group isolation, but it
+Stage 1 freezes split boundaries and change-group isolation, and the completed
+public-data run records the calibration procedure and source identities. It
 does not claim to capture adaptive model-retraining policy, model-version
 lineage, or interpretation-stability evidence. Any future real-data
 evaluation that adapts models over time must record those policies and versions
