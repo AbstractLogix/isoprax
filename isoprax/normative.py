@@ -13,7 +13,7 @@ from pathlib import Path
 
 _REFERENCE_RE = re.compile(
     r"(?ix)"
-    r"(?:\bspec(?:ification)?\s*|§\s*)"
+    r"(?:\bspec(?:s|ification)?\s*|§\s*)"
     r"(?P<section>\d+(?:\.\d+)+|[A-F](?:\.\d+)*)"
     r"|\bAppendix\s+(?P<appendix>[A-F](?:\.\d+)?)"
 )

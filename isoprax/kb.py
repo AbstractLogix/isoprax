@@ -167,7 +167,40 @@ class SQLiteKB(KnowledgeBase):
             );
             """
         )
+        self._migrate_nullable_signal_score()
         self.conn.commit()
+
+    def _migrate_nullable_signal_score(self) -> None:
+        """Allow score-free ForecastSignals in databases created by older code."""
+
+        columns = self.conn.execute("PRAGMA table_info(signals)").fetchall()
+        score = next((column for column in columns if column[1] == "score"), None)
+        if score is None or score[3] == 0:
+            return
+        self.conn.executescript(
+            """
+            ALTER TABLE signals RENAME TO signals_legacy;
+            CREATE TABLE signals (
+                event_id TEXT NOT NULL,
+                strategy_id TEXT NOT NULL,
+                strategy_version TEXT,
+                family TEXT,
+                score REAL,
+                explanation TEXT NOT NULL,
+                calibration_status TEXT,
+                payload TEXT NOT NULL,
+                FOREIGN KEY(event_id) REFERENCES events(id)
+            );
+            INSERT INTO signals (
+                event_id, strategy_id, strategy_version, family, score,
+                explanation, calibration_status, payload
+            )
+            SELECT event_id, strategy_id, strategy_version, family, score,
+                explanation, calibration_status, payload
+            FROM signals_legacy;
+            DROP TABLE signals_legacy;
+            """
+        )
 
     def store_event(self, event: Event) -> None:
         d = event.to_dict()

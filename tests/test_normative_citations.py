@@ -14,6 +14,7 @@ def test_all_implementation_citations_resolve_to_vendored_authority():
     assert citations
     unresolved = [citation for citation in citations if not citation.resolved]
     assert unresolved == []
+    assert any(citation.reference == "5.6.1" for citation in citations)
 
 
 @pytest.mark.parametrize("reference", ["5.2", "5.6.3", "8.2", "D"])
