@@ -112,6 +112,13 @@ controls, split freezing, adequacy checks, and deterministic evidence reports.
 Passing Stage 1 admission gates is **not** a conformance-class upgrade by
 itself; it is evidence infrastructure only.
 
+Stage 1 currently freezes split boundaries and change-group isolation, but it
+does not claim to capture adaptive model-retraining policy, model-version
+lineage, or interpretation-stability evidence. Any future real-data
+evaluation that adapts models over time must record those policies and versions
+explicitly; adaptation and interpretability evidence do not establish outcome
+commensurability.
+
 The deterministic evidence-reporting module (`isoprax/evidence_reporting.py`)
 can publish a bounded summary of assembled corpus, replay-capture, and
 admission evidence. Its reports expose only safe identifiers, hashes, counts,
