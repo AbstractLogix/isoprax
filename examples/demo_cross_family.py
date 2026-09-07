@@ -27,6 +27,8 @@ from isoprax import (
     ChangeEvent,
     DistributionAnomalyStrategy,
     HeuristicRiskStrategy,
+    HistoricalMeanForecastStrategy,
+    MetricSample,
     Outcome,
     OutcomeDefinition,
     RunEvent,
@@ -42,6 +44,7 @@ from isoprax.evaluation import (
     reliability_curve,
     time_sliced_split,
 )
+from isoprax.evidence import build_pooling_harm_evidence
 
 random.seed(7)
 np.random.seed(7)
@@ -270,7 +273,41 @@ def main():
     )
     print("\n=== CROSS-FAMILY RESULT (spec 8, obligation 5) ===")
     print(rep.render())
-    print("     (also not Full: only 2 of 3 Strategy types implemented)")
+    print(
+        "     (third Strategy type is now exercised, but this remains a synthetic proof)"
+    )
+
+    # ---- Third Strategy type: ForecastSignal has coverage, not score ----
+    forecast_history = [
+        MetricSample(resource_id="demo", resource_type="service", value=value)
+        for value in (10.0, 12.0, 14.0)
+    ]
+    forecast_strategy = HistoricalMeanForecastStrategy()
+    for sample in forecast_history:
+        kb.store_event(sample)
+    forecast_signal = forecast_strategy.forecast(forecast_history, {})
+    kb.store_signal(forecast_history[-1].id, forecast_signal)
+    restored_forecast = kb.get_signal(
+        forecast_history[-1].id, forecast_strategy.strategy_id
+    )
+    print("\n=== FORECAST STRATEGY ROUND-TRIP (spec 5.1, 5.2) ===")
+    print(f"  technique: {restored_forecast.technique}")
+    print(f"  interval confidence: {restored_forecast.interval_confidence:.2f}")
+    print("  probability score carried: no")
+
+    # ---- Counterexample: pooled calibration can mask bad ranking ----
+    harm = build_pooling_harm_evidence()
+    print("\n=== POOLING HARM (synthetic, non-conformance evidence) ===")
+    print(
+        f"  {harm.left_window} ECE={harm.left_ece:.3f}; "
+        f"{harm.right_window} ECE={harm.right_ece:.3f}; "
+        f"pooled ECE={harm.pooled_ece:.3f}"
+    )
+    print(
+        f"  per-family top-k precision={harm.per_family_macro_recall:.3f}; "
+        f"pooled top-k precision={harm.pooled_macro_recall:.3f}; "
+        f"degradation={harm.degradation:.3f}"
+    )
 
     # ---- Counterfactual: what commensurable labelling would look like ----
     # Under deterministic replay (spec D.3) BOTH families are labelled by the

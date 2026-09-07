@@ -1,0 +1,6 @@
+{
+  "status": "blocked",
+  "sources": [],
+  "reason": "No public source snapshot is bundled; supply a licensed, versioned snapshot before evaluation.",
+  "claim_boundary": "This evidence lane cannot establish Semantic or Full Conformance."
+}
