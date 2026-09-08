@@ -160,6 +160,18 @@ from .signals import (
     Signal,
 )
 from .stage1_public_validation import build_stage1_public_validation_report
+from .stage2_feasibility import (
+    CLAIM_BOUNDARY,
+    FeasibilityGate,
+    FeasibilityReport,
+    RepeatabilityCheck,
+    ReplayPilotProfile,
+    ReplayTerminalRecord,
+    build_stage2_feasibility_report,
+    compare_repeatability,
+    normalize_replay_records,
+    validate_stage2_feasibility_report,
+)
 from .strategies import (
     AnomalyStrategy,
     Calibrator,

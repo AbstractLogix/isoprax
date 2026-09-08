@@ -324,7 +324,10 @@ def main():
     print("\n=== WHY REPLAY (spec 5.6.4, D.3) ===")
     print("  Under one shared observation process both families would use:")
     print(f"    {replay_def.event} via {replay_def.observation_process}")
-    print(f"  commensurable: {same.commensurable} -> Semantic claim available")
+    print(
+        f"  commensurable: {same.commensurable} -> shared-label prerequisite satisfied; "
+        "Semantic claim withheld until corpus/evaluation evidence"
+    )
     print("  No amount of calibration or corpus size substitutes for this;")
     print("  record linkage pairs events but does not share label semantics.")
 

@@ -4,9 +4,10 @@ Licensed under [Apache-2.0](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md)
 and [AGENTS.md](AGENTS.md) before contributing.
 
 This repository contains the runnable Stage 0 reference implementation of the
-authoritative Isoprax v0.3 POC. It demonstrates shared event, signal,
-knowledge-base, feedback, calibration, and commensurability mechanics for the
-Change and Operational families.
+authoritative Isoprax v0.3 POC, plus Stage 1 public-data evidence and a bounded
+Stage 2 deterministic-replay feasibility reducer. It demonstrates shared
+event, signal, knowledge-base, feedback, calibration, and commensurability
+mechanics for the Change and Operational families.
 
 The implementation declares **Cross-Family Conformance (Structural)** only.
 Its baseline Outcome Definitions are deliberately non-commensurable, so it
@@ -90,15 +91,18 @@ format verification, the coverage-enforced test suite, and the demo.
   structural.
 - Not a Semantic cross-family claim: commensurability must be satisfied first;
   calibration alone cannot bridge non-commensurable definitions.
-- Not Full Conformance: only a subset of strategy types is implemented in this
-  reference slice.
+- Not Full Conformance: the repository still withholds Semantic and Full
+  Conformance claims; Stage 2 feasibility does not substitute for corpus and
+  evaluation evidence.
 
 ## Next steps
 
 1. Add adapters for real VCS/CI and operational telemetry backends.
 2. Expand Stage 1 with additional licensed public sources and sensitivity
    analyses while preserving separately-scoped reporting.
-3. Build a deterministic replay corpus with predeclared thresholds and shared
+3. Use the Stage 2 replay-feasibility gate to estimate whether a predeclared,
+   shared-observation corpus is practical before attempting full acquisition.
+4. Build a deterministic replay corpus with predeclared thresholds and shared
    observation semantics to enable Semantic conformance evaluation.
 4. Expand the conformance suite and publish repeatable evidence artifacts.
 
@@ -134,6 +138,24 @@ can publish a bounded summary of assembled corpus, replay-capture, and
 admission evidence. Its reports expose only safe identifiers, hashes, counts,
 gate summaries, and explicit unavailable evidence; they do not expose replay
 payloads or upgrade an admission result to Semantic or Full Conformance.
+
+### Stage 2 status (replay feasibility)
+
+`isoprax/stage2_feasibility.py` provides the next evidence gate. It validates a
+predeclared pilot profile, normalizes every selected revision into one terminal
+record, preserves censored and blocked-before-compilation outcomes, compares
+repeat runs, and emits only `feasible`, `inconclusive`, or `blocked`.
+
+Stage 2 feasibility is not a Semantic result. The reducer does not acquire a
+full corpus, publish pooled cross-family metrics, or claim model efficacy. A
+future corpus/evaluation stage must consume a feasible pilot and independently
+establish those claims.
+
+The injected end-to-end path is exercised by
+`tests/test_stage2_pilot_integration.py`. It runs synthetic build qualification,
+hermetic execution, replay capture, and feasibility reporting. This verifies
+pipeline wiring only; a real feasibility result still requires a public project
+adapter and a predeclared pilot run.
 
 ### Stage 1 independence constraints
 
