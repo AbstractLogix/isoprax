@@ -157,6 +157,22 @@ hermetic execution, replay capture, and feasibility reporting. This verifies
 pipeline wiring only; a real feasibility result still requires a public project
 adapter and a predeclared pilot run.
 
+The first bounded public pilot is recorded under `docs/stage2/` for
+`traefik/whoami`: three immutable revisions were built locally and each was
+observed with a 60-second, 120-request `/bench` workload. The sealed report is
+`docs/stage2/whoami-pilot-report-v2.json`; it reaches `feasible` with 3/3
+complete observations, 100% observation coverage, and no censored or withheld
+records. All three outcomes were negative, so this is replay-feasibility
+evidence only; it does not establish positive-event yield, model efficacy,
+Semantic conformance, or full-corpus adequacy.
+
+Regenerate the report from the committed measurements with:
+
+```bash
+uv run python scripts/run_stage2_whoami_pilot.py \
+  --output docs/stage2/whoami-pilot-report-v2.json
+```
+
 ### Stage 1 independence constraints
 
 - No private third-party production data is required by the admission layer.

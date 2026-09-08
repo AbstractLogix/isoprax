@@ -51,3 +51,19 @@ uv run ruff check .
 The resulting report is feasibility evidence only. It must not be used to
 publish pooled cross-family scores, Semantic conformance, or full-corpus
 adequacy.
+
+## Recorded public pilot
+
+The sealed public pilot uses the predeclaration and measurements in
+`docs/stage2/whoami-pilot-predeclaration-v2.json` and
+`docs/stage2/whoami-pilot-data-v2.json`. It can be reduced and checked with:
+
+```bash
+uv run python scripts/run_stage2_whoami_pilot.py \
+  --output docs/stage2/whoami-pilot-report-v2.json
+```
+
+The pilot is intentionally bounded: three public revisions, a 60-second
+workload, and no required positive event. A `feasible` result establishes that
+this lane can produce complete public replay records; it does not establish
+that the lane has useful event prevalence or supports Semantic evaluation.

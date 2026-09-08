@@ -130,6 +130,24 @@ description: "Implementation tasks for Stage 2 deterministic replay feasibility"
 
 - [X] T036 [US2] Add an injected end-to-end pilot test covering build qualification, hermetic execution, replay capture, terminal normalization, and feasibility-report validation in `tests/test_stage2_pilot_integration.py`
 
+## Phase 10: Public Pilot Convergence
+
+**Purpose**: Execute the bounded feasibility lane against one public candidate
+and publish the exact evidence package without upgrading the claim boundary.
+
+- [X] T037 [US1] Screen and predeclare the public `traefik/whoami` candidate,
+  immutable revisions, structured latency outcome, censoring rules, and public
+  evidence scope in `docs/stage2/whoami-pilot-predeclaration-v2.json`
+- [X] T038 [US2] Build the three selected revisions and execute the declared
+  60-second, 120-request local HTTP observation workload
+- [X] T039 [US3] Commit raw measurement metadata and reduce it through the
+  Stage 2 feasibility gate in `docs/stage2/whoami-pilot-data-v2.json`,
+  `scripts/run_stage2_whoami_pilot.py`, and
+  `docs/stage2/whoami-pilot-report-v2.json`
+- [X] T040 [US4] Validate the public pilot report and document its limits:
+  all observations are negative, so positive-event yield and Semantic
+  evaluation remain unresolved
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

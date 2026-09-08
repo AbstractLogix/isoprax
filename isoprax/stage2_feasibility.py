@@ -600,9 +600,10 @@ def build_stage2_feasibility_report(
             if not profile.require_both_outcomes
             or (counts["observed_positive"] > 0 and counts["observed_negative"] > 0)
             else "inconclusive",
-            "both observed outcome classes are present"
+            "outcome diversity is not required by this pilot"
             if not profile.require_both_outcomes
-            or (counts["observed_positive"] > 0 and counts["observed_negative"] > 0)
+            else "both observed outcome classes are present"
+            if counts["observed_positive"] > 0 and counts["observed_negative"] > 0
             else "pilot lacks one observed outcome class",
             complete,
         ),

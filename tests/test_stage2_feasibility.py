@@ -430,6 +430,21 @@ def test_report_is_inconclusive_when_outcome_class_or_rate_is_missing():
     assert any(gate.gate_id == "outcome_diversity" for gate in report.gates)
 
 
+def test_report_labels_optional_outcome_diversity_without_overclaiming():
+    pilot = profile(("change-a",), require_repeatability=False)
+    pilot = replace(pilot, require_both_outcomes=False)
+    records = normalize_replay_records(
+        pilot,
+        [capture("change-a")],
+        run_identity="run-1",
+        prediction_fields={"change-a": {"diff_size": "2026-09-01T23:59:00Z"}},
+    )
+    report = build_stage2_feasibility_report(pilot, records)
+    gate = next(gate for gate in report.gates if gate.gate_id == "outcome_diversity")
+    assert gate.status == "pass"
+    assert gate.message == "outcome diversity is not required by this pilot"
+
+
 def test_private_observation_blocks_release():
     pilot = profile()
     report = build_stage2_feasibility_report(pilot, records_for(pilot, private=True))
