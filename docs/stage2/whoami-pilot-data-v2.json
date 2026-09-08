@@ -1,0 +1,60 @@
+{
+  "schema": "isoprax.stage2.pilot-data.v2",
+  "candidate_repository": "https://github.com/traefik/whoami",
+  "predeclaration_commit": "2d146a2f7affd3747662db0c00e8a00c1d4c3259",
+  "collection_date_utc": "2026-09-08",
+  "docker_server_version": "29.7.2",
+  "workload": {
+    "endpoint": "/bench",
+    "requests_per_commit": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds",
+    "positive_rule": "p99 latency > 0.5 seconds over the complete 60-second sample"
+  },
+  "records": [
+    {
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "image_id": "sha256:fa16a83c82d2a9da693a42843e37b35e89b1b1070fe1b13f58e1e7080ee7f3b4",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "build_seconds": 28.558,
+      "p99_seconds": 0.001324,
+      "min_seconds": 0.000588,
+      "max_seconds": 0.001378,
+      "mean_seconds": 0.000771,
+      "outcome_class": "observed_negative",
+      "censor_reason": null,
+      "requests": 120
+    },
+    {
+      "commit": "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+      "image_id": "sha256:9112005ca5421f129a5c1e5322bf9a04bc093f562db7179927d8cee0f126f43d",
+      "build_log_sha256": "19077bc4109b6048645d9ac74dbf196d794ab6906abcc6bebdf85ee334468c80",
+      "build_seconds": 12.113,
+      "p99_seconds": 0.001528,
+      "min_seconds": 0.000600,
+      "max_seconds": 0.001571,
+      "mean_seconds": 0.000810,
+      "outcome_class": "observed_negative",
+      "censor_reason": null,
+      "requests": 120
+    },
+    {
+      "commit": "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae",
+      "image_id": "sha256:7b4c216a3799184c3a65fa3a935eecd53814f909ca4303a3da8c6929114c33bf",
+      "build_log_sha256": "0894fa8b507e830eeb3ef0c348274ef845056b8e7602fdd827a0ba90358ccc6c",
+      "build_seconds": 9.087,
+      "p99_seconds": 0.001131,
+      "min_seconds": 0.000551,
+      "max_seconds": 0.001216,
+      "mean_seconds": 0.000738,
+      "outcome_class": "observed_negative",
+      "censor_reason": null,
+      "requests": 120
+    }
+  ],
+  "repeatability": {
+    "required": false,
+    "interpretation": "not required for this first bounded pilot"
+  }
+}
