@@ -1,0 +1,63 @@
+{
+  "schema": "isoprax.stage2.pilot-data.v1",
+  "candidate_repository": "https://github.com/traefik/whoami",
+  "predeclaration_commit": "0c1f4be8a9d3558c686270a216e9af598d8beb9f",
+  "collection_date_utc": "2026-09-08",
+  "docker_server_version": "29.7.2",
+  "workload": {
+    "endpoint": "/bench",
+    "requests_per_commit": 100,
+    "latency_measurement": "curl time_total seconds",
+    "positive_threshold_seconds": 0.5,
+    "sustain_rule": "99 of 100 samples above threshold"
+  },
+  "records": [
+    {
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "image_id": "sha256:fa16a83c82d2a9da693a42843e37b35e89b1b1070fe1b13f58e1e7080ee7f3b4",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "build_seconds": 28.558,
+      "ready_seconds": 28.941,
+      "p99_seconds": 0.000831,
+      "min_seconds": 0.000461,
+      "max_seconds": 0.000904,
+      "outcome_class": "observed_negative",
+      "censor_reason": null,
+      "requests": 100,
+      "repeat_p99_seconds": 0.001000
+    },
+    {
+      "commit": "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+      "image_id": "sha256:9112005ca5421f129a5c1e5322bf9a04bc093f562db7179927d8cee0f126f43d",
+      "build_log_sha256": "19077bc4109b6048645d9ac74dbf196d794ab6906abcc6bebdf85ee334468c80",
+      "build_seconds": 12.113,
+      "ready_seconds": 12.349,
+      "p99_seconds": 0.000915,
+      "min_seconds": 0.000459,
+      "max_seconds": 0.001208,
+      "outcome_class": "observed_negative",
+      "censor_reason": null,
+      "requests": 100
+    },
+    {
+      "commit": "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae",
+      "image_id": "sha256:7b4c216a3799184c3a65fa3a935eecd53814f909ca4303a3da8c6929114c33bf",
+      "build_log_sha256": "0894fa8b507e830eeb3ef0c348274ef845056b8e7602fdd827a0ba90358ccc6c",
+      "build_seconds": 9.087,
+      "ready_seconds": 9.332,
+      "p99_seconds": 0.000787,
+      "min_seconds": 0.000433,
+      "max_seconds": 0.000968,
+      "outcome_class": "observed_negative",
+      "censor_reason": null,
+      "requests": 100
+    }
+  ],
+  "repeatability": {
+    "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+    "repeat_requests": 100,
+    "repeat_p99_seconds": 0.001000,
+    "same_outcome_class": true,
+    "interpretation": "informational only; repeatability was not a required gate for this first pilot"
+  }
+}
