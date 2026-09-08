@@ -58,5 +58,6 @@
   "supersedes": "whoami-pilot-predeclaration.json",
   "predeclaration_commit": "filled by the commit that adds this file",
   "corpus_data_commit_requirement": "must descend from the predeclaration commit",
-  "artifact_hash_basis": "canonical JSON with artifact_hash omitted"
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "12534199a625589730d7cefb774e2b909ce4e5cad99e94606d5e2796f26658d8"
 }
