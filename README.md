@@ -173,6 +173,15 @@ uv run python scripts/run_stage2_whoami_pilot.py \
   --output docs/stage2/whoami-pilot-report-v2.json
 ```
 
+### Stage 2 corpus evaluation gate
+
+The next reducer is `isoprax/stage2_corpus_evaluation.py`. It admits only a
+predeclared corpus with complete replay lineage, usable positive and negative
+label yield, time-safe rows, and non-degenerate per-family scores. Calibration
+alone is insufficient: constant-score predictors remain inconclusive. Change
+and Operational evaluation stays separate, and pooled/Semantic claims remain
+withheld.
+
 ### Stage 1 independence constraints
 
 - No private third-party production data is required by the admission layer.

@@ -10,8 +10,15 @@ label yield, non-degenerate prediction, and family-scoped evaluation.
 
 ## Closure criteria
 
-- [ ] Profile and report contracts implemented.
-- [ ] All rejection paths have focused tests.
-- [ ] Constant-score predictors cannot qualify.
-- [ ] No pooled or Semantic claim is emitted.
-- [ ] Full repository gates pass.
+- [X] Profile and report contracts implemented.
+- [X] All rejection paths have focused tests.
+- [X] Constant-score predictors cannot qualify.
+- [X] No pooled or Semantic claim is emitted.
+- [X] Full repository gates pass.
+
+## Evidence
+
+The reducer is implemented in `isoprax/stage2_corpus_evaluation.py` and
+covered by `tests/test_stage2_corpus_evaluation.py`. The real whoami feasibility
+pilot remains an input evidence package; its all-negative result is correctly
+inconclusive for this qualified corpus-evaluation gate.
