@@ -1,0 +1,63 @@
+{
+  "schema": "isoprax.stage2.pilot-predeclaration.v2",
+  "candidate": {
+    "repository": "https://github.com/traefik/whoami",
+    "license": "Apache-2.0",
+    "license_reference": "https://github.com/traefik/whoami/blob/master/LICENSE",
+    "build_reference": "Dockerfile",
+    "observation_endpoint": "/bench"
+  },
+  "selected_commits": [
+    "1ce75d01b6978863647da42557a707a479da3a51",
+    "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+    "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae"
+  ],
+  "lane": {
+    "system_id": "traefik-whoami",
+    "service_id": "whoami",
+    "workload_reference": "fixed-local-http-bench-v2",
+    "horizon_rule": "PT10M",
+    "threshold_version": "http-p99-latency-v2",
+    "capture_schema_version": "stage2-whoami-v2",
+    "allowed_evidence_scope": "public-local-replay",
+    "observation_window": "60-second workload within 10-minute horizon",
+    "threshold": "p99 /bench latency > 500ms during the 60-second workload"
+  },
+  "workload": {
+    "requests_per_commit": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds",
+    "positive_rule": "p99 latency > 0.5 seconds over the complete 60-second sample"
+  },
+  "outcome_definitions": {
+    "event": "HTTP /bench p99 latency threshold crossed",
+    "observation_process": "same local HTTP workload and latency capture",
+    "change_family": "threshold crossed after selected commit deployment",
+    "operational_family": "threshold crossed from observed deployed state"
+  },
+  "censoring": [
+    "build failure",
+    "runner failure",
+    "deployment failure",
+    "workload failure",
+    "incomplete observation window",
+    "invalid or unavailable telemetry"
+  ],
+  "prediction_boundary": {
+    "allowed_fields": ["commit_metadata_before_score_time"],
+    "forbidden_fields": ["post_deployment_latency", "post_score_time_telemetry"]
+  },
+  "feasibility_gates": {
+    "min_complete_records": 2,
+    "require_positive_and_negative": false,
+    "min_observation_rate": 0.66,
+    "repeatability": "not required for this first bounded pilot; record discrepancies if repeated"
+  },
+  "external_anchor_reference": "https://github.com/traefik/whoami/commit/1ce75d01b6978863647da42557a707a479da3a51",
+  "supersedes": "whoami-pilot-predeclaration.json",
+  "predeclaration_commit": "filled by the commit that adds this file",
+  "corpus_data_commit_requirement": "must descend from the predeclaration commit",
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "12534199a625589730d7cefb774e2b909ce4e5cad99e94606d5e2796f26658d8"
+}
