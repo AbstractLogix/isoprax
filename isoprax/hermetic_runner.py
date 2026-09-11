@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import Callable, Mapping
 
 from .build_qualification import BuildPreparation
+from .identity import bytes_hash, content_hash
 
 
 @dataclass(frozen=True)
@@ -74,10 +73,6 @@ RunnerBackend = Callable[[str, str, ApprovedRunnerConfiguration], RunnerBackendR
 _VALID_OUTCOMES = {"success", "build_failed", "timeout", "interrupted", "unavailable"}
 
 
-def _canonical(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
-
-
 def _configuration_payload(
     configuration: ApprovedRunnerConfiguration,
 ) -> dict[str, object]:
@@ -96,10 +91,6 @@ def _configuration_payload(
 
 def _controls_payload(controls: EffectiveRunnerControls | None) -> object:
     return None if controls is None else controls.__dict__
-
-
-def _hash(value: object) -> str:
-    return hashlib.sha256(_canonical(value).encode()).hexdigest()
 
 
 def _valid_artifact_path(path: str) -> bool:
@@ -171,7 +162,7 @@ def _artifacts(
             ArtifactEvidence(
                 path,
                 "collected",
-                hashlib.sha256(payload).hexdigest(),
+                bytes_hash(payload),
                 len(payload),
             )
         )
@@ -190,9 +181,9 @@ def _record(
     duration_ms: int | None = None,
     artifacts: tuple[ArtifactEvidence, ...] = (),
 ) -> ExecutionEvidenceRecord:
-    configuration_identity = _hash(_configuration_payload(configuration))
-    command_identity = _hash(configuration.command)
-    execution_identity = _hash(
+    configuration_identity = content_hash(_configuration_payload(configuration))
+    command_identity = content_hash(configuration.command)
+    execution_identity = content_hash(
         {
             "preparation_hash": preparation.preparation_hash,
             "commit": commit,

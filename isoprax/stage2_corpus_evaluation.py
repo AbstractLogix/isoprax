@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable
@@ -11,20 +9,13 @@ from typing import Any, Iterable
 from .admission import CorpusRow
 from .commensurability import Attestation, OutcomeDefinition, check_commensurable
 from .evaluation import check_calibration_conformance
+from .identity import canonical_json, content_hash
 
 CLAIM_BOUNDARY = (
     "Stage 2 corpus evaluation evidence only; this report does not establish "
     "Semantic or Full Conformance, pooled cross-family performance, causality, "
     "or generalization beyond the released corpus."
 )
-
-
-def _canonical(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
-
-
-def _hash(value: object) -> str:
-    return hashlib.sha256(_canonical(value).encode()).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -145,7 +136,7 @@ class CorpusEvaluationReport:
 
 
 def _profile_identity(profile: CorpusEvaluationProfile) -> str:
-    return _hash(profile.identity_payload())
+    return content_hash(profile.identity_payload())
 
 
 def _score(row: CorpusRow, field: str) -> float:
@@ -327,7 +318,13 @@ def evaluate_stage2_corpus(
         "claim_scope": "stage2_corpus_evaluation_only",
     }
     return CorpusEvaluationReport(
-        _hash(payload), profile_id, status, counts, family_reports, pooling, gates
+        content_hash(payload),
+        profile_id,
+        status,
+        counts,
+        family_reports,
+        pooling,
+        gates,
     )
 
 
@@ -336,10 +333,10 @@ def validate_stage2_corpus_evaluation_report(
 ) -> None:
     expected = report.to_dict()
     actual = expected.pop("report_identity")
-    if _hash(expected) != actual:
+    if content_hash(expected) != actual:
         raise ValueError("report identity does not match canonical report")
     if any(
-        field in _canonical(report.to_dict())
+        field in canonical_json(report.to_dict())
         for field in ("change_score", "operational_score")
     ):
         raise ValueError("raw prediction scores must not be published")

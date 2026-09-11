@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable, Mapping
@@ -14,6 +12,7 @@ from .commensurability import (
     OutcomeDefinition,
     check_commensurable,
 )
+from .identity import canonical_json, content_hash
 from .replay_capture import ReplayCaptureRecord
 
 PILOT_STATUSES = frozenset({"feasible", "inconclusive", "blocked"})
@@ -25,14 +24,6 @@ CLAIM_BOUNDARY = (
     "Semantic or Full Conformance, pooled cross-family performance, model "
     "efficacy, or full-corpus adequacy."
 )
-
-
-def _canonical(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
-
-
-def _hash(value: object) -> str:
-    return hashlib.sha256(_canonical(value).encode()).hexdigest()
 
 
 def _parse_timestamp(value: str) -> datetime:
@@ -170,7 +161,7 @@ class ReplayPilotProfile:
 
     @property
     def profile_identity(self) -> str:
-        return _hash(self.to_dict())
+        return content_hash(self.to_dict())
 
 
 @dataclass(frozen=True)
@@ -430,7 +421,7 @@ def normalize_replay_records(
         )
         label = status if status in {"observed_positive", "observed_negative"} else None
         shared_observation_identity = (
-            _hash(
+            content_hash(
                 {
                     "event": profile.change_definition.event,
                     "observation_process": profile.change_definition.observation_process.canonical(),
@@ -491,7 +482,7 @@ def compare_repeatability(
         family_labels = {
             (record.change_label, record.operational_label) for record in present
         }
-        artifacts = {_canonical(record.artifact_manifest) for record in present}
+        artifacts = {canonical_json(record.artifact_manifest) for record in present}
         if len(statuses) > 1:
             discrepancies.append("terminal status differs")
         if len(labels) > 1:
@@ -681,7 +672,7 @@ def build_stage2_feasibility_report(
         "claim_scope": "stage2_replay_feasibility_only",
     }
     return FeasibilityReport(
-        _hash(public),
+        content_hash(public),
         profile.profile_identity,
         status,
         counts,
@@ -722,7 +713,7 @@ def validate_stage2_feasibility_report(report: FeasibilityReport) -> None:
     ):
         raise ValueError("report terminal classes are inconsistent")
     public = report.to_dict()
-    expected = _hash(
+    expected = content_hash(
         {key: value for key, value in public.items() if key != "report_identity"}
     )
     if expected != report.report_identity:

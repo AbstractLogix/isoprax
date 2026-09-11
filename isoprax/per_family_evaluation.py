@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import asdict, dataclass
 from math import sqrt
 from types import MappingProxyType
@@ -21,6 +19,7 @@ from .evaluation import (
     check_calibration_conformance,
     expected_calibration_error,
 )
+from .identity import content_hash
 
 _ALLOWED_METRICS = ("brier_score", "ece", "positive_rate")
 _ALLOWED_STATUSES = {"evaluation_evidence", "blocked", "inconclusive"}
@@ -102,12 +101,6 @@ class PerFamilyEvaluationReport:
             "claim_boundary": self.claim_boundary,
             "claim_scope": self.claim_scope,
         }
-
-
-def _hash(value: object) -> str:
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode()
-    ).hexdigest()
 
 
 def _row_by_id(rows: Iterable[CorpusRow]) -> dict[str, CorpusRow]:
@@ -219,7 +212,7 @@ def evaluate_per_family(
     if admission_profile.predeclaration_evidence is None:
         raise ValueError("predeclaration evidence is required")
     row_by_id = _row_by_id(ordered_rows)
-    corpus_digest = _hash([asdict(row) for row in ordered_rows])
+    corpus_digest = content_hash([asdict(row) for row in ordered_rows])
     if not admission_report.admissible:
         blocked = (
             UnavailableEvaluationEvidence("admission_report", "admission did not pass"),
@@ -233,7 +226,7 @@ def evaluate_per_family(
             unavailable_evidence=[item.__dict__ for item in blocked],
         )
         return PerFamilyEvaluationReport(
-            evaluation_identity=_hash(payload),
+            evaluation_identity=content_hash(payload),
             status="blocked",
             family=profile.family,
             outcome_definition_id=profile.outcome_definition.id,
@@ -360,7 +353,7 @@ def evaluate_per_family(
         unavailable_evidence=[item.__dict__ for item in unavailable],
     )
     return PerFamilyEvaluationReport(
-        evaluation_identity=_hash(payload),
+        evaluation_identity=content_hash(payload),
         status=status,
         family=profile.family,
         outcome_definition_id=profile.outcome_definition.id,
