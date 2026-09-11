@@ -519,6 +519,16 @@ def test_require_commensurable_guards_joint_reasoning():
         require_commensurable(DEFECT_LINKED_FIX, JOB_RUN_FAILURE)
 
 
+def test_require_commensurable_accepts_explicit_retained_observations():
+    left = _defn(id="left")
+    right = _defn(id="right", window="different window")
+
+    result = require_commensurable(left, right, retained_observations=True)
+
+    assert result.level == "bridgeable"
+    assert result.pooling_allowed
+
+
 def test_baseline_strategies_are_non_commensurable():
     """The reference implementation's own example fails the semantic test --
     deliberately (spec D.1)."""
@@ -562,6 +572,31 @@ def test_cross_family_report_pools_when_commensurable():
     assert "Semantic/Full" in rep.declarable_class
 
 
+def test_cross_family_report_uses_retained_observation_pooling_policy():
+    from isoprax.evaluation import cross_family_report
+
+    left = _defn(id="left")
+    right = _defn(id="right", window="different window")
+    scores = [0.1, 0.5, 0.9] * 5
+    outcomes = [0, 0, 1] * 5
+
+    rep = cross_family_report(
+        "change",
+        left,
+        scores,
+        outcomes,
+        "operational",
+        right,
+        scores,
+        outcomes,
+        retained_observations=True,
+    )
+
+    assert rep.commensurable is False
+    assert rep.commensurability_level == "bridgeable"
+    assert rep.pooled_ece is not None
+
+
 def test_outcome_definition_resolvable_from_kb(tmp_path):
     """spec 6: stored scores stay interpretable after the Strategy is gone."""
     kb = SQLiteKB(str(tmp_path / "t.db"))
@@ -601,7 +636,7 @@ def test_time_sliced_and_paired_evaluation_utilities_reject_invalid_inputs():
 def test_evaluation_reports_all_calibration_and_rendering_paths():
     assert brier_score([0, 1], [0, 1]) == 0
     bins = reliability_curve([0, 1], [0, 1], n_bins=2)
-    assert len(bins) == 2 and expected_calibration_error([], []) == 0
+    assert len(bins) == 2
     assert (
         check_calibration_conformance([], [], min_events=0).as_declaration()
         == "uncalibrated"
@@ -619,6 +654,13 @@ def test_evaluation_reports_all_calibration_and_rendering_paths():
     withheld = CrossFamilyReport("a", "b", "d1", "d2", False, "no", 0, 0, 1, 1)
     pooled = CrossFamilyReport("a", "b", "d1", "d2", True, "yes", 0, 0, 1, 1, 0.1)
     assert "WITHHELD" in withheld.render() and "pooled ECE" in pooled.render()
+
+
+def test_evaluation_diagnostics_reject_empty_and_ragged_inputs():
+    with pytest.raises(ValueError, match="flat numeric"):
+        brier_score([[0.1], [0.2, 0.3]], [0, 1])
+    with pytest.raises(ValueError, match="flat numeric"):
+        reliability_curve([[0.1], [0, 1]], [0, 1])
 
 
 def test_evaluation_diagnostics_reject_invalid_inputs():

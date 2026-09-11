@@ -29,8 +29,13 @@ def _diagnostic_arrays(scores, outcomes, *, allow_empty: bool = True):
         raise ValueError("scores and outcomes must have equal length")
     if not allow_empty and score_count == 0:
         raise ValueError("scores and outcomes must not be empty")
-    score_array = np.asarray(scores, dtype=float)
-    outcome_array = np.asarray(outcomes, dtype=float)
+    try:
+        score_array = np.asarray(scores, dtype=float)
+        outcome_array = np.asarray(outcomes, dtype=float)
+    except (TypeError, ValueError) as error:
+        raise ValueError(
+            "scores and outcomes must be flat numeric sequences"
+        ) from error
     if score_array.ndim != 1 or outcome_array.ndim != 1:
         raise ValueError("scores and outcomes must be one-dimensional")
     if not np.all(np.isfinite(score_array)):
@@ -358,6 +363,9 @@ def cross_family_report(
     right_def,
     right_scores,
     right_outcomes,
+    *,
+    attestation=None,
+    retained_observations: bool = False,
 ) -> CrossFamilyReport:
     """Build a conformant cross-family result.
 
@@ -366,7 +374,12 @@ def cross_family_report(
     """
     from .commensurability import check_commensurable
 
-    res = check_commensurable(left_def, right_def)
+    res = check_commensurable(
+        left_def,
+        right_def,
+        attestation=attestation,
+        retained_observations=retained_observations,
+    )
     l_ece = expected_calibration_error(left_scores, left_outcomes)
     r_ece = expected_calibration_error(right_scores, right_outcomes)
     l_ok = check_calibration_conformance(left_scores, left_outcomes).passes
@@ -374,7 +387,7 @@ def cross_family_report(
     calibrated = l_ok and r_ok
 
     pooled = None
-    if res.commensurable:
+    if res.pooling_allowed:
         pooled = expected_calibration_error(
             list(left_scores) + list(right_scores),
             list(left_outcomes) + list(right_outcomes),
@@ -383,6 +396,8 @@ def cross_family_report(
     cls = "Cross-Family Conformance (Structural)"
     if res.commensurable:
         cls += ", commensurability established but Semantic/Full claims are outside Stage 0"
+    elif res.pooling_allowed:
+        cls += ", pooling permitted by retained-observation evidence"
     if not calibrated:
         cls += ", uncalibrated"
 

@@ -241,10 +241,23 @@ def check_commensurable(
     )
 
 
-def require_commensurable(a: OutcomeDefinition, b: OutcomeDefinition) -> None:
-    result = check_commensurable(a, b)
+def require_commensurable(
+    a: OutcomeDefinition,
+    b: OutcomeDefinition,
+    *,
+    attestation: Attestation | None = None,
+    retained_observations: bool = False,
+) -> CommensurabilityResult:
+    """Require the same pooling policy exposed by ``check_commensurable``."""
+    result = check_commensurable(
+        a,
+        b,
+        attestation=attestation,
+        retained_observations=retained_observations,
+    )
     if not result.pooling_allowed:
         raise IncommensurableError(result.reason)
+    return result
 
 
 class OutcomeDefinitionRegistry:

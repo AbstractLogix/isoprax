@@ -634,6 +634,8 @@ def test_admission_model_and_gate_edge_cases(
         SplitDefinition(
             "train", "2026-01-02T00:00:00+00:00", "2026-01-01T00:00:00+00:00"
         )
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        SplitDefinition("train", "2026-01-01T00:00:00", "2026-01-02T00:00:00+00:00")
     with pytest.raises(ValueError, match="invalid row split"):
         _row(split="bad")
     with pytest.raises(ValueError, match="invalid outcome"):
@@ -671,6 +673,8 @@ def test_admission_model_and_gate_edge_cases(
     assert not admission._gate_split_and_followup(
         [_row(score_time="2026-02-01T00:00:00+00:00")], profile
     ).passed
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        _row(score_time="2026-01-01T00:00:00")
     assert not admission._gate_horizon_and_threshold_freeze(
         [_row(threshold_version="")], profile
     ).passed
@@ -754,3 +758,18 @@ def test_admission_remaining_fail_closed_branches(profile: AdmissionProfile) -> 
             }
         ]
     )
+
+
+def test_split_gate_rejects_malformed_row_timestamp(profile: AdmissionProfile) -> None:
+    row = _row()
+    object.__setattr__(row, "score_time", "not-a-timestamp")
+
+    gate = admission._gate_split_and_followup([row], profile)
+
+    assert not gate.passed
+    assert gate.failed_row_ids == ("r1",)
+
+
+def test_parse_iso_rejects_empty_timestamp() -> None:
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        admission._parse_iso("")
