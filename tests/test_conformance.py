@@ -17,6 +17,7 @@ from isoprax import (
     ForecastSignal,
     HeuristicRiskStrategy,
     IncommensurableError,
+    KnowledgeBase,
     MetricSample,
     Outcome,
     OutcomeDefinition,
@@ -437,6 +438,33 @@ def test_sqlite_kb_lifecycle_and_query_filters_fail_closed(tmp_path):
     kb.close()
 
 
+def test_knowledge_base_retrieval_capabilities_are_abstract():
+    class IncompleteKB(KnowledgeBase):
+        def store_event(self, event):
+            pass
+
+        def store_signal(self, event_id, signal):
+            pass
+
+        def store_outcome(self, outcome):
+            pass
+
+        def query_events(self, family=None, event_type=None, start=None, end=None):
+            return []
+
+        def store_outcome_definition(self, definition):
+            pass
+
+        def get_outcome_definition(self, definition_id):
+            pass
+
+        def get_labeled_pairs(self, strategy_id):
+            return []
+
+    with pytest.raises(TypeError, match="abstract"):
+        IncompleteKB()
+
+
 # --- Section 3.3: cross-family conformance ---
 
 
@@ -519,6 +547,16 @@ def test_require_commensurable_guards_joint_reasoning():
         require_commensurable(DEFECT_LINKED_FIX, JOB_RUN_FAILURE)
 
 
+def test_require_commensurable_accepts_explicit_retained_observations():
+    left = _defn(id="left")
+    right = _defn(id="right", window="different window")
+
+    result = require_commensurable(left, right, retained_observations=True)
+
+    assert result.level == "bridgeable"
+    assert result.pooling_allowed
+
+
 def test_baseline_strategies_are_non_commensurable():
     """The reference implementation's own example fails the semantic test --
     deliberately (spec D.1)."""
@@ -562,6 +600,31 @@ def test_cross_family_report_pools_when_commensurable():
     assert "Semantic/Full" in rep.declarable_class
 
 
+def test_cross_family_report_uses_retained_observation_pooling_policy():
+    from isoprax.evaluation import cross_family_report
+
+    left = _defn(id="left")
+    right = _defn(id="right", window="different window")
+    scores = [0.1, 0.5, 0.9] * 5
+    outcomes = [0, 0, 1] * 5
+
+    rep = cross_family_report(
+        "change",
+        left,
+        scores,
+        outcomes,
+        "operational",
+        right,
+        scores,
+        outcomes,
+        retained_observations=True,
+    )
+
+    assert rep.commensurable is False
+    assert rep.commensurability_level == "bridgeable"
+    assert rep.pooled_ece is not None
+
+
 def test_outcome_definition_resolvable_from_kb(tmp_path):
     """spec 6: stored scores stay interpretable after the Strategy is gone."""
     kb = SQLiteKB(str(tmp_path / "t.db"))
@@ -601,7 +664,7 @@ def test_time_sliced_and_paired_evaluation_utilities_reject_invalid_inputs():
 def test_evaluation_reports_all_calibration_and_rendering_paths():
     assert brier_score([0, 1], [0, 1]) == 0
     bins = reliability_curve([0, 1], [0, 1], n_bins=2)
-    assert len(bins) == 2 and expected_calibration_error([], []) == 0
+    assert len(bins) == 2
     assert (
         check_calibration_conformance([], [], min_events=0).as_declaration()
         == "uncalibrated"
@@ -619,3 +682,45 @@ def test_evaluation_reports_all_calibration_and_rendering_paths():
     withheld = CrossFamilyReport("a", "b", "d1", "d2", False, "no", 0, 0, 1, 1)
     pooled = CrossFamilyReport("a", "b", "d1", "d2", True, "yes", 0, 0, 1, 1, 0.1)
     assert "WITHHELD" in withheld.render() and "pooled ECE" in pooled.render()
+
+
+def test_evaluation_diagnostics_reject_empty_and_ragged_inputs():
+    with pytest.raises(ValueError, match="flat numeric"):
+        brier_score([[0.1], [0.2, 0.3]], [0, 1])
+    with pytest.raises(ValueError, match="flat numeric"):
+        reliability_curve([[0.1], [0, 1]], [0, 1])
+
+
+def test_evaluation_diagnostics_reject_invalid_inputs():
+    with pytest.raises(ValueError, match="must not be empty"):
+        brier_score([], [])
+    with pytest.raises(ValueError, match="equal length"):
+        reliability_curve([0.1], [0, 1])
+    with pytest.raises(ValueError, match="equal length"):
+        expected_calibration_error([0.1], [0, 1])
+    with pytest.raises(ValueError, match="positive integer"):
+        reliability_curve([0.1], [0], n_bins=0)
+    with pytest.raises(ValueError, match="strictly between"):
+        time_sliced_split([], train_frac=1.5)
+    with pytest.raises(ValueError, match="non-empty"):
+        paired_comparison([], [])
+    with pytest.raises(ValueError, match="sized sequences"):
+        brier_score(iter([0.1]), [0])
+    with pytest.raises(ValueError, match="one-dimensional"):
+        reliability_curve([[0.1]], [[0]])
+    with pytest.raises(ValueError, match="finite"):
+        brier_score([float("nan")], [0])
+    with pytest.raises(ValueError, match=r"in \[0, 1\]"):
+        brier_score([1.1], [0])
+    with pytest.raises(ValueError, match="binary"):
+        brier_score([0.1], [2])
+    with pytest.raises(ValueError, match="finite"):
+        paired_comparison([float("inf")], [0.1])
+
+
+def test_evaluation_diagnostics_cover_constant_and_bad_calibration_paths():
+    assert paired_comparison([0.1], [0.1]).p_value == 1.0
+    result = check_calibration_conformance(
+        [1.0, 1.0], [0, 1], min_events=2, max_ece=0.01
+    )
+    assert not result.passes and "exceeds" in result.reason

@@ -4,19 +4,37 @@ import subprocess
 from dataclasses import replace
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 import isoprax.replay_selection as replay
 from isoprax import (
     PredeclarationArtifact,
     build_replay_justification_exclusion,
-    compute_predeclaration_hash,
     derive_build_floor,
     evaluate_predeclaration_provenance,
+    hash_predeclaration_artifact,
     record_exclusion_entry,
     screen_candidates,
     screen_early_candidate,
     validate_predeclaration_artifact,
 )
+
+
+@given(
+    st.dictionaries(
+        st.text(min_size=1, max_size=12),
+        st.integers(),
+        min_size=1,
+        max_size=12,
+    )
+)
+def test_predeclaration_hash_is_invariant_to_mapping_insertion_order(payload):
+    reordered = dict(reversed(list(payload.items())))
+
+    assert replay.hash_predeclaration_artifact(
+        payload
+    ) == replay.hash_predeclaration_artifact(reordered)
 
 
 def test_screen_candidates_records_every_outcome_and_fail_order() -> None:
@@ -90,7 +108,7 @@ def test_predeclaration_hash_detects_tampering_and_rejects_window_derived_soak_r
         adequacy_floor=20,
         ablation_comparison_plan="compare baseline and drift-aware variants",
     )
-    recorded_hash = compute_predeclaration_hash(artifact)
+    recorded_hash = hash_predeclaration_artifact(artifact)
     assert (
         validate_predeclaration_artifact(artifact, expected_hash=recorded_hash) is True
     )
@@ -150,7 +168,7 @@ def test_predeclaration_provenance_requires_anchor_and_ancestry(tmp_path) -> Non
         adequacy_floor=20,
         ablation_comparison_plan="compare baseline and drift-aware variants",
     )
-    recorded_hash = compute_predeclaration_hash(artifact)
+    recorded_hash = hash_predeclaration_artifact(artifact)
 
     def git(*args: str) -> str:
         return subprocess.run(

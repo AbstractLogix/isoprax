@@ -4,7 +4,11 @@ import pytest
 
 from isoprax.normative import resolve_citations
 
-ROOT = Path(__file__).parents[1]
+ROOT = next(
+    parent
+    for parent in Path(__file__).resolve().parents
+    if (parent / "docs" / "isoprax-v0.3-poc.md").is_file()
+)
 SPEC = ROOT / "docs" / "isoprax-v0.3-poc.md"
 
 

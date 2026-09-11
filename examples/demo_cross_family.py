@@ -269,7 +269,6 @@ def main():
         JOB_RUN_FAILURE,
         a_cal,
         a_y,
-        all_strategy_types=False,
     )
     print("\n=== CROSS-FAMILY RESULT (spec 8, obligation 5) ===")
     print(rep.render())
@@ -304,8 +303,8 @@ def main():
         f"pooled ECE={harm.pooled_ece:.3f}"
     )
     print(
-        f"  per-family top-k precision={harm.per_family_macro_recall:.3f}; "
-        f"pooled top-k precision={harm.pooled_macro_recall:.3f}; "
+        f"  per-family top-k precision={harm.per_family_macro_precision:.3f}; "
+        f"pooled top-k precision={harm.pooled_macro_precision:.3f}; "
         f"degradation={harm.degradation:.3f}"
     )
 

@@ -24,7 +24,7 @@ diff-coverage: test ## Require 95% coverage for changes relative to origin/main.
 	uv run coverage xml -o coverage.xml
 	uv run diff-cover coverage.xml --compare-branch origin/main --fail-under 95
 
-mutation: ## Run mutation testing for the build-qualification evidence boundary.
+mutation: ## Run mutation testing for all production modules.
 
 	uv run mutmut run
 

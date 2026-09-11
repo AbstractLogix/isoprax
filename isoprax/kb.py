@@ -65,8 +65,10 @@ class KnowledgeBase(ABC):
     @abstractmethod
     def store_outcome(self, outcome: Outcome) -> None: ...
 
+    @abstractmethod
     def get_event(self, event_id: str) -> Optional[dict[str, Any]]: ...
 
+    @abstractmethod
     def get_signal(self, event_id: str, strategy_id: str) -> Optional[Signal]: ...
 
     @abstractmethod
@@ -152,6 +154,7 @@ class SQLiteKB(KnowledgeBase):
                 explanation TEXT NOT NULL,
                 calibration_status TEXT,
                 payload TEXT NOT NULL,
+                UNIQUE(event_id, strategy_id),
                 FOREIGN KEY(event_id) REFERENCES events(id)
             );
 
@@ -167,8 +170,37 @@ class SQLiteKB(KnowledgeBase):
             );
             """
         )
+        self._reject_duplicate_signal_identities()
         self._migrate_nullable_signal_score()
+        self._create_signal_identity_constraint()
         self.conn.commit()
+
+    @staticmethod
+    def _payload_matches(stored_payload: str, payload: dict[str, Any]) -> bool:
+        try:
+            stored = json.loads(stored_payload)
+            normalized = json.loads(json.dumps(payload, default=str))
+            return stored == normalized
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ValueError("stored KB payload is not valid JSON") from error
+
+    def _reject_duplicate_signal_identities(self) -> None:
+        duplicates = self.conn.execute(
+            "SELECT event_id, strategy_id FROM signals "
+            "GROUP BY event_id, strategy_id HAVING COUNT(*) > 1"
+        ).fetchall()
+        if duplicates:
+            event_id, strategy_id = duplicates[0]
+            raise ValueError(
+                "duplicate signal identity in existing KB: "
+                f"({event_id!r}, {strategy_id!r})"
+            )
+
+    def _create_signal_identity_constraint(self) -> None:
+        self.conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS "
+            "idx_signals_event_strategy ON signals(event_id, strategy_id)"
+        )
 
     def _migrate_nullable_signal_score(self) -> None:
         """Allow score-free ForecastSignals in databases created by older code."""
@@ -189,6 +221,7 @@ class SQLiteKB(KnowledgeBase):
                 explanation TEXT NOT NULL,
                 calibration_status TEXT,
                 payload TEXT NOT NULL,
+                UNIQUE(event_id, strategy_id),
                 FOREIGN KEY(event_id) REFERENCES events(id)
             );
             INSERT INTO signals (
@@ -204,8 +237,17 @@ class SQLiteKB(KnowledgeBase):
 
     def store_event(self, event: Event) -> None:
         d = event.to_dict()
+        existing = self.conn.execute(
+            "SELECT payload FROM events WHERE id=?", (d["id"],)
+        ).fetchone()
+        if existing is not None:
+            if self._payload_matches(existing["payload"], d):
+                return
+            raise ValueError(
+                f"event id '{d['id']}' already stored with different content"
+            )
         self.conn.execute(
-            "INSERT OR REPLACE INTO events (id, event_type, family, timestamp, source, payload)"
+            "INSERT INTO events (id, event_type, family, timestamp, source, payload)"
             " VALUES (?,?,?,?,?,?)",
             (
                 d["id"],
@@ -226,6 +268,17 @@ class SQLiteKB(KnowledgeBase):
             # definition is resolvable at the time it is persisted (spec 5.2).
             self.get_outcome_definition(signal.outcome_definition_id)
         d = signal.to_dict()
+        existing = self.conn.execute(
+            "SELECT payload FROM signals WHERE event_id=? AND strategy_id=?",
+            (event_id, d["strategy_id"]),
+        ).fetchone()
+        if existing is not None:
+            if self._payload_matches(existing["payload"], d):
+                return
+            raise ValueError(
+                "signal identity already stored with different content "
+                f"for ({event_id!r}, {d['strategy_id']!r})"
+            )
         self.conn.execute(
             "INSERT INTO signals (event_id, strategy_id, strategy_version, family,"
             " score, explanation, calibration_status, payload) VALUES (?,?,?,?,?,?,?,?)",
@@ -298,9 +351,21 @@ class SQLiteKB(KnowledgeBase):
         self.conn.commit()
 
     def store_outcome_definition(self, definition) -> None:
+        payload = definition.to_dict()
+        existing = self.conn.execute(
+            "SELECT payload FROM outcome_definitions WHERE id=?",
+            (definition.id,),
+        ).fetchone()
+        if existing is not None:
+            if self._payload_matches(existing["payload"], payload):
+                return
+            raise ValueError(
+                "outcome definition id "
+                f"'{definition.id}' already stored with different content"
+            )
         self.conn.execute(
-            "INSERT OR REPLACE INTO outcome_definitions (id, payload) VALUES (?,?)",
-            (definition.id, json.dumps(definition.to_dict())),
+            "INSERT INTO outcome_definitions (id, payload) VALUES (?,?)",
+            (definition.id, json.dumps(payload)),
         )
         self.conn.commit()
 

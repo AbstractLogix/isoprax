@@ -19,9 +19,36 @@ from scipy import stats
 from sklearn.metrics import roc_auc_score
 
 
+def _diagnostic_arrays(scores, outcomes, *, allow_empty: bool = True):
+    try:
+        score_count = len(scores)
+        outcome_count = len(outcomes)
+    except TypeError as error:
+        raise ValueError("scores and outcomes must be sized sequences") from error
+    if score_count != outcome_count:
+        raise ValueError("scores and outcomes must have equal length")
+    if not allow_empty and score_count == 0:
+        raise ValueError("scores and outcomes must not be empty")
+    try:
+        score_array = np.asarray(scores, dtype=float)
+        outcome_array = np.asarray(outcomes, dtype=float)
+    except (TypeError, ValueError) as error:
+        raise ValueError(
+            "scores and outcomes must be flat numeric sequences"
+        ) from error
+    if score_array.ndim != 1 or outcome_array.ndim != 1:
+        raise ValueError("scores and outcomes must be one-dimensional")
+    if not np.all(np.isfinite(score_array)):
+        raise ValueError("scores must be finite")
+    if np.any((score_array < 0.0) | (score_array > 1.0)):
+        raise ValueError("scores must be in [0, 1]")
+    if not np.all(np.isin(outcome_array, (0.0, 1.0))):
+        raise ValueError("outcomes must be binary 0 or 1")
+    return score_array, outcome_array
+
+
 def brier_score(scores: list[float], outcomes: list[int]) -> float:
-    s = np.asarray(scores, dtype=float)
-    y = np.asarray(outcomes, dtype=float)
+    s, y = _diagnostic_arrays(scores, outcomes, allow_empty=False)
     return float(np.mean((s - y) ** 2))
 
 
@@ -38,8 +65,9 @@ def reliability_curve(scores, outcomes, n_bins: int = 10) -> list[ReliabilityBin
     """Data behind a reliability diagram (spec 5.3): for each score bin, the
     mean predicted probability vs the observed empirical frequency. A well-
     calibrated strategy has mean_predicted ~= empirical_frequency per bin."""
-    s = np.asarray(scores, dtype=float)
-    y = np.asarray(outcomes, dtype=float)
+    if not isinstance(n_bins, int) or isinstance(n_bins, bool) or n_bins < 1:
+        raise ValueError("n_bins must be a positive integer")
+    s, y = _diagnostic_arrays(scores, outcomes)
     edges = np.linspace(0.0, 1.0, n_bins + 1)
     out = []
     for i in range(n_bins):
@@ -72,6 +100,13 @@ def expected_calibration_error(scores, outcomes, n_bins: int = 10) -> float:
 def time_sliced_split(events: list[dict], train_frac: float = 0.7):
     """Time-ordered split (spec 8.1). Assumes events already time-sorted or
     sorts them; NEVER shuffles."""
+    if (
+        isinstance(train_frac, bool)
+        or not isinstance(train_frac, (int, float))
+        or not np.isfinite(train_frac)
+        or not 0.0 < train_frac < 1.0
+    ):
+        raise ValueError("train_frac must be strictly between 0 and 1")
     ordered = sorted(events, key=lambda e: e["timestamp"])
     k = int(len(ordered) * train_frac)
     return ordered[:k], ordered[k:]
@@ -98,6 +133,10 @@ def paired_comparison(
     c = np.asarray(candidate_errs, dtype=float)
     if len(b) != len(c):
         raise ValueError("paired test requires equal-length paired errors")
+    if not len(b):
+        raise ValueError("paired test requires non-empty paired errors")
+    if not np.all(np.isfinite(b)) or not np.all(np.isfinite(c)):
+        raise ValueError("paired errors must be finite")
     # Wilcoxon requires some non-zero differences
     diffs = b - c
     if np.allclose(diffs, 0):
@@ -324,7 +363,9 @@ def cross_family_report(
     right_def,
     right_scores,
     right_outcomes,
-    all_strategy_types: bool = False,
+    *,
+    attestation=None,
+    retained_observations: bool = False,
 ) -> CrossFamilyReport:
     """Build a conformant cross-family result.
 
@@ -333,7 +374,12 @@ def cross_family_report(
     """
     from .commensurability import check_commensurable
 
-    res = check_commensurable(left_def, right_def)
+    res = check_commensurable(
+        left_def,
+        right_def,
+        attestation=attestation,
+        retained_observations=retained_observations,
+    )
     l_ece = expected_calibration_error(left_scores, left_outcomes)
     r_ece = expected_calibration_error(right_scores, right_outcomes)
     l_ok = check_calibration_conformance(left_scores, left_outcomes).passes
@@ -341,7 +387,7 @@ def cross_family_report(
     calibrated = l_ok and r_ok
 
     pooled = None
-    if res.commensurable:
+    if res.pooling_allowed:
         pooled = expected_calibration_error(
             list(left_scores) + list(right_scores),
             list(left_outcomes) + list(right_outcomes),
@@ -350,6 +396,8 @@ def cross_family_report(
     cls = "Cross-Family Conformance (Structural)"
     if res.commensurable:
         cls += ", commensurability established but Semantic/Full claims are outside Stage 0"
+    elif res.pooling_allowed:
+        cls += ", pooling permitted by retained-observation evidence"
     if not calibrated:
         cls += ", uncalibrated"
 

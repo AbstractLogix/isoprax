@@ -8,8 +8,9 @@ Semantic or Full conformance claim.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 _ALLOWED_SPLITS = ("train", "calibration_fit", "calibration_gate", "test")
@@ -18,6 +19,9 @@ _FORBIDDEN_LINKAGE_ONLY = {
     "text_similarity",
     "shared_authorship",
 }
+_RFC3339_UTC = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$"
+)
 
 
 @dataclass(frozen=True)
@@ -287,9 +291,14 @@ def _gate_split_and_followup(
     split_by_name = {s.name: s for s in profile.split_definitions}
     failed: list[str] = []
     for r in rows:
-        split = split_by_name[r.split]
-        t = _parse_iso(r.score_time)
-        if t < _parse_iso(split.start) or t > _parse_iso(split.end):
+        try:
+            split = split_by_name[r.split]
+            t = _parse_iso(r.score_time)
+            in_split = _parse_iso(split.start) <= t <= _parse_iso(split.end)
+        except (TypeError, ValueError):
+            failed.append(r.row_id)
+            continue
+        if not in_split:
             failed.append(r.row_id)
             continue
         if r.outcome_class != "censored" and not r.outcome_window_complete:
@@ -504,7 +513,7 @@ def _gate_adequacy(rows: list[CorpusRow], profile: AdmissionProfile) -> GateResu
             message=(
                 "per-split adequacy floor not met for observed_positive/observed_negative"
             ),
-            failed_row_ids=tuple(deficits),
+            failed_row_ids=tuple(sorted(r.row_id for r in rows if r.split in deficits)),
         )
     return GateResult("adequacy", True, "adequacy gate passed")
 
@@ -542,4 +551,13 @@ def _counts_by_split(rows: list[CorpusRow]) -> dict[str, dict[str, int]]:
 
 
 def _parse_iso(ts: str) -> datetime:
-    return datetime.fromisoformat(ts)
+    if not isinstance(ts, str) or not _RFC3339_UTC.fullmatch(ts):
+        raise ValueError("timestamp must be RFC 3339 UTC")
+    normalized = ts[:-1] + "+00:00" if ts.endswith("Z") else ts
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise ValueError("timestamp must be RFC 3339 UTC") from error
+    if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
+        raise ValueError("timestamp must be RFC 3339 UTC")
+    return parsed

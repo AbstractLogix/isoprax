@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable, Mapping
 
 from .admission import CorpusRow, SplitDefinition
+from .identity import content_hash
 from .replay_capture import ReplayCaptureRecord
 
 _SPLIT_NAMES = ("train", "calibration_fit", "calibration_gate", "test")
@@ -85,12 +84,6 @@ def _admission_timestamp(value: str) -> str:
     return _parse_time(value).isoformat()
 
 
-def _hash(value: object) -> str:
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode()
-    ).hexdigest()
-
-
 def _profile_payload(profile: CorpusAssemblyProfile) -> dict[str, object]:
     return {
         "expected_system_id": profile.expected_system_id,
@@ -107,7 +100,7 @@ def _profile_payload(profile: CorpusAssemblyProfile) -> dict[str, object]:
 def _input_identity(value: ReplayCaptureInput) -> str:
     capture = value.capture
     identity = getattr(capture, "lane_identity", type(capture).__name__)
-    return _hash(
+    return content_hash(
         {
             "capture": identity,
             "fields": value.prediction_fields,
@@ -191,7 +184,7 @@ def _row(
 ) -> CorpusRow:
     capture = value.capture
     lane = capture.lane
-    row_id = _hash(
+    row_id = content_hash(
         {
             "profile": profile_identity,
             "capture": capture.lane_identity,
@@ -229,7 +222,7 @@ def assemble_corpus(
     profile: CorpusAssemblyProfile, inputs: Iterable[ReplayCaptureInput]
 ) -> CorpusAssemblyReport:
     """Reduce capture evidence into deterministic candidate rows and rejections."""
-    profile_identity = _hash(_profile_payload(profile))
+    profile_identity = content_hash(_profile_payload(profile))
     accepted: list[CorpusRow] = []
     rejected: list[AssemblyRejection] = []
     seen_changes: set[str] = set()
