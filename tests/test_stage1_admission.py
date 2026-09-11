@@ -634,6 +634,8 @@ def test_admission_model_and_gate_edge_cases(
         SplitDefinition(
             "train", "2026-01-02T00:00:00+00:00", "2026-01-01T00:00:00+00:00"
         )
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        SplitDefinition("train", "2026-01-01T00:00:00", "2026-01-02T00:00:00+00:00")
     with pytest.raises(ValueError, match="invalid row split"):
         _row(split="bad")
     with pytest.raises(ValueError, match="invalid outcome"):
@@ -671,6 +673,8 @@ def test_admission_model_and_gate_edge_cases(
     assert not admission._gate_split_and_followup(
         [_row(score_time="2026-02-01T00:00:00+00:00")], profile
     ).passed
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        _row(score_time="2026-01-01T00:00:00")
     assert not admission._gate_horizon_and_threshold_freeze(
         [_row(threshold_version="")], profile
     ).passed
