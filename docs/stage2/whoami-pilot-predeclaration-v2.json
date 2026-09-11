@@ -30,11 +30,25 @@
     "latency_measurement": "curl time_total seconds",
     "positive_rule": "p99 latency > 0.5 seconds over the complete 60-second sample"
   },
-  "outcome_definitions": {
-    "event": "HTTP /bench p99 latency threshold crossed",
-    "observation_process": "same local HTTP workload and latency capture",
-    "change_family": "threshold crossed after selected commit deployment",
-    "operational_family": "threshold crossed from observed deployed state"
+    "outcome_definitions": {
+        "event": "HTTP /bench p99 latency threshold crossed",
+        "observation_process": "same local HTTP workload and latency capture",
+        "change_family": "threshold crossed after selected commit deployment",
+        "operational_family": "threshold crossed from observed deployed state",
+        "window": {
+            "duration": 10,
+            "unit": "minute",
+            "anchor": "score_time"
+        },
+        "thresholds": [
+            {
+                "metric": "p99_latency_seconds",
+                "operator": ">",
+                "value": 0.5,
+                "sustain": 60,
+                "sustain_unit": "second"
+            }
+        ]
   },
   "censoring": [
     "build failure",
@@ -56,8 +70,8 @@
   },
   "external_anchor_reference": "https://github.com/traefik/whoami/commit/1ce75d01b6978863647da42557a707a479da3a51",
   "supersedes": "whoami-pilot-predeclaration.json",
-  "predeclaration_commit": "filled by the commit that adds this file",
+    "predeclaration_commit": "fe26a04bc522f9d4591f2751ff2295a2fcfef0c0",
   "corpus_data_commit_requirement": "must descend from the predeclaration commit",
   "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
-  "artifact_hash": "12534199a625589730d7cefb774e2b909ce4e5cad99e94606d5e2796f26658d8"
+    "artifact_hash": "ecd5ae90362fa99a3f2bc3fb6395cce14e4d1a81b6947cc5678d3da69e5b884c"
 }
