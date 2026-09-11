@@ -111,3 +111,8 @@ def test_legacy_duplicate_signals_fail_closed_during_migration(tmp_path):
 
     with pytest.raises(ValueError, match="duplicate signal identity"):
         SQLiteKB(path)
+
+
+def test_malformed_stored_payload_is_rejected():
+    with pytest.raises(ValueError, match="stored KB payload is not valid JSON"):
+        SQLiteKB._payload_matches("{", {})
