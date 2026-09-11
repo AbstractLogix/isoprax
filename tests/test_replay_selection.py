@@ -4,6 +4,8 @@ import subprocess
 from dataclasses import replace
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 import isoprax.replay_selection as replay
 from isoprax import (
@@ -17,6 +19,22 @@ from isoprax import (
     screen_early_candidate,
     validate_predeclaration_artifact,
 )
+
+
+@given(
+    st.dictionaries(
+        st.text(min_size=1, max_size=12),
+        st.integers(),
+        min_size=1,
+        max_size=12,
+    )
+)
+def test_predeclaration_hash_is_invariant_to_mapping_insertion_order(payload):
+    reordered = dict(reversed(list(payload.items())))
+
+    assert replay.hash_predeclaration_artifact(
+        payload
+    ) == replay.hash_predeclaration_artifact(reordered)
 
 
 def test_screen_candidates_records_every_outcome_and_fail_order() -> None:

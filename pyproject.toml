@@ -39,8 +39,7 @@ filterwarnings = ["error::ResourceWarning"]
 
 [tool.mutmut]
 source_paths = ["isoprax"]
-only_mutate = ["isoprax/build_qualification.py"]
-pytest_add_cli_args = ["-o", "addopts=", "tests/test_build_qualification.py", "-q"]
+pytest_add_cli_args = ["-o", "addopts=", "tests", "-q"]
 mutate_only_covered_lines = true
 
 [tool.ruff]
