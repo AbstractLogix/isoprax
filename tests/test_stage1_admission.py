@@ -311,6 +311,7 @@ def test_adequacy_gate_rejects_under_minimum_counts(
     )
     g = {x.gate_id: x for x in rep.gate_results}["adequacy"]
     assert not g.passed
+    assert g.failed_row_ids == ("r1",)
 
 
 def test_deterministic_output_for_identical_inputs(profile: AdmissionProfile) -> None:

@@ -65,8 +65,10 @@ class KnowledgeBase(ABC):
     @abstractmethod
     def store_outcome(self, outcome: Outcome) -> None: ...
 
+    @abstractmethod
     def get_event(self, event_id: str) -> Optional[dict[str, Any]]: ...
 
+    @abstractmethod
     def get_signal(self, event_id: str, strategy_id: str) -> Optional[Signal]: ...
 
     @abstractmethod

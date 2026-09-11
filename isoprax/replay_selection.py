@@ -677,9 +677,6 @@ def hash_predeclaration_artifact(
     return hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
 
 
-compute_predeclaration_hash = hash_predeclaration_artifact
-
-
 def validate_predeclaration_artifact(
     artifact: PredeclarationArtifact | Mapping[str, Any],
     *,
@@ -745,9 +742,6 @@ def validate_predeclaration_artifact(
             "soak duration rule cannot use the observation window it bounds"
         )
     return True
-
-
-validate_predeclaration = validate_predeclaration_artifact
 
 
 def _infer_commit_time(
@@ -894,10 +888,6 @@ def evaluate_predeclaration_provenance(
     )
 
 
-check_predeclaration_provenance = evaluate_predeclaration_provenance
-validate_predeclaration_provenance = evaluate_predeclaration_provenance
-
-
 def record_exclusion_entry(
     dataset_id: str,
     *,
@@ -938,9 +928,6 @@ def record_exclusion_entry(
     return entry
 
 
-validate_exclusion_entry = record_exclusion_entry
-
-
 def build_replay_justification_exclusion(
     dataset_id: str,
     *,
@@ -970,8 +957,6 @@ __all__ = [
     "ProvenanceRecord",
     "ScreeningResult",
     "build_replay_justification_exclusion",
-    "check_predeclaration_provenance",
-    "compute_predeclaration_hash",
     "derive_build_floor",
     "evaluate_candidate_screening",
     "evaluate_predeclaration_provenance",
@@ -981,8 +966,5 @@ __all__ = [
     "screen_early_candidate",
     "screen_candidate_system",
     "screen_candidates",
-    "validate_exclusion_entry",
-    "validate_predeclaration",
     "validate_predeclaration_artifact",
-    "validate_predeclaration_provenance",
 ]

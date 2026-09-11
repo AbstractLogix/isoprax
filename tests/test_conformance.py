@@ -17,6 +17,7 @@ from isoprax import (
     ForecastSignal,
     HeuristicRiskStrategy,
     IncommensurableError,
+    KnowledgeBase,
     MetricSample,
     Outcome,
     OutcomeDefinition,
@@ -435,6 +436,33 @@ def test_sqlite_kb_lifecycle_and_query_filters_fail_closed(tmp_path):
             kb.store_outcome(Outcome("missing", "s", True, DEFECT_LINKED_FIX.id))
     assert kb.conn is None
     kb.close()
+
+
+def test_knowledge_base_retrieval_capabilities_are_abstract():
+    class IncompleteKB(KnowledgeBase):
+        def store_event(self, event):
+            pass
+
+        def store_signal(self, event_id, signal):
+            pass
+
+        def store_outcome(self, outcome):
+            pass
+
+        def query_events(self, family=None, event_type=None, start=None, end=None):
+            return []
+
+        def store_outcome_definition(self, definition):
+            pass
+
+        def get_outcome_definition(self, definition_id):
+            pass
+
+        def get_labeled_pairs(self, strategy_id):
+            return []
+
+    with pytest.raises(TypeError, match="abstract"):
+        IncompleteKB()
 
 
 # --- Section 3.3: cross-family conformance ---
