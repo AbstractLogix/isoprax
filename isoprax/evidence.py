@@ -15,8 +15,8 @@ class PoolingHarmEvidence:
     right_ece: float
     pooled_ece: float
     k: int
-    per_family_macro_recall: float
-    pooled_macro_recall: float
+    per_family_macro_precision: float
+    pooled_macro_precision: float
     degradation: float
     left_selected: tuple[str, ...]
     right_selected: tuple[str, ...]
@@ -24,9 +24,14 @@ class PoolingHarmEvidence:
     claim_boundary: str
 
 
-def _family_rows(prefix: str, score: float, positives: int, total: int):
+def _family_rows(prefix: str, base_score: float, positives: int, total: int):
+    step = 0.0001 / max(total, 1)
     return [
-        (f"{prefix}-{index:03d}", score, int(index < positives))
+        (
+            f"{prefix}-{index:03d}",
+            base_score + (index - (total - 1) / 2) * step,
+            int(index >= total - positives),
+        )
         for index in range(total)
     ]
 
@@ -52,12 +57,13 @@ def build_pooling_harm_evidence(total: int = 100, k: int = 20) -> PoolingHarmEvi
 
     The 7-day family has a 0.60 event rate and the 90-day family a 0.90 event
     rate. Each score is calibrated within its own definition, and pooled ECE is
-    exactly zero, but pooled ranking selects only the higher-scale family and
-    halves macro per-family top-k recall.
+    low, but pooled ranking selects only the higher-scale family and halves
+    macro per-family top-k precision. Scores are strictly ordered so selection
+    does not depend on event-ID tie-breaking.
     """
 
-    left = _family_rows("seven-day", 0.60, int(total * 0.60), total)
-    right = _family_rows("ninety-day", 0.90, int(total * 0.90), total)
+    left = _family_rows("seven-day", 0.58, int(total * 0.60), total)
+    right = _family_rows("ninety-day", 0.88, int(total * 0.90), total)
     pooled = left + right
     left_selected = _top_k(left, k)
     right_selected = _top_k(right, k)
@@ -82,8 +88,8 @@ def build_pooling_harm_evidence(total: int = 100, k: int = 20) -> PoolingHarmEvi
             [row[1] for row in pooled], [row[2] for row in pooled]
         ),
         k=k,
-        per_family_macro_recall=per_family,
-        pooled_macro_recall=pooled_macro,
+        per_family_macro_precision=per_family,
+        pooled_macro_precision=pooled_macro,
         degradation=per_family - pooled_macro,
         left_selected=left_selected,
         right_selected=right_selected,
