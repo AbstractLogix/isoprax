@@ -509,7 +509,7 @@ def _gate_adequacy(rows: list[CorpusRow], profile: AdmissionProfile) -> GateResu
             message=(
                 "per-split adequacy floor not met for observed_positive/observed_negative"
             ),
-            failed_row_ids=tuple(deficits),
+            failed_row_ids=tuple(sorted(r.row_id for r in rows if r.split in deficits)),
         )
     return GateResult("adequacy", True, "adequacy gate passed")
 
