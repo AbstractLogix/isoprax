@@ -758,3 +758,18 @@ def test_admission_remaining_fail_closed_branches(profile: AdmissionProfile) -> 
             }
         ]
     )
+
+
+def test_split_gate_rejects_malformed_row_timestamp(profile: AdmissionProfile) -> None:
+    row = _row()
+    object.__setattr__(row, "score_time", "not-a-timestamp")
+
+    gate = admission._gate_split_and_followup([row], profile)
+
+    assert not gate.passed
+    assert gate.failed_row_ids == ("r1",)
+
+
+def test_parse_iso_rejects_empty_timestamp() -> None:
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        admission._parse_iso("")
