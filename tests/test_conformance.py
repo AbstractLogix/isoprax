@@ -664,7 +664,7 @@ def test_time_sliced_and_paired_evaluation_utilities_reject_invalid_inputs():
 def test_evaluation_reports_all_calibration_and_rendering_paths():
     assert brier_score([0, 1], [0, 1]) == 0
     bins = reliability_curve([0, 1], [0, 1], n_bins=2)
-    assert len(bins) == 2 and expected_calibration_error([], []) == 0
+    assert len(bins) == 2
     assert (
         check_calibration_conformance([], [], min_events=0).as_declaration()
         == "uncalibrated"
@@ -682,3 +682,45 @@ def test_evaluation_reports_all_calibration_and_rendering_paths():
     withheld = CrossFamilyReport("a", "b", "d1", "d2", False, "no", 0, 0, 1, 1)
     pooled = CrossFamilyReport("a", "b", "d1", "d2", True, "yes", 0, 0, 1, 1, 0.1)
     assert "WITHHELD" in withheld.render() and "pooled ECE" in pooled.render()
+
+
+def test_evaluation_diagnostics_reject_empty_and_ragged_inputs():
+    with pytest.raises(ValueError, match="flat numeric"):
+        brier_score([[0.1], [0.2, 0.3]], [0, 1])
+    with pytest.raises(ValueError, match="flat numeric"):
+        reliability_curve([[0.1], [0, 1]], [0, 1])
+
+
+def test_evaluation_diagnostics_reject_invalid_inputs():
+    with pytest.raises(ValueError, match="must not be empty"):
+        brier_score([], [])
+    with pytest.raises(ValueError, match="equal length"):
+        reliability_curve([0.1], [0, 1])
+    with pytest.raises(ValueError, match="equal length"):
+        expected_calibration_error([0.1], [0, 1])
+    with pytest.raises(ValueError, match="positive integer"):
+        reliability_curve([0.1], [0], n_bins=0)
+    with pytest.raises(ValueError, match="strictly between"):
+        time_sliced_split([], train_frac=1.5)
+    with pytest.raises(ValueError, match="non-empty"):
+        paired_comparison([], [])
+    with pytest.raises(ValueError, match="sized sequences"):
+        brier_score(iter([0.1]), [0])
+    with pytest.raises(ValueError, match="one-dimensional"):
+        reliability_curve([[0.1]], [[0]])
+    with pytest.raises(ValueError, match="finite"):
+        brier_score([float("nan")], [0])
+    with pytest.raises(ValueError, match=r"in \[0, 1\]"):
+        brier_score([1.1], [0])
+    with pytest.raises(ValueError, match="binary"):
+        brier_score([0.1], [2])
+    with pytest.raises(ValueError, match="finite"):
+        paired_comparison([float("inf")], [0.1])
+
+
+def test_evaluation_diagnostics_cover_constant_and_bad_calibration_paths():
+    assert paired_comparison([0.1], [0.1]).p_value == 1.0
+    result = check_calibration_conformance(
+        [1.0, 1.0], [0, 1], min_events=2, max_ece=0.01
+    )
+    assert not result.passes and "exceeds" in result.reason
