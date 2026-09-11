@@ -774,3 +774,8 @@ def test_split_gate_rejects_malformed_row_timestamp(profile: AdmissionProfile) -
 def test_parse_iso_rejects_empty_timestamp() -> None:
     with pytest.raises(ValueError, match="RFC 3339 UTC"):
         admission._parse_iso("")
+
+
+def test_parse_iso_rejects_space_separator() -> None:
+    with pytest.raises(ValueError, match="RFC 3339 UTC"):
+        admission._parse_iso("2026-01-01 00:00:00+00:00")
