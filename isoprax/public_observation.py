@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterable
+
+from .identity import content_hash
 
 
 @dataclass(frozen=True)
@@ -91,9 +91,7 @@ def normalize_public_observations(
         }
         records.append(
             PublicObservationRecord(
-                hashlib.sha256(
-                    json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-                ).hexdigest(),
+                content_hash(payload),
                 **payload,
             )
         )

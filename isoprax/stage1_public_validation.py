@@ -6,7 +6,6 @@ import csv
 import datetime as dt
 import gzip
 import hashlib
-import json
 import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -22,6 +21,7 @@ from .admission import (
     evaluate_admission,
 )
 from .commensurability import ObservationProcess, OutcomeDefinition, Threshold, Window
+from .identity import content_hash
 from .per_family_evaluation import (
     PerFamilyEvaluationProfile,
     evaluate_per_family,
@@ -482,9 +482,7 @@ def build_stage1_public_validation_report(
         "cross_family_pooling": "withheld: Outcome Definitions use different observation processes",
         "claim_boundary": _CLAIM_BOUNDARY,
     }
-    identity = hashlib.sha256(
-        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+    identity = content_hash(payload)
     return {"report_identity": f"sha256:{identity}", **payload}
 
 

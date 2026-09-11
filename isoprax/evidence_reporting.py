@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import Any, Iterable
 
 from .admission import AdmissionProfile, AdmissionReport
 from .corpus_assembly import CorpusAssemblyReport
+from .identity import content_hash
 from .replay_capture import ReplayCaptureRecord
 
 _CLAIM_BOUNDARY = (
@@ -17,14 +16,6 @@ _CLAIM_BOUNDARY = (
     "Conformance, model efficacy, or cross-family score pooling."
 )
 _STATUSES = {"admission_evidence", "blocked", "inconclusive"}
-
-
-def _canonical(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
-
-
-def _hash(value: object) -> str:
-    return hashlib.sha256(_canonical(value).encode()).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -283,7 +274,7 @@ def build_evidence_report(
         "claim_scope": "stage1_evidence_reporting_only",
     }
     return EvidenceReport(
-        report_identity=_hash(public),
+        report_identity=content_hash(public),
         status=status,
         assembly_profile_identity=assembly.profile_identity,
         release_scope=profile.release_scope,

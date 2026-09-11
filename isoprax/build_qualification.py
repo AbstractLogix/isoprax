@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Mapping
+
+from .identity import content_hash
 
 
 @dataclass(frozen=True)
@@ -54,10 +54,6 @@ class BuildQualificationReport:
     claim_scope: str = "build_qualification_only"
 
 
-def _canonical(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
-
-
 def _sample_payload(sample: BuildSample) -> dict[str, Any]:
     return {
         "commits": sample.commits,
@@ -73,7 +69,7 @@ def prepare_build_sample(sample: BuildSample) -> BuildPreparation:
         raise ValueError("sample commits must be non-empty and duplicate-free")
     if not sample.recipe_reference.strip():
         raise ValueError("recipe_reference is required")
-    digest = hashlib.sha256(_canonical(_sample_payload(sample)).encode()).hexdigest()
+    digest = content_hash(_sample_payload(sample))
     coverage = {record.commit: record for record in sample.legal_coverage}
     if any(
         not coverage.get(commit)

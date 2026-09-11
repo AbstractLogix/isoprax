@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterable
+
+from .identity import bytes_hash, content_hash
 
 _CANONICAL_SPLITS = ("train", "calibration_fit", "calibration_gate", "test")
 _ALLOWED_OUTCOMES = ("observed_positive", "observed_negative", "censored")
@@ -136,9 +136,7 @@ def _snapshot_identity(item: PublicCorpusSnapshot) -> str:
         "uses_private_data": item.uses_private_data,
         "uses_privileged_telemetry": item.uses_privileged_telemetry,
     }
-    return hashlib.sha256(
-        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+    return content_hash(payload)
 
 
 def normalize_public_corpus(
@@ -190,9 +188,7 @@ def normalize_public_corpus(
             outcome, reason = "censored", "public corpus artifacts are incomplete"
 
         payload = _identity_payload(item, outcome, reason)
-        identity = hashlib.sha256(
-            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
+        identity = content_hash(payload)
         records.append(PublicCorpusRecord(identity=identity, **payload))
         seen.add(key)
 
@@ -233,7 +229,7 @@ def materialize_public_corpus(
         input_identity = (
             _snapshot_identity(item)
             if isinstance(item, PublicCorpusSnapshot)
-            else hashlib.sha256(repr(item).encode()).hexdigest()
+            else bytes_hash(repr(item).encode())
         )
         try:
             if not isinstance(item, PublicCorpusSnapshot):
@@ -272,9 +268,7 @@ def materialize_public_corpus(
         "withheld": [record.__dict__ for record in withheld_records],
         "published_artifacts": profile.published_artifacts,
     }
-    materialization_identity = hashlib.sha256(
-        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+    materialization_identity = content_hash(payload)
     return PublicCorpusReport(
         materialization_identity=materialization_identity,
         profile_identity=profile.profile_identity,
