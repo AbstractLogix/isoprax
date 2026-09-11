@@ -304,8 +304,8 @@ def main():
         f"pooled ECE={harm.pooled_ece:.3f}"
     )
     print(
-        f"  per-family top-k precision={harm.per_family_macro_recall:.3f}; "
-        f"pooled top-k precision={harm.pooled_macro_recall:.3f}; "
+        f"  per-family top-k precision={harm.per_family_macro_precision:.3f}; "
+        f"pooled top-k precision={harm.pooled_macro_precision:.3f}; "
         f"degradation={harm.degradation:.3f}"
     )
 

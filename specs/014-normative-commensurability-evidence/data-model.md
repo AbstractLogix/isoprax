@@ -66,7 +66,8 @@ to pass.
 - `k`: deterministic selection size.
 - `per_family_selection`, `pooled_selection`: selected IDs.
 - `selection_metric`: deterministic per-definition outcome metric.
-- `degradation`: pooled minus per-family result, with direction defined.
+- `degradation`: per-family minus pooled result, so positive values mean pooled
+  ranking lost per-family top-k precision.
 - `claim_boundary`: explicit non-efficacy/non-conformance statement.
 
 ## PublicLabelEvidence
