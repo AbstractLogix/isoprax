@@ -9,7 +9,7 @@ Semantic or Full conformance claim.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 _ALLOWED_SPLITS = ("train", "calibration_fit", "calibration_gate", "test")
@@ -287,9 +287,14 @@ def _gate_split_and_followup(
     split_by_name = {s.name: s for s in profile.split_definitions}
     failed: list[str] = []
     for r in rows:
-        split = split_by_name[r.split]
-        t = _parse_iso(r.score_time)
-        if t < _parse_iso(split.start) or t > _parse_iso(split.end):
+        try:
+            split = split_by_name[r.split]
+            t = _parse_iso(r.score_time)
+            in_split = _parse_iso(split.start) <= t <= _parse_iso(split.end)
+        except (TypeError, ValueError):
+            failed.append(r.row_id)
+            continue
+        if not in_split:
             failed.append(r.row_id)
             continue
         if r.outcome_class != "censored" and not r.outcome_window_complete:
@@ -542,4 +547,13 @@ def _counts_by_split(rows: list[CorpusRow]) -> dict[str, dict[str, int]]:
 
 
 def _parse_iso(ts: str) -> datetime:
-    return datetime.fromisoformat(ts)
+    if not isinstance(ts, str) or not ts:
+        raise ValueError("timestamp must be RFC 3339 UTC")
+    normalized = ts[:-1] + "+00:00" if ts.endswith("Z") else ts
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise ValueError("timestamp must be RFC 3339 UTC") from error
+    if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
+        raise ValueError("timestamp must be RFC 3339 UTC")
+    return parsed
