@@ -269,7 +269,6 @@ def main():
         JOB_RUN_FAILURE,
         a_cal,
         a_y,
-        all_strategy_types=False,
     )
     print("\n=== CROSS-FAMILY RESULT (spec 8, obligation 5) ===")
     print(rep.render())
