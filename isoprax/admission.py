@@ -8,6 +8,7 @@ Semantic or Full conformance claim.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -18,6 +19,9 @@ _FORBIDDEN_LINKAGE_ONLY = {
     "text_similarity",
     "shared_authorship",
 }
+_RFC3339_UTC = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$"
+)
 
 
 @dataclass(frozen=True)
@@ -547,7 +551,7 @@ def _counts_by_split(rows: list[CorpusRow]) -> dict[str, dict[str, int]]:
 
 
 def _parse_iso(ts: str) -> datetime:
-    if not isinstance(ts, str) or not ts:
+    if not isinstance(ts, str) or not _RFC3339_UTC.fullmatch(ts):
         raise ValueError("timestamp must be RFC 3339 UTC")
     normalized = ts[:-1] + "+00:00" if ts.endswith("Z") else ts
     try:
