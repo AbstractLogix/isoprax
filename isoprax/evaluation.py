@@ -325,6 +325,9 @@ def cross_family_report(
     right_scores,
     right_outcomes,
     all_strategy_types: bool = False,
+    *,
+    attestation=None,
+    retained_observations: bool = False,
 ) -> CrossFamilyReport:
     """Build a conformant cross-family result.
 
@@ -333,7 +336,12 @@ def cross_family_report(
     """
     from .commensurability import check_commensurable
 
-    res = check_commensurable(left_def, right_def)
+    res = check_commensurable(
+        left_def,
+        right_def,
+        attestation=attestation,
+        retained_observations=retained_observations,
+    )
     l_ece = expected_calibration_error(left_scores, left_outcomes)
     r_ece = expected_calibration_error(right_scores, right_outcomes)
     l_ok = check_calibration_conformance(left_scores, left_outcomes).passes
@@ -341,7 +349,7 @@ def cross_family_report(
     calibrated = l_ok and r_ok
 
     pooled = None
-    if res.commensurable:
+    if res.pooling_allowed:
         pooled = expected_calibration_error(
             list(left_scores) + list(right_scores),
             list(left_outcomes) + list(right_outcomes),
@@ -350,6 +358,8 @@ def cross_family_report(
     cls = "Cross-Family Conformance (Structural)"
     if res.commensurable:
         cls += ", commensurability established but Semantic/Full claims are outside Stage 0"
+    elif res.pooling_allowed:
+        cls += ", pooling permitted by retained-observation evidence"
     if not calibrated:
         cls += ", uncalibrated"
 

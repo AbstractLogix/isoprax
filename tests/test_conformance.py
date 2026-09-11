@@ -519,6 +519,16 @@ def test_require_commensurable_guards_joint_reasoning():
         require_commensurable(DEFECT_LINKED_FIX, JOB_RUN_FAILURE)
 
 
+def test_require_commensurable_accepts_explicit_retained_observations():
+    left = _defn(id="left")
+    right = _defn(id="right", window="different window")
+
+    result = require_commensurable(left, right, retained_observations=True)
+
+    assert result.level == "bridgeable"
+    assert result.pooling_allowed
+
+
 def test_baseline_strategies_are_non_commensurable():
     """The reference implementation's own example fails the semantic test --
     deliberately (spec D.1)."""
@@ -560,6 +570,31 @@ def test_cross_family_report_pools_when_commensurable():
     assert rep.pooled_ece is not None
     assert "Structural" in rep.declarable_class
     assert "Semantic/Full" in rep.declarable_class
+
+
+def test_cross_family_report_uses_retained_observation_pooling_policy():
+    from isoprax.evaluation import cross_family_report
+
+    left = _defn(id="left")
+    right = _defn(id="right", window="different window")
+    scores = [0.1, 0.5, 0.9] * 5
+    outcomes = [0, 0, 1] * 5
+
+    rep = cross_family_report(
+        "change",
+        left,
+        scores,
+        outcomes,
+        "operational",
+        right,
+        scores,
+        outcomes,
+        retained_observations=True,
+    )
+
+    assert rep.commensurable is False
+    assert rep.commensurability_level == "bridgeable"
+    assert rep.pooled_ece is not None
 
 
 def test_outcome_definition_resolvable_from_kb(tmp_path):

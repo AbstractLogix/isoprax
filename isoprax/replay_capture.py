@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable, Mapping
 
 from .build_qualification import BuildQualificationReport
 from .hermetic_runner import ExecutionEvidenceRecord
+from .identity import bytes_hash, content_hash
 
 
 @dataclass(frozen=True)
@@ -122,14 +121,6 @@ def _parse_utc(value: str) -> datetime:
         raise ValueError("timestamp must be RFC 3339 UTC") from error
 
 
-def _canonical(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
-
-
-def _hash(value: object) -> str:
-    return hashlib.sha256(_canonical(value).encode()).hexdigest()
-
-
 def _valid_path(path: str) -> bool:
     return bool(path) and not path.startswith("/") and ".." not in path.split("/")
 
@@ -171,7 +162,7 @@ def _artifact_records(
             continue
         records.append(
             ObservationArtifactEvidence(
-                path, "collected", hashlib.sha256(payload).hexdigest(), len(payload)
+                path, "collected", bytes_hash(payload), len(payload)
             )
         )
     return tuple(records)
@@ -213,7 +204,7 @@ def _record(
     outcome_class: str = "censored",
     censor_reason: str | None = None,
 ) -> ReplayCaptureRecord:
-    identity = _hash(
+    identity = content_hash(
         {
             "lane": _lane_payload(lane),
             "qualification_report_hash": report.preparation_hash,

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterable
+
+from .identity import content_hash
 
 
 @dataclass(frozen=True)
@@ -36,10 +36,6 @@ class PublicEvidenceRecord:
 
 def _valid_reference(value: str) -> bool:
     return value.startswith("https://") and "@" not in value and "?token=" not in value
-
-
-def _canonical(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 def normalize_public_evidence(
@@ -80,11 +76,7 @@ def normalize_public_evidence(
             "available": available,
             "unavailable_reason": reason,
         }
-        records.append(
-            PublicEvidenceRecord(
-                hashlib.sha256(_canonical(payload).encode()).hexdigest(), **payload
-            )
-        )
+        records.append(PublicEvidenceRecord(content_hash(payload), **payload))
         seen.add(key)
     return tuple(
         sorted(records, key=lambda record: (record.system_id, record.revision))
