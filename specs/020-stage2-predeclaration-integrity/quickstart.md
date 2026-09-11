@@ -7,4 +7,7 @@ uv run pytest -q
 uv run ruff check .
 ```
 
-The generated report remains feasibility-only evidence.
+With the current published artifact, the command writes an explicit
+`inconclusive` report because its public-commit anchor is not independently
+verified. No feasibility report is emitted until an external attestation is
+verified.

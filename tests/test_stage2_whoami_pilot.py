@@ -52,3 +52,19 @@ def test_committed_predeclaration_passes_hash_and_ancestry_verification():
 
     assert provenance.ancestry_ok is True
     assert provenance.predeclared_before_data is True
+    assert provenance.anchored is False
+
+
+def test_unverified_anchor_produces_inconclusive_report_without_feasibility():
+    predecl = _predeclaration()
+    provenance = _PILOT._validate_predeclaration(
+        predecl, "b8bd8cb9178ae936ebcabd54645633d5046ac018"
+    )
+
+    report = _PILOT._inconclusive_report(
+        predecl, provenance, "b8bd8cb9178ae936ebcabd54645633d5046ac018"
+    )
+
+    assert report["status"] == "inconclusive"
+    assert report["external_anchor_status"] == "unverified"
+    assert "feasibility_report" not in report

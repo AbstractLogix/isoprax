@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import subprocess
 from pathlib import Path
 
 from isoprax.commensurability import OutcomeDefinition
+from isoprax.identity import bytes_hash, content_hash
 from isoprax.replay_capture import (
     DeploymentEvidence,
     ObservationArtifactEvidence,
@@ -31,14 +31,9 @@ SCORE_TIME = "2026-09-08T00:00:00Z"
 WINDOW_END = "2026-09-08T00:10:00Z"
 
 
-def _sha256(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
-
-
 def _predeclaration_hash(predecl: dict[str, object]) -> str:
     payload = {key: value for key, value in predecl.items() if key != "artifact_hash"}
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return _sha256(canonical.encode("utf-8"))
+    return content_hash(payload)
 
 
 def _git_output(*args: str) -> str:
@@ -81,10 +76,35 @@ def _validate_predeclaration(predecl: dict[str, object], corpus_data_commit: str
         external_anchor={
             "anchor_type": "public_commit",
             "anchor_reference": str(predecl["external_anchor_reference"]),
-            "independent_of_repository_and_clock": True,
+            "independent_of_repository_and_clock": False,
         },
+        require_external_anchor=False,
         repository_path=ROOT,
     )
+
+
+def _inconclusive_report(
+    predecl: dict[str, object], provenance, corpus_data_commit: str
+) -> dict[str, object]:
+    return {
+        "schema": "isoprax.stage2.whoami-pilot-report.v1",
+        "status": "inconclusive",
+        "reason": (
+            "external anchor is recorded but not independently verified; "
+            "no feasibility report is emitted"
+        ),
+        "candidate": predecl["candidate"]["repository"],
+        "predeclaration_commit": provenance.predeclaration_commit,
+        "corpus_data_commit": corpus_data_commit,
+        "predeclaration_is_ancestor": provenance.ancestry_ok,
+        "external_anchor_reference": predecl["external_anchor_reference"],
+        "external_anchor_status": "unverified",
+        "predeclaration_artifact_hash": provenance.artifact_hash,
+        "claim_boundary": (
+            "Stage 2 replay feasibility evidence only; no feasibility, Semantic, "
+            "or Full Conformance claim is emitted without an independent anchor."
+        ),
+    }
 
 
 def _definition(
@@ -169,7 +189,7 @@ def _capture(
         separators=(",", ":"),
     ).encode()
     artifact = ObservationArtifactEvidence(
-        "metrics.json", "collected", _sha256(payload), len(payload)
+        "metrics.json", "collected", bytes_hash(payload), len(payload)
     )
     observation = ObservationEvidence(
         SCORE_TIME,
@@ -217,6 +237,17 @@ def main() -> None:
     predecl = json.loads(PREDECLARATION_PATH.read_text())
     data_commit = _git_output("rev-parse", "HEAD")
     provenance = _validate_predeclaration(predecl, data_commit)
+    if not provenance.anchored:
+        output = _inconclusive_report(predecl, provenance, data_commit)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(output, indent=2, sort_keys=True) + "\n")
+        print(
+            json.dumps(
+                {"status": output["status"], "report": str(args.output)},
+                sort_keys=True,
+            )
+        )
+        return
     profile = _profile(predecl, provenance, data_commit)
     captures = tuple(_capture(row, profile) for row in data["records"])
     records = normalize_replay_records(

@@ -69,9 +69,10 @@
     "repeatability": "not required for this first bounded pilot; record discrepancies if repeated"
   },
   "external_anchor_reference": "https://github.com/traefik/whoami/commit/1ce75d01b6978863647da42557a707a479da3a51",
+  "external_anchor_status": "unverified",
   "supersedes": "whoami-pilot-predeclaration.json",
     "predeclaration_commit": "fe26a04bc522f9d4591f2751ff2295a2fcfef0c0",
   "corpus_data_commit_requirement": "must descend from the predeclaration commit",
   "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
-    "artifact_hash": "ecd5ae90362fa99a3f2bc3fb6395cce14e4d1a81b6947cc5678d3da69e5b884c"
+    "artifact_hash": "a507a8c003a2e66c013ad6a46aaa67111de0804cca24156e5be4c930ed1d041c"
 }

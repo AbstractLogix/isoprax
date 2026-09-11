@@ -6,7 +6,9 @@
 
 Make the released `traefik/whoami` Stage 2 pilot path verify the
 predeclaration artifact it reads, use its declared outcome semantics, and call
-the existing provenance verifier before producing a feasibility report.
+the existing provenance verifier before producing a feasibility report. Until
+an external anchor is independently verified, the pilot must emit an explicit
+`inconclusive` result and no feasibility report.
 
 ## Acceptance scenarios
 
@@ -16,9 +18,14 @@ the existing provenance verifier before producing a feasibility report.
    artifact and must be an ancestor of the corpus-data commit.
 3. The pilot profile derives observation process, window, thresholds, and
    family descriptions from the predeclaration rather than script constants.
-4. A valid committed artifact still produces the existing feasibility report.
+4. A valid artifact with an unverified external anchor produces a machine-
+   readable `inconclusive` result without a feasibility report.
+5. A valid artifact with an independently verified external anchor may
+   proceed to the existing feasibility report path.
 
 ## Claim boundary
 
-This closes a provenance/evidence integrity gap. It does not turn the pilot
-into a Semantic or Full Conformance result.
+This closes a provenance/evidence integrity gap. A repository URL is not
+treated as an independent anchor. The pilot does not turn into a Semantic or
+Full Conformance result, and remains inconclusive until third-party anchor
+verification is implemented and supplied.
