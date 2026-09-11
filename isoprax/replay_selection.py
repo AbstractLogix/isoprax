@@ -801,6 +801,7 @@ def evaluate_predeclaration_provenance(
     predeclaration_commit: str | None = None,
     corpus_data_commits: Iterable[str] = (),
     external_anchor: Mapping[str, Any] | None = None,
+    require_external_anchor: bool = True,
     remote_configured: bool = False,
     repository_pushed: bool = False,
     repository_path: str | Path | None = None,
@@ -808,7 +809,13 @@ def evaluate_predeclaration_provenance(
     commit_timestamps: Mapping[str, Any] | None = None,
     observed_hash: str | None = None,
 ) -> ProvenanceRecord:
-    """Validate hash, ancestry, and external-anchor requirements for a predeclaration."""
+    """Validate hash and ancestry, optionally requiring an external anchor.
+
+    The normal contract requires an independently verified external anchor.
+    Bounded workflows may set ``require_external_anchor=False`` to preserve
+    hash and ancestry evidence while returning an explicitly unanchored record;
+    callers must then withhold any feasibility result that requires anchoring.
+    """
     corpus_commits = tuple(corpus_data_commits)
     payload_hash = artifact_hash or hash_predeclaration_artifact(artifact)
     if observed_hash is not None and observed_hash != payload_hash:
@@ -830,22 +837,25 @@ def evaluate_predeclaration_provenance(
             or None
         )
     anchored = bool(anchor_type and anchor_reference)
-    if not anchored:
-        raise ValueError(
-            "predeclaration requires a recorded external anchor independent of the repository and clock"
-        )
-    if anchor_map.get("independent_of_repository_and_clock") is not True:
-        raise ValueError(
-            "external anchor must be independent of the project repository and clock"
-        )
-    if str(anchor_type).lower() in {
-        "push_time_attestation",
-        "remote_push",
-        "remote-attestation",
-    } and (not remote_configured or not repository_pushed):
-        raise ValueError(
-            "remote push attestation requires a configured public remote and pushed repository state"
-        )
+    if require_external_anchor:
+        if not anchored:
+            raise ValueError(
+                "predeclaration requires a recorded external anchor independent of the repository and clock"
+            )
+        if anchor_map.get("independent_of_repository_and_clock") is not True:
+            raise ValueError(
+                "external anchor must be independent of the project repository and clock"
+            )
+        if str(anchor_type).lower() in {
+            "push_time_attestation",
+            "remote_push",
+            "remote-attestation",
+        } and (not remote_configured or not repository_pushed):
+            raise ValueError(
+                "remote push attestation requires a configured public remote and pushed repository state"
+            )
+    else:
+        anchored = False
     ancestry_ok = _ancestor_check(
         str(predeclaration_commit),
         corpus_commits,
