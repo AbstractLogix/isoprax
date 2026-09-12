@@ -6,6 +6,15 @@ All notable changes to this reference implementation are recorded here.
 
 - Continue hardening evidence integrity and claim-bounded evaluation paths.
 
+## [0.2.0] - 2026-09-12
+
+- Added Sigstore DSSE and Rekor inclusion verification before Stage 2 can emit
+  replay-feasibility evidence.
+- Made SQLite signal and outcome linkage include `strategy_version`, rejecting
+  ambiguous legacy rows and reads.
+- Replaced Python-specific identity serialization with RFC 8785 canonical JSON
+  so hashes are independently reproducible across languages.
+
 ## [0.1.0] - 2026-09-05
 
 - Initial Isoprax v0.3 reference implementation release.
