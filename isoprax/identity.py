@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from typing import Any
+
+import rfc8785
 
 
 def canonical_json(value: Any) -> str:
-    """Serialize an identity payload deterministically across all reducers."""
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+    """Serialize an identity payload using RFC 8785 JSON Canonicalization."""
+    return rfc8785.dumps(value).decode("utf-8")
 
 
 def content_hash(value: Any) -> str:
