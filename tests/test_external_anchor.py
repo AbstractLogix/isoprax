@@ -5,24 +5,38 @@ import pytest
 
 from isoprax.external_anchor import (
     DEFAULT_SUBJECT_NAME,
-    IN_TOTO_STATEMENT_TYPE,
-    PREDICATE_TYPE,
     _rekor_reference,
     _validate_statement,
+    build_stage2_statement,
+    stage2_statement_payload,
     verify_sigstore_attestation,
 )
 
 HASH = "a" * 64
 COMMIT = "b" * 40
+REAL_BUNDLE = (
+    Path(__file__).parent / "fixtures/sigstore-python-4.5.0-pypi.sigstore.json"
+)
+REAL_SIGNER_IDENTITY = (
+    "https://github.com/sigstore/sigstore-python/"
+    ".github/workflows/release.yml@refs/tags/v4.5.0"
+)
+REAL_ISSUER = "https://token.actions.githubusercontent.com"
+ISOPRAX_PREDECLARATION = (
+    Path(__file__).parents[1] / "docs/stage2/whoami-pilot-predeclaration-v3.json"
+)
+ISOPRAX_BUNDLE = (
+    Path(__file__).parent / "fixtures/whoami-pilot-predeclaration-v3.sigstore.json"
+)
+ISOPRAX_SIGNER_IDENTITY = (
+    "https://github.com/AbstractLogix/isoprax/"
+    ".github/workflows/stage2-anchor.yml@refs/tags/stage2-anchor-v3"
+)
+ISOPRAX_ISSUER = "https://token.actions.githubusercontent.com"
 
 
 def _statement():
-    return {
-        "_type": IN_TOTO_STATEMENT_TYPE,
-        "subject": [{"name": DEFAULT_SUBJECT_NAME, "digest": {"sha256": HASH}}],
-        "predicateType": PREDICATE_TYPE,
-        "predicate": {"artifact_hash": HASH, "predeclaration_commit": COMMIT},
-    }
+    return stage2_statement_payload(HASH, COMMIT)
 
 
 def _install_fake_sigstore(monkeypatch, payload):
@@ -31,14 +45,15 @@ def _install_fake_sigstore(monkeypatch, payload):
     import sigstore.verify.policy
 
     class FakeBundle:
-        log_entry = type(
-            "LogEntry", (), {"_inner": type("Entry", (), {"log_index": 17})()}
-        )()
-
         @classmethod
         def from_json(cls, raw):
             assert raw == b"bundle"
             return cls()
+
+        def to_json(self):
+            return json.dumps(
+                {"verificationMaterial": {"tlogEntries": [{"logIndex": "17"}]}}
+            )
 
     class FakeVerifier:
         @classmethod
@@ -68,6 +83,12 @@ def test_valid_in_toto_statement_binds_hash_and_commit():
         predeclaration_commit=COMMIT,
         subject_name=DEFAULT_SUBJECT_NAME,
     )
+
+
+def test_statement_builder_and_verifier_share_one_canonical_definition():
+    statement = build_stage2_statement(HASH, COMMIT)
+
+    assert json.loads(statement._contents) == _statement()
 
 
 @pytest.mark.parametrize(
@@ -180,7 +201,69 @@ def test_invalid_bundle_is_unverified_without_network_or_clock_evidence(tmp_path
     assert "verification failed" in result.reason
 
 
-def test_valid_bundle_verification_binds_statement_and_rekor(monkeypatch, tmp_path):
+def test_real_production_bundle_verifies_offline():
+    from sigstore.models import Bundle
+    from sigstore.verify import Verifier
+    from sigstore.verify.policy import Identity
+
+    bundle = Bundle.from_json(REAL_BUNDLE.read_bytes())
+    payload_type, payload = Verifier.production(offline=True).verify_dsse(
+        bundle,
+        Identity(identity=REAL_SIGNER_IDENTITY, issuer=REAL_ISSUER),
+    )
+
+    assert payload_type == "application/vnd.in-toto+json"
+    statement = json.loads(payload)
+    assert statement["subject"] == [
+        {
+            "name": "sigstore-4.5.0-py3-none-any.whl",
+            "digest": {
+                "sha256": "f045b207f2e12605cf775ec38e89c5eda625d71ffa7830477db65e47ec2bc8b2"
+            },
+        }
+    ]
+    reference, index = _rekor_reference(bundle, REAL_BUNDLE)
+    assert reference == "rekor://2268434920"
+    assert index == "2268434920"
+
+
+def test_real_bundle_is_rejected_as_an_isoprax_anchor():
+    result = verify_sigstore_attestation(
+        REAL_BUNDLE,
+        artifact_hash=(
+            "f045b207f2e12605cf775ec38e89c5eda625d71ffa7830477db65e47ec2bc8b2"
+        ),
+        predeclaration_commit=COMMIT,
+        signer_identity=REAL_SIGNER_IDENTITY,
+        issuer=REAL_ISSUER,
+    )
+
+    assert result.verified is False
+    assert "predicate type" in result.reason
+
+
+def test_real_isoprax_bundle_verifies_offline_and_matches_builder():
+    predeclaration = json.loads(ISOPRAX_PREDECLARATION.read_text(encoding="utf-8"))
+    result = verify_sigstore_attestation(
+        ISOPRAX_BUNDLE,
+        artifact_hash=predeclaration["artifact_hash"],
+        predeclaration_commit=predeclaration["predeclaration_commit"],
+        signer_identity=ISOPRAX_SIGNER_IDENTITY,
+        issuer=ISOPRAX_ISSUER,
+    )
+
+    assert result.verified is True
+    assert result.anchor_reference == "rekor://2810335040"
+    assert result.rekor_log_index == "2810335040"
+    assert result.statement == json.loads(
+        build_stage2_statement(
+            predeclaration["artifact_hash"],
+            predeclaration["predeclaration_commit"],
+        )._contents
+    )
+
+
+def test_valid_application_binding_returns_verified_anchor(monkeypatch, tmp_path):
     _install_fake_sigstore(
         monkeypatch,
         ("application/vnd.in-toto+json", json.dumps(_statement()).encode()),
@@ -200,13 +283,6 @@ def test_valid_bundle_verification_binds_statement_and_rekor(monkeypatch, tmp_pa
     assert result.anchor_reference == "rekor://17"
     assert result.rekor_log_index == "17"
     assert result.statement == _statement()
-
-
-def test_rekor_reference_has_bundle_fallback():
-    reference, index = _rekor_reference(object(), Path("bundle.json"))
-
-    assert reference == "sigstore-bundle:bundle.json"
-    assert index is None
 
 
 @pytest.mark.parametrize(
@@ -232,3 +308,46 @@ def test_signed_payload_shape_errors_remain_unverified(
 
     assert result.verified is False
     assert message in result.reason
+
+
+def test_rekor_reference_has_bundle_fallback():
+    reference, index = _rekor_reference(object(), Path("bundle.json"))
+
+    assert reference == "sigstore-bundle:bundle.json"
+    assert index is None
+
+
+@pytest.mark.parametrize(
+    "entries",
+    [([], "bundle must contain"), ([{"logIndex": ""}], "index is empty")],
+)
+def test_rekor_reference_rejects_unusable_log_entries(entries):
+    class FakeBundle:
+        def to_json(self):
+            return json.dumps({"verificationMaterial": {"tlogEntries": entries[0]}})
+
+    reference, index = _rekor_reference(FakeBundle(), Path("bundle.json"))
+
+    assert reference == "sigstore-bundle:bundle.json"
+    assert index is None
+
+
+def test_statement_builder_rejects_invalid_identity_inputs():
+    with pytest.raises(ValueError, match="lowercase SHA-256"):
+        build_stage2_statement("A" * 64, COMMIT)
+    with pytest.raises(ValueError, match="predeclaration_commit"):
+        build_stage2_statement(HASH, "")
+    with pytest.raises(ValueError, match="subject_name"):
+        build_stage2_statement(HASH, COMMIT, subject_name="")
+
+
+def test_statement_shape_rejects_unexpected_fields():
+    statement = _statement()
+    statement["unexpected"] = True
+    with pytest.raises(ValueError, match="Stage 2 shape"):
+        _validate_statement(
+            statement,
+            artifact_hash=HASH,
+            predeclaration_commit=COMMIT,
+            subject_name=DEFAULT_SUBJECT_NAME,
+        )

@@ -92,3 +92,56 @@ conformance tests.
 
 **Rationale**: There is no network API or external service contract in scope.
 A quickstart and data model are sufficient for the implementation handoff.
+
+## Decision 6: Establish repeatability before selecting an outcome threshold
+
+**Decision**: Do not derive a threshold from the three one-run revision
+measurements in `whoami-pilot-data-v2.json`. First repeat the same frozen lane
+multiple times, beginning with one revision, so revision effect and run-to-run
+noise are not treated as the same signal. Select a resolved scalar threshold
+only after that baseline and place it in the structured threshold `value`.
+
+The derivation rule and the baseline sample's content hash belong in the
+predeclaration description and evidence manifest, respectively. They are
+audit context, not a replacement for the machine-checked scalar. The v2
+predeclaration and report remain unchanged historical evidence; a later
+threshold requires a new predeclaration and a new external anchor.
+
+**Rationale**: With one run per revision, the existing 35% spread cannot
+distinguish revision effect from run-to-run noise. A quantile, midpoint, or
+fitted constant over those same observations would move the labels after the
+fact. A positive in the repeatability-baseline phase is explicitly a slow-run
+signal, not yet a claim of revision regression; a future corpus threshold must
+clear measured repeat noise.
+
+## Decision 7: Use explicit evidence-scale corpus defaults
+
+The corpus gate defaults are 800 labeled test rows per family with at least 50
+positive and 50 negative outcomes. Small values remain available only through
+explicit structural smoke-test overrides. This keeps the default contract
+honest while preserving cheap reducer tests.
+
+## Decision 8: Size the next feasibility pilot for acquisition, not evaluation
+
+The next feasibility pilot targets 30-50 revisions, with three repeat runs on
+three revisions and at least five positive and five negative events. This is
+an acquisition decision, not a corpus-evaluation sample size. At an illustrative
+20% observed positive rate, two-sided 95% Clopper-Pearson intervals are
+`[0.077, 0.386]` for 30 revisions and `[0.100, 0.337]` for 50; the pilot must
+not be treated as evidence-scale calibration.
+
+## Decision 9: Resolve the next scalar threshold from the repeatability baseline
+
+The nine raw p99 measurements in
+`docs/stage2/whoami-repeatability-data-v2.json` have content hash
+`86e522d21ee4802a7cc6776977c704edb4ddea7f4f87c49f91fc25336216ba76`.
+Their median is `0.00146439` seconds, the linear-interpolated IQR is
+`0.00021271` seconds, and the resolved scalar baseline threshold is
+`0.00210252` seconds (`median + 3 * IQR`).
+
+This scalar is eligible for a new thresholded predeclaration only; it must not
+relabel the v2 three-revision measurements. The new predeclaration must carry
+the scalar in structured threshold `value`, describe this derivation, and
+reference the baseline hash. Any future positive means the run exceeded the
+repeat-noise margin; it is not automatically a causal revision-regression
+claim.

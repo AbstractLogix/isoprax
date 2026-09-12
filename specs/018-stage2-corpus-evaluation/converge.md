@@ -8,6 +8,15 @@ The repository has Stage 2 replay-feasibility evidence and Stage 1 per-family
 evaluation, but no corpus-level gate combining provenance, split integrity,
 label yield, non-degenerate prediction, and family-scoped evaluation.
 
+## Decision 001: evidence-scale corpus defaults
+
+The original defaults of four test rows and two observations of each outcome
+class were structural smoke-test values, not defensible evaluation defaults.
+They are replaced by 800 labeled test rows per family, with at least 50
+positive and 50 negative outcomes and maximum ECE `0.05`. Existing tests retain
+small values only through explicit profile overrides, making their plumbing
+scope visible.
+
 ## Closure criteria
 
 - [X] Profile and report contracts implemented.

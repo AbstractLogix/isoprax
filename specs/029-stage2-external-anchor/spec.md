@@ -17,9 +17,9 @@ performed offline from the supplied bundle.
    `feasibility_report`.
 2. A valid Sigstore bundle with a valid Rekor inclusion proof and matching
    in-toto subject/predicate permits the existing feasibility reducer to run.
-3. The pilot exposes a command that creates the attestation through
-   `sigstore attest`, allowing Rekor to provide the independent timestamp and
-   transparency-log evidence.
+3. The pilot exposes a command that builds the canonical in-toto Statement
+   with Sigstore's Python API and signs it through `Signer.sign_dsse`, allowing
+   Rekor to provide the independent timestamp and transparency-log evidence.
 
 ## Claim boundary
 

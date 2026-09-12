@@ -1,0 +1,51 @@
+{
+  "schema": "isoprax.stage2.repeatability-predeclaration.v1",
+  "purpose": "baseline run-to-run noise measurement before threshold selection",
+  "candidate": {
+    "repository": "https://github.com/traefik/whoami",
+    "license": "Apache-2.0",
+    "license_reference": "https://github.com/traefik/whoami/blob/master/LICENSE",
+    "build_reference": "Dockerfile",
+    "observation_endpoint": "/bench"
+  },
+  "selected_commits": [
+    "1ce75d01b6978863647da42557a707a479da3a51"
+  ],
+  "lane": {
+    "system_id": "traefik-whoami",
+    "service_id": "whoami",
+    "workload_reference": "fixed-local-http-bench-v2",
+    "horizon_rule": "PT10M",
+    "capture_schema_version": "stage2-whoami-repeatability-v1",
+    "allowed_evidence_scope": "public-local-replay",
+    "observation_window": "60-second workload within 10-minute horizon",
+    "measurement": "p99 /bench latency in seconds; no outcome threshold applied"
+  },
+  "workload": {
+    "requests_per_run": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds"
+  },
+  "repeatability": {
+    "runs_per_revision": 3,
+    "required": true,
+    "comparison": "compare identical lane inputs without averaging away discrepancies"
+  },
+  "threshold_selection": {
+    "status": "deferred_until_repeatability",
+    "required_form": "resolved scalar in structured threshold value",
+    "derivation_context": "baseline repeat-run noise only; not a revision-effect label",
+    "future_margin": "must clear measured repeat-run noise before thresholded corpus acquisition"
+  },
+  "evidence_boundary": {
+    "included_in_whoami_pilot_v2": false,
+    "included_in_stage2_corpus_evaluation": false,
+    "raw_measurements_are": "threshold-selection evidence only"
+  },
+  "supersedes": null,
+  "predeclaration_commit": "5e1eafa4304b069a18543a91759fc54725fc35a5",
+  "corpus_data_commit_requirement": "must descend from the predeclaration commit",
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "0069aa380654d7d3735102a13feb37905bacf65658ea12c1f7160e8a8a0bf97a"
+}

@@ -14,6 +14,44 @@
     "signer_identity": null,
     "status": "unverified"
   },
+  "yield_estimate": {
+    "bootstrap": {
+      "samples": 2000,
+      "seed": 0
+    },
+    "bootstrap_95_percent_interval": {
+      "negative": [
+        1.0,
+        1.0
+      ],
+      "positive": [
+        0.0,
+        0.0
+      ]
+    },
+    "counts": {
+      "blocked": 0,
+      "censored": 0,
+      "labeled": 3,
+      "negative": 3,
+      "positive": 0,
+      "selected": 3
+    },
+    "implied_records": {
+      "conservative_95_percent": null,
+      "point_estimate": null
+    },
+    "planning_target": {
+      "negative": 5,
+      "positive": 5
+    },
+    "rates": {
+      "negative": 1.0,
+      "positive": 0.0
+    },
+    "reason": "pilot contains no observed positive events; no finite corpus estimate",
+    "status": "no_positive_events"
+  },
   "predeclaration_artifact_hash": "a507a8c003a2e66c013ad6a46aaa67111de0804cca24156e5be4c930ed1d041c",
   "predeclaration_commit": "fe26a04bc522f9d4591f2751ff2295a2fcfef0c0",
   "predeclaration_is_ancestor": true,

@@ -1,0 +1,129 @@
+{
+  "schema": "isoprax.stage2.repeatability-data.v2",
+  "candidate_repository": "https://github.com/traefik/whoami",
+  "predeclaration_artifact_hash": "cec2872406ec036f60022836497190d3fbfbbb2ded4cf892efc45884dfa6bae4",
+  "predeclaration_commit": "325f69e506ba6833bb3e3c6a3cfa88721afc7fcc",
+  "predeclaration_sealed_commit": "9b396f0adebebcc491684028a190dae014ecb68c",
+  "collection_date_utc": "2026-09-12",
+  "workload": {
+    "endpoint": "/bench",
+    "requests_per_run": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds",
+    "threshold_applied": false
+  },
+  "records": [
+    {
+      "run_identity": "whoami-repeatability-v2-1ce75d01b697-run-1",
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "image": "isoprax-whoami:1ce75d01b697",
+      "image_id": "sha256:fa16a83c82d2a9da693a42843e37b35e89b1b1070fe1b13f58e1e7080ee7f3b4",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "requests": 120,
+      "p99_seconds": 0.0016024400000000003,
+      "min_seconds": 0.000657,
+      "max_seconds": 0.001886,
+      "mean_seconds": 0.0009709833333333334
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-1ce75d01b697-run-2",
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "image": "isoprax-whoami:1ce75d01b697",
+      "image_id": "sha256:fa16a83c82d2a9da693a42843e37b35e89b1b1070fe1b13f58e1e7080ee7f3b4",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "requests": 120,
+      "p99_seconds": 0.005209880000000001,
+      "min_seconds": 0.000685,
+      "max_seconds": 0.015713,
+      "mean_seconds": 0.0014084166666666665
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-1ce75d01b697-run-3",
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "image": "isoprax-whoami:1ce75d01b697",
+      "image_id": "sha256:fa16a83c82d2a9da693a42843e37b35e89b1b1070fe1b13f58e1e7080ee7f3b4",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "requests": 120,
+      "p99_seconds": 0.0015767300000000001,
+      "min_seconds": 0.000681,
+      "max_seconds": 0.001745,
+      "mean_seconds": 0.0009812416666666666
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-8951300b46f1-run-1",
+      "commit": "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+      "image": "isoprax-whoami:8951300b46f1",
+      "image_id": "sha256:9112005ca5421f129a5c1e5322bf9a04bc093f562db7179927d8cee0f126f43d",
+      "build_log_sha256": "19077bc4109b6048645d9ac74dbf196d794ab6906abcc6bebdf85ee334468c80",
+      "requests": 120,
+      "p99_seconds": 0.0014643899999999999,
+      "min_seconds": 0.000661,
+      "max_seconds": 0.001693,
+      "mean_seconds": 0.00094885
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-8951300b46f1-run-2",
+      "commit": "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+      "image": "isoprax-whoami:8951300b46f1",
+      "image_id": "sha256:9112005ca5421f129a5c1e5322bf9a04bc093f562db7179927d8cee0f126f43d",
+      "build_log_sha256": "19077bc4109b6048645d9ac74dbf196d794ab6906abcc6bebdf85ee334468c80",
+      "requests": 120,
+      "p99_seconds": 0.0014845300000000008,
+      "min_seconds": 0.000687,
+      "max_seconds": 0.001564,
+      "mean_seconds": 0.0009369
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-8951300b46f1-run-3",
+      "commit": "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+      "image": "isoprax-whoami:8951300b46f1",
+      "image_id": "sha256:9112005ca5421f129a5c1e5322bf9a04bc093f562db7179927d8cee0f126f43d",
+      "build_log_sha256": "19077bc4109b6048645d9ac74dbf196d794ab6906abcc6bebdf85ee334468c80",
+      "requests": 120,
+      "p99_seconds": 0.00138166,
+      "min_seconds": 0.000676,
+      "max_seconds": 0.001483,
+      "mean_seconds": 0.0009042249999999999
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-3c6fc4814630-run-1",
+      "commit": "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae",
+      "image": "isoprax-whoami:3c6fc4814630",
+      "image_id": "sha256:7b4c216a3799184c3a65fa3a935eecd53814f909ca4303a3da8c6929114c33bf",
+      "build_log_sha256": "0894fa8b507e830eeb3ef0c348274ef845056b8e7602fdd827a0ba90358ccc6c",
+      "requests": 120,
+      "p99_seconds": 0.0011811,
+      "min_seconds": 0.000692,
+      "max_seconds": 0.001828,
+      "mean_seconds": 0.0009222750000000001
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-3c6fc4814630-run-2",
+      "commit": "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae",
+      "image": "isoprax-whoami:3c6fc4814630",
+      "image_id": "sha256:7b4c216a3799184c3a65fa3a935eecd53814f909ca4303a3da8c6929114c33bf",
+      "build_log_sha256": "0894fa8b507e830eeb3ef0c348274ef845056b8e7602fdd827a0ba90358ccc6c",
+      "requests": 120,
+      "p99_seconds": 0.0012544000000000001,
+      "min_seconds": 0.000684,
+      "max_seconds": 0.001417,
+      "mean_seconds": 0.00091245
+    },
+    {
+      "run_identity": "whoami-repeatability-v2-3c6fc4814630-run-3",
+      "commit": "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae",
+      "image": "isoprax-whoami:3c6fc4814630",
+      "image_id": "sha256:7b4c216a3799184c3a65fa3a935eecd53814f909ca4303a3da8c6929114c33bf",
+      "build_log_sha256": "0894fa8b507e830eeb3ef0c348274ef845056b8e7602fdd827a0ba90358ccc6c",
+      "requests": 120,
+      "p99_seconds": 0.00136402,
+      "min_seconds": 0.000641,
+      "max_seconds": 0.001403,
+      "mean_seconds": 0.0009061083333333334
+    }
+  ],
+  "interpretation": "raw repeatability baseline only; no outcome labels or revision-effect claim",
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "86e522d21ee4802a7cc6776977c704edb4ddea7f4f87c49f91fc25336216ba76"
+}

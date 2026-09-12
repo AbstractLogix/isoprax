@@ -2,6 +2,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -19,6 +20,34 @@ def _predeclaration() -> dict[str, object]:
 def test_published_predeclaration_hash_matches_its_content():
     predecl = _predeclaration()
     assert _PILOT._predeclaration_hash(predecl) == predecl["artifact_hash"]
+
+
+def test_whoami_pilot_publishes_non_estimable_yield_when_all_events_are_negative():
+    data = json.loads(_PILOT.DATA_PATH.read_text(encoding="utf-8"))
+
+    estimate = _PILOT._yield_estimate(data)
+
+    assert estimate["status"] == "no_positive_events"
+    assert estimate["implied_records"]["point_estimate"] is None
+    assert estimate["planning_target"] == {"negative": 5, "positive": 5}
+
+
+def test_whoami_pilot_rejects_a_label_that_disagrees_with_the_threshold():
+    data = json.loads(_PILOT.DATA_PATH.read_text(encoding="utf-8"))
+    predecl = json.loads(_PILOT.PREDECLARATION_PATH.read_text(encoding="utf-8"))
+    row = copy.deepcopy(data["records"][0])
+    row["p99_seconds"] = 0.6
+
+    with pytest.raises(ValueError, match="does not match"):
+        _PILOT._resolved_outcome(row, predecl)
+
+
+def test_checked_in_whoami_report_publishes_the_same_yield_estimate():
+    data = json.loads(_PILOT.DATA_PATH.read_text(encoding="utf-8"))
+    report_path = _PILOT.ROOT / "docs/stage2/whoami-pilot-report-v2.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    assert report["yield_estimate"] == _PILOT._yield_estimate(data)
 
 
 def test_tampered_predeclaration_is_rejected_before_provenance():
@@ -55,6 +84,34 @@ def test_committed_predeclaration_passes_hash_and_ancestry_verification():
     assert provenance.anchored is False
 
 
+def test_thresholded_v3_predeclaration_is_sealed_without_relabeling_v2():
+    path = _PILOT.ROOT / "docs/stage2/whoami-pilot-predeclaration-v3.json"
+    predecl = json.loads(path.read_text(encoding="utf-8"))
+
+    assert _PILOT._predeclaration_hash(predecl) == predecl["artifact_hash"]
+    assert predecl["supersedes"] == "whoami-pilot-predeclaration-v2.json"
+    assert predecl["outcome_definitions"]["thresholds"][0]["value"] == 0.00210252
+    assert (
+        _PILOT._predeclaration_introducing_commit(path)
+        == predecl["predeclaration_commit"]
+    )
+
+
+def test_thresholded_v3_profile_requires_declared_repeatability():
+    path = _PILOT.ROOT / "docs/stage2/whoami-pilot-predeclaration-v3.json"
+    predecl = json.loads(path.read_text(encoding="utf-8"))
+    provenance = SimpleNamespace(
+        artifact_hash=predecl["artifact_hash"],
+        external_anchor_reference=predecl["external_anchor_reference"],
+        predeclaration_commit=predecl["predeclaration_commit"],
+        ancestry_ok=True,
+    )
+
+    profile = _PILOT._profile(predecl, provenance, "data-commit")
+
+    assert profile.require_repeatability is True
+
+
 def test_unverified_anchor_produces_inconclusive_report_without_feasibility():
     predecl = _predeclaration()
     provenance = _PILOT._validate_predeclaration(
@@ -68,4 +125,5 @@ def test_unverified_anchor_produces_inconclusive_report_without_feasibility():
     assert report["status"] == "inconclusive"
     assert report["external_anchor_status"] == "unverified"
     assert report["external_anchor_verification"]["status"] == "unverified"
+    assert "yield_estimate" not in report
     assert "feasibility_report" not in report

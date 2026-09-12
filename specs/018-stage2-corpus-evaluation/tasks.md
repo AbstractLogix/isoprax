@@ -35,3 +35,10 @@ description: "Implementation tasks for the Stage 2 corpus evaluation gate"
 
 - [X] T014 Run focused and full validation gates.
 - [X] T015 Complete `converge.md` and review the branch against `spec.md`.
+
+## Phase 6: Evidence-scale defaults
+
+- [X] T016 Raise the global corpus profile defaults to 800 test rows and 50
+  positive/negative outcomes per family.
+- [X] T017 Make all small structural fixtures explicitly override the evidence
+  scale and document the intentional calibration-floor override.

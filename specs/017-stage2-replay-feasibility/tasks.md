@@ -148,6 +148,24 @@ and publish the exact evidence package without upgrading the claim boundary.
   all observations are negative, so positive-event yield and Semantic
   evaluation remain unresolved
 
+## Phase 11: Repeatability-first threshold selection
+
+**Purpose**: Measure run-to-run noise before creating a new outcome threshold
+or relabeling any observed revision.
+
+- [X] T041 Add a new repeatability-baseline predeclaration for the existing
+  whoami lane, explicitly excluding its raw runs from the v2 feasibility and
+  corpus evidence.
+- [X] T042 Collect repeated runs of one frozen revision, then three revisions
+  with three runs each, preserving raw p99 measurements and run identities.
+- [X] T043 Select a resolved scalar threshold only from the repeatability
+  baseline, record its derivation description and baseline content hash, and
+  create a new predeclaration before any thresholded pilot acquisition.
+- [ ] T044 Require the later feasibility pilot to target 30-50 revisions, at
+  least five positive and five negative outcomes, and a three-run repeatability
+  check; publish the bootstrap
+  yield estimate without treating it as corpus evidence.
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

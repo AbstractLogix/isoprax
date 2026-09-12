@@ -17,7 +17,7 @@ import json
 import sqlite3
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 from .events import Event, Family
 from .signals import (
@@ -227,8 +227,11 @@ class SQLiteKB(KnowledgeBase):
         for index in indexes:
             if not index[2]:
                 continue
-            columns = self.conn.execute(f"PRAGMA index_info({index[1]!r})").fetchall()
-            if [column[2] for column in columns] == [
+            columns = self.conn.execute(
+                "SELECT name FROM pragma_index_info(?) ORDER BY seqno",
+                (index[1],),
+            ).fetchall()
+            if [column[0] for column in columns] == [
                 "event_id",
                 "strategy_id",
                 "strategy_version",
@@ -269,20 +272,96 @@ class SQLiteKB(KnowledgeBase):
             """
         )
 
+    @staticmethod
+    def _legacy_outcome_ambiguities(conn) -> list[dict[str, Any]]:
+        columns = conn.execute("PRAGMA table_info(outcomes)").fetchall()
+        has_version = any(column[1] == "signal_strategy_version" for column in columns)
+        where = (
+            "WHERE o.signal_strategy_version IS NULL AND " if has_version else "WHERE "
+        )
+        rows = conn.execute(
+            "SELECT o.rowid AS rowid, o.event_id, o.signal_strategy_id, "
+            "COUNT(s.strategy_version) AS matching_versions "
+            "FROM outcomes o LEFT JOIN signals s "
+            "ON s.event_id=o.event_id AND s.strategy_id=o.signal_strategy_id "
+            f"{where}1=1 "
+            "GROUP BY o.rowid, o.event_id, o.signal_strategy_id "
+            "HAVING COUNT(s.strategy_version) != 1 "
+            "ORDER BY o.rowid"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    @classmethod
+    def legacy_outcome_ambiguities(cls, path: str) -> list[dict[str, Any]]:
+        """List legacy outcomes that cannot be linked to one signal version."""
+
+        conn = sqlite3.connect(path)
+        conn.row_factory = sqlite3.Row
+        try:
+            return cls._legacy_outcome_ambiguities(conn)
+        finally:
+            conn.close()
+
+    @classmethod
+    def repair_legacy_outcomes(cls, path: str, resolutions: Mapping[int, str]) -> None:
+        """Apply explicit human-selected signal versions to legacy outcomes."""
+
+        conn = sqlite3.connect(path)
+        conn.row_factory = sqlite3.Row
+        try:
+            columns = conn.execute("PRAGMA table_info(outcomes)").fetchall()
+            if not any(column[1] == "signal_strategy_version" for column in columns):
+                conn.execute(
+                    "ALTER TABLE outcomes ADD COLUMN signal_strategy_version TEXT"
+                )
+            ambiguities = cls._legacy_outcome_ambiguities(conn)
+            expected_ids = {int(row["rowid"]) for row in ambiguities}
+            supplied_ids = {int(rowid) for rowid in resolutions}
+            if supplied_ids != expected_ids:
+                raise ValueError(
+                    "legacy outcome resolutions must cover exactly these rowids: "
+                    f"{sorted(expected_ids)}"
+                )
+            for row in ambiguities:
+                rowid = int(row["rowid"])
+                version = str(resolutions[rowid]).strip()
+                if not version:
+                    raise ValueError(f"legacy outcome row {rowid} needs a version")
+                matches = conn.execute(
+                    "SELECT COUNT(*) FROM signals WHERE event_id=? "
+                    "AND strategy_id=? AND strategy_version=?",
+                    (row["event_id"], row["signal_strategy_id"], version),
+                ).fetchone()[0]
+                if matches != 1:
+                    raise ValueError(
+                        f"legacy outcome row {rowid} does not match one signal version"
+                    )
+                conn.execute(
+                    "UPDATE outcomes SET signal_strategy_version=? WHERE rowid=?",
+                    (version, rowid),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
     def _migrate_outcome_signal_version(self) -> None:
         columns = self.conn.execute("PRAGMA table_info(outcomes)").fetchall()
         if not any(column[1] == "signal_strategy_version" for column in columns):
             self.conn.execute(
                 "ALTER TABLE outcomes ADD COLUMN signal_strategy_version TEXT"
             )
-        unresolved = self.conn.execute(
-            "SELECT o.rowid FROM outcomes o WHERE o.signal_strategy_version IS NULL "
-            "AND (SELECT COUNT(*) FROM signals s WHERE s.event_id=o.event_id "
-            "AND s.strategy_id=o.signal_strategy_id) != 1 LIMIT 1"
-        ).fetchone()
+        unresolved = self._legacy_outcome_ambiguities(self.conn)
         if unresolved:
+            details = ", ".join(
+                f"rowid {row['rowid']} ({row['event_id']!r}, "
+                f"{row['signal_strategy_id']!r}; "
+                f"{row['matching_versions']} matching versions)"
+                for row in unresolved
+            )
             raise ValueError(
-                "existing outcome cannot be linked to exactly one signal version"
+                "existing outcomes cannot be linked to exactly one signal version; "
+                f"offending rows: {details}; repair with "
+                "SQLiteKB.repair_legacy_outcomes(path, {rowid: version})"
             )
         self.conn.execute(
             "UPDATE outcomes SET signal_strategy_version = ("

@@ -17,6 +17,10 @@ CLAIM_BOUNDARY = (
     "or generalization beyond the released corpus."
 )
 
+CORPUS_MIN_TEST_ROWS = 800
+CORPUS_MIN_TEST_POSITIVES = 50
+CORPUS_MIN_TEST_NEGATIVES = 50
+
 
 @dataclass(frozen=True)
 class CorpusEvaluationProfile:
@@ -32,9 +36,9 @@ class CorpusEvaluationProfile:
     threshold_version: str
     allowed_evidence_scope: str
     published_artifacts: tuple[str, ...]
-    min_test_rows: int = 4
-    min_test_positives: int = 2
-    min_test_negatives: int = 2
+    min_test_rows: int = CORPUS_MIN_TEST_ROWS
+    min_test_positives: int = CORPUS_MIN_TEST_POSITIVES
+    min_test_negatives: int = CORPUS_MIN_TEST_NEGATIVES
     max_ece: float = 0.05
     attestation: Attestation | None = None
 
@@ -191,6 +195,8 @@ def _family_report(
     scores = [_score(row, field) for row in test]
     outcomes = [_outcome(row) for row in test]
     assert all(outcome is not None for outcome in outcomes)
+    # The Stage 2 corpus profile intentionally overrides the generic
+    # calibration default with its declared per-family test-row floor.
     evidence = check_calibration_conformance(
         scores,
         outcomes,

@@ -7,6 +7,9 @@ from isoprax.admission import CorpusRow
 from isoprax.commensurability import OutcomeDefinition
 from isoprax.stage2_corpus_evaluation import (
     CLAIM_BOUNDARY,
+    CORPUS_MIN_TEST_NEGATIVES,
+    CORPUS_MIN_TEST_POSITIVES,
+    CORPUS_MIN_TEST_ROWS,
     CorpusEvaluationGate,
     CorpusEvaluationProfile,
     CorpusEvaluationReport,
@@ -39,10 +42,10 @@ def profile(**changes):
         "threshold-v1",
         "public-replay",
         ("corpus.json", "report.json"),
-        8,
-        4,
-        4,
-        0.05,
+        min_test_rows=8,
+        min_test_positives=4,
+        min_test_negatives=4,
+        max_ece=0.05,
     )
     return replace(base, **changes)
 
@@ -91,6 +94,27 @@ def test_balanced_shared_corpus_qualifies_per_family_without_pooling():
     assert report.family_reports["operational"]["metrics"]["auc"] == 0.75
     assert report.pooling["status"] == "withheld"
     validate_stage2_corpus_evaluation_report(report)
+
+
+def test_corpus_profile_defaults_require_real_evaluation_scale():
+    default = CorpusEvaluationProfile(
+        "public-system",
+        "feasibility-report-id",
+        "predeclared-artifact-hash",
+        "corpus-artifact-hash",
+        definition("change-definition"),
+        definition("operational-definition"),
+        "change_score",
+        "operational_score",
+        "PT10M",
+        "threshold-v1",
+        "public-replay",
+        ("corpus.json", "report.json"),
+    )
+
+    assert default.min_test_rows == CORPUS_MIN_TEST_ROWS == 800
+    assert default.min_test_positives == CORPUS_MIN_TEST_POSITIVES == 50
+    assert default.min_test_negatives == CORPUS_MIN_TEST_NEGATIVES == 50
 
 
 def test_constant_score_predictor_is_inconclusive_despite_calibration():

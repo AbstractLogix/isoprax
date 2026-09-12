@@ -152,9 +152,9 @@ def test_replay_capture_assembly_feeds_stage2_corpus_gate():
             "threshold-v1",
             "public-replay",
             ("corpus.json", "report.json"),
-            8,
-            4,
-            4,
+            min_test_rows=8,
+            min_test_positives=4,
+            min_test_negatives=4,
         ),
     )
 

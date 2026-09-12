@@ -88,7 +88,10 @@ corpus adequacy, per-family evaluation, and any future Semantic claim.
 - **FR-005**: Reject pooled metrics unless the structured outcome definitions
   are directly commensurable or carry a valid recorded attestation.
 - **FR-006**: Require both observed outcome classes and declared minimum sample
-  sizes before qualified calibration or discrimination results are emitted.
+  sizes before qualified calibration or discrimination results are emitted. The
+  default evidence-scale profile is 800 labeled test rows per family with at
+  least 50 positive and 50 negative outcomes; smaller structural tests must
+  override these values explicitly.
 - **FR-007**: Report calibration and discrimination independently for Change and
   Operational families, including score variance or an equivalent
   non-degeneracy check.

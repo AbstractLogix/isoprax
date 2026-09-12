@@ -72,6 +72,8 @@ from .evidence_reporting import (
 )
 from .external_anchor import (
     ExternalAnchorVerification,
+    build_stage2_statement,
+    stage2_statement_payload,
     verify_sigstore_attestation,
 )
 from .hermetic_runner import (
@@ -160,6 +162,9 @@ from .signals import (
 )
 from .stage1_public_validation import build_stage1_public_validation_report
 from .stage2_corpus_evaluation import (
+    CORPUS_MIN_TEST_NEGATIVES,
+    CORPUS_MIN_TEST_POSITIVES,
+    CORPUS_MIN_TEST_ROWS,
     CorpusEvaluationGate,
     CorpusEvaluationProfile,
     CorpusEvaluationReport,
@@ -168,6 +173,7 @@ from .stage2_corpus_evaluation import (
 )
 from .stage2_feasibility import (
     CLAIM_BOUNDARY,
+    BootstrapYieldEstimate,
     FeasibilityGate,
     FeasibilityReport,
     RepeatabilityCheck,
@@ -175,6 +181,7 @@ from .stage2_feasibility import (
     ReplayTerminalRecord,
     build_stage2_feasibility_report,
     compare_repeatability,
+    estimate_stage2_yield,
     normalize_replay_records,
     validate_stage2_feasibility_report,
 )
