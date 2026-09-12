@@ -44,7 +44,8 @@
     "raw_measurements_are": "threshold-selection evidence only"
   },
   "supersedes": null,
-  "predeclaration_commit": "filled by the commit that adds this file",
+  "predeclaration_commit": "5e1eafa4304b069a18543a91759fc54725fc35a5",
   "corpus_data_commit_requirement": "must descend from the predeclaration commit",
-  "artifact_hash_basis": "canonical JSON with artifact_hash omitted"
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "0069aa380654d7d3735102a13feb37905bacf65658ea12c1f7160e8a8a0bf97a"
 }
