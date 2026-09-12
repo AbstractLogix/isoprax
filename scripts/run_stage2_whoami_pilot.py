@@ -5,9 +5,16 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
+from typing import Mapping
 
 from isoprax.commensurability import OutcomeDefinition
+from isoprax.external_anchor import (
+    DEFAULT_SUBJECT_NAME,
+    ExternalAnchorVerification,
+    verify_sigstore_attestation,
+)
 from isoprax.identity import bytes_hash, content_hash
 from isoprax.replay_capture import (
     DeploymentEvidence,
@@ -56,7 +63,47 @@ def _predeclaration_introducing_commit() -> str:
     return commits[0]
 
 
-def _validate_predeclaration(predecl: dict[str, object], corpus_data_commit: str):
+def _configured_attestation(
+    predecl: Mapping[str, object],
+    *,
+    bundle_path: Path | None,
+    signer_identity: str | None,
+    issuer: str | None,
+    subject_name: str | None,
+) -> tuple[Path | None, str | None, str | None, str]:
+    configured = predecl.get("sigstore_attestation", {})
+    if not isinstance(configured, Mapping):
+        raise ValueError("sigstore_attestation must be an object")
+    configured_bundle = configured.get("bundle_path")
+    resolved_bundle = bundle_path or (
+        None if not configured_bundle else Path(str(configured_bundle))
+    )
+    if resolved_bundle is not None and not resolved_bundle.is_absolute():
+        resolved_bundle = ROOT / resolved_bundle
+    return (
+        resolved_bundle,
+        signer_identity or _optional_text(configured.get("signer_identity")),
+        issuer or _optional_text(configured.get("issuer")),
+        subject_name
+        or _optional_text(configured.get("subject_name"))
+        or DEFAULT_SUBJECT_NAME,
+    )
+
+
+def _optional_text(value: object) -> str | None:
+    text = str(value).strip() if value is not None else ""
+    return text or None
+
+
+def _validate_predeclaration(
+    predecl: dict[str, object],
+    corpus_data_commit: str,
+    *,
+    attestation_bundle: Path | None = None,
+    signer_identity: str | None = None,
+    signer_issuer: str | None = None,
+    attestation_subject: str | None = None,
+):
     recorded_hash = str(predecl.get("artifact_hash", "")).strip()
     if not recorded_hash:
         raise ValueError("predeclaration artifact_hash is required")
@@ -67,38 +114,89 @@ def _validate_predeclaration(predecl: dict[str, object], corpus_data_commit: str
     introducing_commit = _predeclaration_introducing_commit()
     if declared_commit != introducing_commit:
         raise ValueError("predeclaration_commit does not match the introducing commit")
-    return evaluate_predeclaration_provenance(
+    (
+        bundle_path,
+        configured_identity,
+        configured_issuer,
+        subject_name,
+    ) = _configured_attestation(
+        predecl,
+        bundle_path=attestation_bundle,
+        signer_identity=signer_identity,
+        issuer=signer_issuer,
+        subject_name=attestation_subject,
+    )
+    verification = verify_sigstore_attestation(
+        bundle_path,
+        artifact_hash=recorded_hash,
+        predeclaration_commit=declared_commit,
+        signer_identity=configured_identity,
+        issuer=configured_issuer,
+        subject_name=subject_name,
+    )
+    provenance = evaluate_predeclaration_provenance(
         predecl,
         artifact_hash=recorded_hash,
         observed_hash=actual_hash,
         predeclaration_commit=declared_commit,
         corpus_data_commits=(corpus_data_commit,),
         external_anchor={
-            "anchor_type": "public_commit",
-            "anchor_reference": str(predecl["external_anchor_reference"]),
-            "independent_of_repository_and_clock": False,
+            "anchor_type": (
+                verification.anchor_type if verification.verified else "public_commit"
+            ),
+            "anchor_reference": (
+                verification.anchor_reference
+                if verification.verified
+                else str(predecl["external_anchor_reference"])
+            ),
+            "independent_of_repository_and_clock": verification.verified,
         },
-        require_external_anchor=False,
+        require_external_anchor=verification.verified,
         repository_path=ROOT,
+    )
+    return replace(
+        provenance,
+        records={
+            **provenance.records,
+            "external_anchor_verification": verification.to_dict(),
+        },
     )
 
 
 def _inconclusive_report(
-    predecl: dict[str, object], provenance, corpus_data_commit: str
+    predecl: dict[str, object],
+    provenance,
+    corpus_data_commit: str,
+    verification: ExternalAnchorVerification | None = None,
 ) -> dict[str, object]:
+    verification_data = (
+        verification.to_dict()
+        if verification is not None
+        else provenance.records.get("external_anchor_verification", {})
+    )
+    reason = (
+        verification.reason
+        if verification is not None
+        else str(
+            verification_data.get(
+                "reason",
+                "Sigstore attestation bundle is not configured",
+            )
+        )
+    )
     return {
         "schema": "isoprax.stage2.whoami-pilot-report.v1",
         "status": "inconclusive",
-        "reason": (
-            "external anchor is recorded but not independently verified; "
-            "no feasibility report is emitted"
-        ),
+        "reason": f"{reason}; no feasibility report is emitted",
         "candidate": predecl["candidate"]["repository"],
         "predeclaration_commit": provenance.predeclaration_commit,
         "corpus_data_commit": corpus_data_commit,
         "predeclaration_is_ancestor": provenance.ancestry_ok,
-        "external_anchor_reference": predecl["external_anchor_reference"],
+        "external_anchor_reference": (
+            provenance.external_anchor_reference or predecl["external_anchor_reference"]
+        ),
         "external_anchor_status": "unverified",
+        "external_anchor_verification": verification_data,
         "predeclaration_artifact_hash": provenance.artifact_hash,
         "claim_boundary": (
             "Stage 2 replay feasibility evidence only; no feasibility, Semantic, "
@@ -232,11 +330,22 @@ def main() -> None:
     parser.add_argument(
         "--output", type=Path, default=ROOT / "docs/stage2/whoami-pilot-report.json"
     )
+    parser.add_argument("--attestation-bundle", type=Path)
+    parser.add_argument("--attestation-identity")
+    parser.add_argument("--attestation-issuer")
+    parser.add_argument("--attestation-subject")
     args = parser.parse_args()
     data = json.loads(DATA_PATH.read_text())
     predecl = json.loads(PREDECLARATION_PATH.read_text())
     data_commit = _git_output("rev-parse", "HEAD")
-    provenance = _validate_predeclaration(predecl, data_commit)
+    provenance = _validate_predeclaration(
+        predecl,
+        data_commit,
+        attestation_bundle=args.attestation_bundle,
+        signer_identity=args.attestation_identity,
+        signer_issuer=args.attestation_issuer,
+        attestation_subject=args.attestation_subject,
+    )
     if not provenance.anchored:
         output = _inconclusive_report(predecl, provenance, data_commit)
         args.output.parent.mkdir(parents=True, exist_ok=True)

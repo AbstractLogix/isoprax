@@ -67,4 +67,5 @@ def test_unverified_anchor_produces_inconclusive_report_without_feasibility():
 
     assert report["status"] == "inconclusive"
     assert report["external_anchor_status"] == "unverified"
+    assert report["external_anchor_verification"]["status"] == "unverified"
     assert "feasibility_report" not in report

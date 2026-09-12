@@ -12,6 +12,7 @@ requires-python = ">=3.10,<3.15"
 dependencies = [
   "numpy>=1.26,<3",
   "scikit-learn>=1.5,<2",
+  "sigstore>=4,<5",
   "scipy>=1.11,<2",
 ]
 

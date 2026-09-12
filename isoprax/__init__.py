@@ -70,6 +70,10 @@ from .evidence_reporting import (
     UnavailableEvidence,
     build_evidence_report,
 )
+from .external_anchor import (
+    ExternalAnchorVerification,
+    verify_sigstore_attestation,
+)
 from .hermetic_runner import (
     ApprovedRunnerConfiguration,
     ArtifactEvidence,
