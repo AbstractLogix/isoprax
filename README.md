@@ -159,12 +159,12 @@ adapter and a predeclared pilot run.
 
 The first bounded public pilot is recorded under `docs/stage2/` for
 `traefik/whoami`: three immutable revisions were built locally and each was
-observed with a 60-second, 120-request `/bench` workload. The sealed report is
-`docs/stage2/whoami-pilot-report-v2.json`; it reaches `feasible` with 3/3
-complete observations, 100% observation coverage, and no censored or withheld
-records. All three outcomes were negative, so this is replay-feasibility
-evidence only; it does not establish positive-event yield, model efficacy,
-Semantic conformance, or full-corpus adequacy.
+observed with a 60-second, 120-request `/bench` workload. The checked-in
+report is intentionally `inconclusive` until a Sigstore DSSE bundle with a
+verified Rekor inclusion proof is supplied. All three observed outcomes were
+negative, so even an anchored report would be replay-feasibility evidence
+only; it would not establish positive-event yield, model efficacy, Semantic
+conformance, or full-corpus adequacy.
 
 Regenerate the report from the committed measurements with:
 
@@ -172,6 +172,9 @@ Regenerate the report from the committed measurements with:
 uv run python scripts/run_stage2_whoami_pilot.py \
   --output docs/stage2/whoami-pilot-report-v2.json
 ```
+
+Pass `--attestation-bundle`, `--attestation-identity`, and
+`--attestation-issuer` to enable the independently verified anchor path.
 
 ### Stage 2 corpus evaluation gate
 
