@@ -1,7 +1,6 @@
 name: Stage 2 anchor artifact
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "stage2-anchor-*"
