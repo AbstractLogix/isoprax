@@ -1,4 +1,10 @@
-"""Fail-closed execution evidence for an externally approved runner."""
+"""Validate execution evidence from an externally approved runner.
+
+The module name is historical. This reference implementation does not launch
+Docker, Podman, or another container engine and does not establish that the
+injected backend is hermetic. It validates the backend's reported controls and
+retains fail-closed execution evidence only.
+"""
 
 from __future__ import annotations
 
@@ -70,6 +76,7 @@ class ExecutionEvidenceRecord:
 
 
 RunnerBackend = Callable[[str, str, ApprovedRunnerConfiguration], RunnerBackendResult]
+# Injected process/container boundary supplied by the integrating environment.
 _VALID_OUTCOMES = {"success", "build_failed", "timeout", "interrupted", "unavailable"}
 
 
@@ -214,8 +221,10 @@ def run_prepared_execution(
 ) -> ExecutionEvidenceRecord:
     """Run one prepared commit through an approved injected backend.
 
-    The backend is responsible for the external process/container. This module
-    retains only evidence after independently checking its reported controls.
+    The backend is responsible for launching the external process/container.
+    This module does not provision or invoke a runner and must not claim that
+    the backend is hermetic; it retains evidence after checking reported
+    controls.
     """
     if preparation.blocked_reason:
         return _record(
