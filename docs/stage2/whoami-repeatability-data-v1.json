@@ -1,0 +1,53 @@
+{
+  "schema": "isoprax.stage2.repeatability-data.v1",
+  "candidate_repository": "https://github.com/traefik/whoami",
+  "predeclaration_artifact_hash": "0069aa380654d7d3735102a13feb37905bacf65658ea12c1f7160e8a8a0bf97a",
+  "predeclaration_commit": "5e1eafa4304b069a18543a91759fc54725fc35a5",
+  "predeclaration_sealed_commit": "ade105e",
+  "collection_started_utc": "2026-09-12T17:28:15+00:00",
+  "container_image": "isoprax-whoami:1ce75d01b697",
+  "image_id": "sha256:fa16a83c82d2a9da693a42843e37b35e89b1b1070fe1b13f58e1e7080ee7f3b4",
+  "workload": {
+    "endpoint": "/bench",
+    "requests_per_run": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds",
+    "threshold_applied": false
+  },
+  "records": [
+    {
+      "run_identity": "whoami-repeatability-v1-1ce75d01b697-run-1",
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "requests": 120,
+      "p99_seconds": 0.0016010500000000006,
+      "min_seconds": 0.00066,
+      "max_seconds": 0.004695,
+      "mean_seconds": 0.00101005
+    },
+    {
+      "run_identity": "whoami-repeatability-v1-1ce75d01b697-run-2",
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "requests": 120,
+      "p99_seconds": 0.0015103700000000002,
+      "min_seconds": 0.000712,
+      "max_seconds": 0.001998,
+      "mean_seconds": 0.0009839916666666666
+    },
+    {
+      "run_identity": "whoami-repeatability-v1-1ce75d01b697-run-3",
+      "commit": "1ce75d01b6978863647da42557a707a479da3a51",
+      "build_log_sha256": "acabb23be7a59bffce5eca90784bf024456561b622d7f6067ce065f765240949",
+      "requests": 120,
+      "p99_seconds": 0.00126858,
+      "min_seconds": 0.000709,
+      "max_seconds": 0.001313,
+      "mean_seconds": 0.0009470333333333333
+    }
+  ],
+  "interpretation": "raw repeatability baseline only; no outcome labels or revision-effect claim",
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "d25c8aa098e3adc017b3943e7ffed7114c1f423baf5211a0ee84fc0049690aad"
+}
