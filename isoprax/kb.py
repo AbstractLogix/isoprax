@@ -46,6 +46,7 @@ class Outcome:
     action_taken: Optional[str] = None
     resolved: Optional[bool] = None
     feedback_timestamp: Optional[str] = None
+    signal_strategy_version: Optional[str] = None
 
     def __post_init__(self) -> None:
         if not self.outcome_definition_id:
@@ -69,7 +70,12 @@ class KnowledgeBase(ABC):
     def get_event(self, event_id: str) -> Optional[dict[str, Any]]: ...
 
     @abstractmethod
-    def get_signal(self, event_id: str, strategy_id: str) -> Optional[Signal]: ...
+    def get_signal(
+        self,
+        event_id: str,
+        strategy_id: str,
+        strategy_version: Optional[str] = None,
+    ) -> Optional[Signal]: ...
 
     @abstractmethod
     def query_events(
@@ -92,7 +98,9 @@ class KnowledgeBase(ABC):
         ...
 
     @abstractmethod
-    def get_labeled_pairs(self, strategy_id: str) -> list[tuple[float, int]]:
+    def get_labeled_pairs(
+        self, strategy_id: str, strategy_version: Optional[str] = None
+    ) -> list[tuple[float, int]]:
         """Return (score, actual_outcome) pairs for calibration/eval (spec 5.3, 8).
 
         Pairs are scoped to ONE strategy and therefore to one Outcome
@@ -148,19 +156,20 @@ class SQLiteKB(KnowledgeBase):
             CREATE TABLE IF NOT EXISTS signals (
                 event_id TEXT NOT NULL,
                 strategy_id TEXT NOT NULL,
-                strategy_version TEXT,
+                strategy_version TEXT NOT NULL,
                 family TEXT,
                 score REAL,
                 explanation TEXT NOT NULL,
                 calibration_status TEXT,
                 payload TEXT NOT NULL,
-                UNIQUE(event_id, strategy_id),
+                UNIQUE(event_id, strategy_id, strategy_version),
                 FOREIGN KEY(event_id) REFERENCES events(id)
             );
 
             CREATE TABLE IF NOT EXISTS outcomes (
                 event_id TEXT NOT NULL,
                 signal_strategy_id TEXT NOT NULL,
+                signal_strategy_version TEXT,
                 predicted_condition_occurred INTEGER NOT NULL,
                 outcome_definition_id TEXT NOT NULL,
                 action_taken TEXT,
@@ -170,8 +179,9 @@ class SQLiteKB(KnowledgeBase):
             );
             """
         )
-        self._reject_duplicate_signal_identities()
         self._migrate_nullable_signal_score()
+        self._migrate_signal_identity()
+        self._migrate_outcome_signal_version()
         self._create_signal_identity_constraint()
         self.conn.commit()
 
@@ -184,22 +194,101 @@ class SQLiteKB(KnowledgeBase):
         except (TypeError, json.JSONDecodeError) as error:
             raise ValueError("stored KB payload is not valid JSON") from error
 
-    def _reject_duplicate_signal_identities(self) -> None:
-        duplicates = self.conn.execute(
+    def _validate_signal_versions(self) -> None:
+        missing = self.conn.execute(
             "SELECT event_id, strategy_id FROM signals "
-            "GROUP BY event_id, strategy_id HAVING COUNT(*) > 1"
+            "WHERE strategy_version IS NULL OR TRIM(strategy_version) = '' LIMIT 1"
+        ).fetchone()
+        if missing:
+            raise ValueError(
+                "existing signal is missing strategy_version: "
+                f"({missing['event_id']!r}, {missing['strategy_id']!r})"
+            )
+        duplicates = self.conn.execute(
+            "SELECT event_id, strategy_id, strategy_version FROM signals "
+            "GROUP BY event_id, strategy_id, strategy_version HAVING COUNT(*) > 1"
         ).fetchall()
         if duplicates:
-            event_id, strategy_id = duplicates[0]
+            event_id, strategy_id, strategy_version = duplicates[0]
             raise ValueError(
                 "duplicate signal identity in existing KB: "
-                f"({event_id!r}, {strategy_id!r})"
+                f"({event_id!r}, {strategy_id!r}, {strategy_version!r})"
             )
 
     def _create_signal_identity_constraint(self) -> None:
         self.conn.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS "
-            "idx_signals_event_strategy ON signals(event_id, strategy_id)"
+            "idx_signals_event_strategy_version ON signals "
+            "(event_id, strategy_id, strategy_version)"
+        )
+
+    def _has_versioned_signal_identity(self) -> bool:
+        indexes = self.conn.execute("PRAGMA index_list(signals)").fetchall()
+        for index in indexes:
+            if not index[2]:
+                continue
+            columns = self.conn.execute(f"PRAGMA index_info({index[1]!r})").fetchall()
+            if [column[2] for column in columns] == [
+                "event_id",
+                "strategy_id",
+                "strategy_version",
+            ]:
+                return True
+        return False
+
+    def _migrate_signal_identity(self) -> None:
+        """Rebuild pre-versioned signal tables with the versioned identity."""
+
+        if self._has_versioned_signal_identity():
+            self._validate_signal_versions()
+            return
+        self._validate_signal_versions()
+        self.conn.executescript(
+            """
+            ALTER TABLE signals RENAME TO signals_legacy;
+            CREATE TABLE signals (
+                event_id TEXT NOT NULL,
+                strategy_id TEXT NOT NULL,
+                strategy_version TEXT NOT NULL,
+                family TEXT,
+                score REAL,
+                explanation TEXT NOT NULL,
+                calibration_status TEXT,
+                payload TEXT NOT NULL,
+                UNIQUE(event_id, strategy_id, strategy_version),
+                FOREIGN KEY(event_id) REFERENCES events(id)
+            );
+            INSERT INTO signals (
+                event_id, strategy_id, strategy_version, family, score,
+                explanation, calibration_status, payload
+            )
+            SELECT event_id, strategy_id, strategy_version, family, score,
+                explanation, calibration_status, payload
+            FROM signals_legacy;
+            DROP TABLE signals_legacy;
+            """
+        )
+
+    def _migrate_outcome_signal_version(self) -> None:
+        columns = self.conn.execute("PRAGMA table_info(outcomes)").fetchall()
+        if not any(column[1] == "signal_strategy_version" for column in columns):
+            self.conn.execute(
+                "ALTER TABLE outcomes ADD COLUMN signal_strategy_version TEXT"
+            )
+        unresolved = self.conn.execute(
+            "SELECT o.rowid FROM outcomes o WHERE o.signal_strategy_version IS NULL "
+            "AND (SELECT COUNT(*) FROM signals s WHERE s.event_id=o.event_id "
+            "AND s.strategy_id=o.signal_strategy_id) != 1 LIMIT 1"
+        ).fetchone()
+        if unresolved:
+            raise ValueError(
+                "existing outcome cannot be linked to exactly one signal version"
+            )
+        self.conn.execute(
+            "UPDATE outcomes SET signal_strategy_version = ("
+            "SELECT s.strategy_version FROM signals s WHERE s.event_id=outcomes.event_id "
+            "AND s.strategy_id=outcomes.signal_strategy_id) "
+            "WHERE signal_strategy_version IS NULL"
         )
 
     def _migrate_nullable_signal_score(self) -> None:
@@ -215,13 +304,13 @@ class SQLiteKB(KnowledgeBase):
             CREATE TABLE signals (
                 event_id TEXT NOT NULL,
                 strategy_id TEXT NOT NULL,
-                strategy_version TEXT,
+                strategy_version TEXT NOT NULL,
                 family TEXT,
                 score REAL,
                 explanation TEXT NOT NULL,
                 calibration_status TEXT,
                 payload TEXT NOT NULL,
-                UNIQUE(event_id, strategy_id),
+                UNIQUE(event_id, strategy_id, strategy_version),
                 FOREIGN KEY(event_id) REFERENCES events(id)
             );
             INSERT INTO signals (
@@ -269,15 +358,17 @@ class SQLiteKB(KnowledgeBase):
             self.get_outcome_definition(signal.outcome_definition_id)
         d = signal.to_dict()
         existing = self.conn.execute(
-            "SELECT payload FROM signals WHERE event_id=? AND strategy_id=?",
-            (event_id, d["strategy_id"]),
+            "SELECT payload FROM signals WHERE event_id=? AND strategy_id=? "
+            "AND strategy_version=?",
+            (event_id, d["strategy_id"], d["strategy_version"]),
         ).fetchone()
         if existing is not None:
             if self._payload_matches(existing["payload"], d):
                 return
             raise ValueError(
                 "signal identity already stored with different content "
-                f"for ({event_id!r}, {d['strategy_id']!r})"
+                f"for ({event_id!r}, {d['strategy_id']!r}, "
+                f"{d['strategy_version']!r})"
             )
         self.conn.execute(
             "INSERT INTO signals (event_id, strategy_id, strategy_version, family,"
@@ -295,12 +386,25 @@ class SQLiteKB(KnowledgeBase):
         )
         self.conn.commit()
 
-    def get_signal(self, event_id: str, strategy_id: str) -> Optional[Signal]:
-        row = self.conn.execute(
-            "SELECT payload FROM signals WHERE event_id=? AND strategy_id=? "
-            "ORDER BY rowid DESC LIMIT 1",
-            (event_id, strategy_id),
-        ).fetchone()
+    def get_signal(
+        self,
+        event_id: str,
+        strategy_id: str,
+        strategy_version: Optional[str] = None,
+    ) -> Optional[Signal]:
+        if strategy_version is not None and not strategy_version.strip():
+            raise ValueError("strategy_version must be non-empty when provided")
+        params: tuple[str, ...] = (event_id, strategy_id)
+        query = "SELECT payload FROM signals WHERE event_id=? AND strategy_id=?"
+        if strategy_version is not None:
+            query += " AND strategy_version=?"
+            params += (strategy_version,)
+        rows = self.conn.execute(query, params).fetchall()
+        if strategy_version is None and len(rows) > 1:
+            raise ValueError(
+                "strategy_version is required when multiple signal versions exist"
+            )
+        row = rows[0] if rows else None
         if row is None:
             return None
         payload = json.loads(row["payload"])
@@ -318,13 +422,31 @@ class SQLiteKB(KnowledgeBase):
 
     def store_outcome(self, outcome: Outcome) -> None:
         rows = self.conn.execute(
-            "SELECT payload FROM signals WHERE event_id=? AND strategy_id=?",
+            "SELECT strategy_version, payload FROM signals "
+            "WHERE event_id=? AND strategy_id=?",
             (outcome.event_id, outcome.signal_strategy_id),
         ).fetchall()
         if not rows:
             raise KeyError(
                 "cannot store an outcome without its originating event signal"
             )
+        if outcome.signal_strategy_version is not None:
+            if not outcome.signal_strategy_version.strip():
+                raise ValueError("signal_strategy_version must be non-empty")
+            rows = [
+                row
+                for row in rows
+                if row["strategy_version"] == outcome.signal_strategy_version
+            ]
+            if not rows:
+                raise KeyError(
+                    "cannot store an outcome for the requested signal version"
+                )
+        elif len(rows) > 1:
+            raise ValueError(
+                "signal_strategy_version is required when multiple signal versions exist"
+            )
+        signal_version = rows[0]["strategy_version"]
         for row in rows:
             signal = json.loads(row["payload"])
             if signal.get("outcome_definition_id") != outcome.outcome_definition_id:
@@ -335,12 +457,13 @@ class SQLiteKB(KnowledgeBase):
         self.get_outcome_definition(outcome.outcome_definition_id)
         self.conn.execute(
             "INSERT INTO outcomes (event_id, signal_strategy_id,"
-            " predicted_condition_occurred, outcome_definition_id,"
+            " signal_strategy_version, predicted_condition_occurred, outcome_definition_id,"
             " action_taken, resolved, feedback_timestamp)"
-            " VALUES (?,?,?,?,?,?,?)",
+            " VALUES (?,?,?,?,?,?,?,?)",
             (
                 outcome.event_id,
                 outcome.signal_strategy_id,
+                signal_version,
                 int(outcome.predicted_condition_occurred),
                 outcome.outcome_definition_id,
                 outcome.action_taken,
@@ -406,12 +529,34 @@ class SQLiteKB(KnowledgeBase):
         rows = self.conn.execute(q, params).fetchall()
         return [json.loads(r["payload"]) for r in rows]
 
-    def get_labeled_pairs(self, strategy_id: str) -> list[tuple[float, int]]:
+    def get_labeled_pairs(
+        self, strategy_id: str, strategy_version: Optional[str] = None
+    ) -> list[tuple[float, int]]:
+        if strategy_version is not None and not strategy_version.strip():
+            raise ValueError("strategy_version must be non-empty when provided")
+        versions = self.conn.execute(
+            "SELECT DISTINCT s.strategy_version FROM signals s "
+            "JOIN outcomes o ON s.event_id=o.event_id "
+            "AND s.strategy_id=o.signal_strategy_id "
+            "AND s.strategy_version=o.signal_strategy_version "
+            "WHERE s.strategy_id=?",
+            (strategy_id,),
+        ).fetchall()
+        if strategy_version is None and len(versions) > 1:
+            raise ValueError(
+                "strategy_version is required when labeled pairs span multiple versions"
+            )
+        version_clause = ""
+        params: tuple[Any, ...] = (strategy_id,)
+        if strategy_version is not None:
+            version_clause = " AND s.strategy_version=?"
+            params += (strategy_version,)
         rows = self.conn.execute(
             "SELECT s.score AS score, o.predicted_condition_occurred AS actual "
             "FROM signals s JOIN outcomes o "
             "ON s.event_id=o.event_id AND s.strategy_id=o.signal_strategy_id "
-            "WHERE s.strategy_id=?",
-            (strategy_id,),
+            "AND s.strategy_version=o.signal_strategy_version "
+            "WHERE s.strategy_id=?" + version_clause,
+            params,
         ).fetchall()
         return [(r["score"], r["actual"]) for r in rows]
