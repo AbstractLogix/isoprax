@@ -97,11 +97,14 @@ format verification, the coverage-enforced test suite, and the demo.
 
 ## Next steps
 
-1. Run an anchored pilot with both positive and negative outcome classes.
-2. Publish a bootstrapped outcome-yield estimate with its implied corpus size.
-3. Scale beyond the initial three revisions and freeze the predeclared corpus.
-4. Run Stage 2 corpus evaluation with non-degenerate per-family scores.
-5. Add adapters for real VCS/CI and operational telemetry backends.
+1. Repeat one frozen lane before selecting a scalar outcome threshold.
+2. Run a predeclared 30-50 revision pilot with repeated lanes and both outcome
+   classes.
+3. Publish a bootstrapped outcome-yield estimate with its implied corpus size.
+4. Build the 800-row-per-family predeclared corpus with 50 outcomes of each
+   class.
+5. Run Stage 2 corpus evaluation with non-degenerate per-family scores.
+6. Add adapters for real VCS/CI and operational telemetry backends.
 
 These gates remain evidence work: passing them does not by itself establish
 Semantic or Full Conformance.
@@ -155,6 +158,10 @@ The pilot tooling also reports a deterministic bootstrap estimate of usable
 positive/negative outcome yield and an implied planning size. The current
 whoami measurements have no positive events, so the report publishes no finite
 corpus-size estimate and remains unsuitable for corpus evaluation.
+
+The feasibility acquisition target is at least five positive and five negative
+events; the later evidence-scale corpus target is 800 test rows with 50 of
+each class per family.
 
 The injected end-to-end path is exercised by
 `tests/test_stage2_pilot_integration.py`. It runs synthetic build qualification,

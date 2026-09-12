@@ -161,8 +161,9 @@ or relabeling any observed revision.
 - [ ] T043 Select a resolved scalar threshold only from the repeatability
   baseline, record its derivation description and baseline content hash, and
   create a new predeclaration before any thresholded pilot acquisition.
-- [ ] T044 Require the later feasibility pilot to target 30-50 revisions and
-  at least five positive and five negative outcomes; publish the bootstrap
+- [ ] T044 Require the later feasibility pilot to target 30-50 revisions, at
+  least five positive and five negative outcomes, and a three-run repeatability
+  check; publish the bootstrap
   yield estimate without treating it as corpus evidence.
 
 ## Dependencies & Execution Order

@@ -28,6 +28,7 @@ def test_whoami_pilot_publishes_non_estimable_yield_when_all_events_are_negative
 
     assert estimate["status"] == "no_positive_events"
     assert estimate["implied_records"]["point_estimate"] is None
+    assert estimate["planning_target"] == {"negative": 5, "positive": 5}
 
 
 def test_checked_in_whoami_report_publishes_the_same_yield_estimate():

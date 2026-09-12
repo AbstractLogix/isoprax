@@ -1,0 +1,53 @@
+{
+  "schema": "isoprax.stage2.repeatability-predeclaration.v2",
+  "purpose": "three-revision run-to-run noise measurement before threshold selection",
+  "candidate": {
+    "repository": "https://github.com/traefik/whoami",
+    "license": "Apache-2.0",
+    "license_reference": "https://github.com/traefik/whoami/blob/master/LICENSE",
+    "build_reference": "Dockerfile",
+    "observation_endpoint": "/bench"
+  },
+  "selected_commits": [
+    "1ce75d01b6978863647da42557a707a479da3a51",
+    "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+    "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae"
+  ],
+  "lane": {
+    "system_id": "traefik-whoami",
+    "service_id": "whoami",
+    "workload_reference": "fixed-local-http-bench-v2",
+    "horizon_rule": "PT10M",
+    "capture_schema_version": "stage2-whoami-repeatability-v1",
+    "allowed_evidence_scope": "public-local-replay",
+    "observation_window": "60-second workload within 10-minute horizon",
+    "measurement": "p99 /bench latency in seconds; no outcome threshold applied"
+  },
+  "workload": {
+    "requests_per_run": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds"
+  },
+  "repeatability": {
+    "runs_per_revision": 3,
+    "required": true,
+    "comparison": "compare identical lane inputs without averaging away discrepancies"
+  },
+  "threshold_selection": {
+    "status": "deferred_until_repeatability",
+    "required_form": "resolved scalar in structured threshold value",
+    "derivation_context": "repeat-run noise across three revisions; not a revision-effect label",
+    "future_margin": "must clear measured repeat-run noise before thresholded corpus acquisition"
+  },
+  "prior_baseline_artifact_hash": "d25c8aa098e3adc017b3943e7ffed7114c1f423baf5211a0ee84fc0049690aad",
+  "evidence_boundary": {
+    "included_in_whoami_pilot_v2": false,
+    "included_in_stage2_corpus_evaluation": false,
+    "raw_measurements_are": "threshold-selection evidence only"
+  },
+  "supersedes": "whoami-repeatability-predeclaration-v1",
+  "predeclaration_commit": "filled by the commit that adds this file",
+  "corpus_data_commit_requirement": "must descend from the predeclaration commit",
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted"
+}

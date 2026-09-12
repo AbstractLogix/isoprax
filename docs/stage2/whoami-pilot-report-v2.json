@@ -42,8 +42,8 @@
       "point_estimate": null
     },
     "planning_target": {
-      "negative": 2,
-      "positive": 2
+      "negative": 5,
+      "positive": 5
     },
     "rates": {
       "negative": 1.0,

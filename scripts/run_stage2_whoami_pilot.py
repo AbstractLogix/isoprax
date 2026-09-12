@@ -37,8 +37,8 @@ DATA_PATH = ROOT / "docs/stage2/whoami-pilot-data-v2.json"
 PREDECLARATION_PATH = ROOT / "docs/stage2/whoami-pilot-predeclaration-v2.json"
 SCORE_TIME = "2026-09-08T00:00:00Z"
 WINDOW_END = "2026-09-08T00:10:00Z"
-YIELD_TARGET_POSITIVE = 2
-YIELD_TARGET_NEGATIVE = 2
+YIELD_TARGET_POSITIVE = 5
+YIELD_TARGET_NEGATIVE = 5
 
 
 def _predeclaration_hash(predecl: dict[str, object]) -> str:

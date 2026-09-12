@@ -120,3 +120,12 @@ The corpus gate defaults are 800 labeled test rows per family with at least 50
 positive and 50 negative outcomes. Small values remain available only through
 explicit structural smoke-test overrides. This keeps the default contract
 honest while preserving cheap reducer tests.
+
+## Decision 8: Size the next feasibility pilot for acquisition, not evaluation
+
+The next feasibility pilot targets 30-50 revisions, with three repeat runs on
+three revisions and at least five positive and five negative events. This is
+an acquisition decision, not a corpus-evaluation sample size. At an illustrative
+20% observed positive rate, two-sided 95% Clopper-Pearson intervals are
+`[0.077, 0.386]` for 30 revisions and `[0.100, 0.337]` for 50; the pilot must
+not be treated as evidence-scale calibration.
