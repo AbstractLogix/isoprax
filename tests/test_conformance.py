@@ -625,6 +625,34 @@ def test_cross_family_report_uses_retained_observation_pooling_policy():
     assert rep.pooled_ece is not None
 
 
+def test_cross_family_report_threads_calibration_configuration():
+    from isoprax.evaluation import cross_family_report
+
+    shared = _defn(id="shared-configured")
+    scores = [0.1, 0.5, 0.9] * 5
+    outcomes = [0, 0, 1] * 5
+
+    rep = cross_family_report(
+        "change",
+        shared,
+        scores,
+        outcomes,
+        "operational",
+        shared,
+        scores,
+        outcomes,
+        min_events=15,
+        n_bins=3,
+        max_ece=0.25,
+    )
+
+    assert rep.calibration_min_events == 15
+    assert rep.calibration_n_bins == 3
+    assert rep.calibration_max_ece == 0.25
+    assert ", uncalibrated" not in rep.declarable_class
+    assert "min_events=15" in rep.render()
+
+
 def test_outcome_definition_resolvable_from_kb(tmp_path):
     """spec 6: stored scores stay interpretable after the Strategy is gone."""
     kb = SQLiteKB(str(tmp_path / "t.db"))
