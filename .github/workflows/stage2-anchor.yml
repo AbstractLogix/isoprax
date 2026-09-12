@@ -34,16 +34,16 @@ jobs:
       - name: Create Stage 2 bundle
         run: >-
           uv run python scripts/create_stage2_anchor_attestation.py
-          docs/stage2/whoami-pilot-predeclaration-v2.json
-          --bundle dist/whoami-pilot-predeclaration-v2.sigstore.json
+          docs/stage2/whoami-pilot-predeclaration-v3.json
+          --bundle dist/whoami-pilot-predeclaration-v3.sigstore.json
           --oidc-client-id sigstore
 
       - name: Record bundle digest
-        run: sha256sum dist/whoami-pilot-predeclaration-v2.sigstore.json
+        run: sha256sum dist/whoami-pilot-predeclaration-v3.sigstore.json
 
       - name: Upload signed bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: whoami-pilot-predeclaration-v2-sigstore-bundle
-          path: dist/whoami-pilot-predeclaration-v2.sigstore.json
+          name: whoami-pilot-predeclaration-v3-sigstore-bundle
+          path: dist/whoami-pilot-predeclaration-v3.sigstore.json
           if-no-files-found: error

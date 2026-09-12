@@ -1,0 +1,120 @@
+{
+  "schema": "isoprax.stage2.pilot-predeclaration.v3",
+  "candidate": {
+    "repository": "https://github.com/traefik/whoami",
+    "source_ref": "1ce75d01b6978863647da42557a707a479da3a51",
+    "license": "Apache-2.0",
+    "license_reference": "https://github.com/traefik/whoami/blob/master/LICENSE",
+    "build_reference": "Dockerfile",
+    "observation_endpoint": "/bench",
+    "selection_rule": "Descending first-parent history from source_ref; retain commits whose tree contains Dockerfile, app.go, and /bench; select the first 30."
+  },
+  "selected_commits": [
+    "1ce75d01b6978863647da42557a707a479da3a51",
+    "8951300b46f13ce678dbed8a692ef2ccecf0eec4",
+    "3c6fc4814630c9645affe0e2ff42c8bc2d8aadae",
+    "a4469d5b7aa50e03243fa75e1848d7f648ffb959",
+    "7e57190724ca7c0a74aa7f878b6cefe13b11994f",
+    "b49779da6892cf6838b3452d436136a63539958d",
+    "4c339e1ec673ab0b2200c4e6216dbb7b15d0a6e8",
+    "dec1ed84e37648285d4ddfae911344483c77906b",
+    "a7324d7c32a237c24260f06a27defdd673b2a823",
+    "c081c062397fe179772e8edc6bff24ec7cb8bff6",
+    "87f25fc35b3e9051117dddfd11bbae5fbc986581",
+    "932937c4e8307a4ed8b5152bd871022746453de6",
+    "eeea0e75c9072cad07ae85ebf0de5b6cb769aa4d",
+    "09b74d791259d90084716157049dc1aa1b7d15cd",
+    "5a6136c5e7947b44374d92ebca915e17beb27928",
+    "f3f17505276a40958d485ce530b695f0a8f35af6",
+    "30767b10c576c03c208deedb3c6d56621599cb8e",
+    "c6b17b0ee6a3d3640aa9db4406885feba02c390f",
+    "227c61f841cc9efb65cad6bce349366c7d6ef58d",
+    "27a158b32e2e894e47194a5f5f2fa6076643a3fd",
+    "e59736736851ca955cf8734fe4ea6d0c71ddbd62",
+    "bda49f6a9b3d9132034e6ff57c690484ac2e65a2",
+    "3b2f295be21c82ed967f1c7d9cc309491ed9b895",
+    "098845bccd59f1f28a311350495e6189c3e09bd3",
+    "0f526f05ab8aebe99029d75f9eccd299af01c101",
+    "24b1d1e4be3c3d9d94ef7e9802f6375eacecbaa7",
+    "1c1ad7d0f95703a0ca40636a8fb8ef714f245af8",
+    "05efa96950b904ec8b560af612db16ed360c038d",
+    "46d1c2fa1adac1d3abe52b10a1561aa1d0c8cd16",
+    "9b1db3f461457ba194f6bac86e6b8f6e6a700ce1"
+  ],
+  "lane": {
+    "system_id": "traefik-whoami",
+    "service_id": "whoami",
+    "workload_reference": "fixed-local-http-bench-v3",
+    "horizon_rule": "PT10M",
+    "threshold_version": "http-p99-latency-v3-repeatability",
+    "capture_schema_version": "stage2-whoami-v3",
+    "allowed_evidence_scope": "public-local-replay",
+    "observation_window": "60-second workload within 10-minute horizon",
+    "threshold": "p99 /bench latency > 0.00210252 seconds; scalar resolved from the repeatability baseline before this pilot"
+  },
+  "workload": {
+    "requests_per_commit": 120,
+    "interval_seconds": 0.5,
+    "duration_seconds": 60,
+    "latency_measurement": "curl time_total seconds",
+    "positive_rule": "p99 latency > 0.00210252 seconds over the complete 60-second sample",
+    "threshold_derivation": "median + 3 * IQR over docs/stage2/whoami-repeatability-data-v2.json; baseline content hash 86e522d21ee4802a7cc6776977c704edb4ddea7f4f87c49f91fc25336216ba76",
+    "label_interpretation": "A positive is a slow-run signal beyond measured repeat noise; it is not automatically a causal revision-regression claim."
+  },
+  "outcome_definitions": {
+    "event": "HTTP /bench p99 latency threshold crossed",
+    "observation_process": "same local HTTP workload and latency capture",
+    "change_family": "threshold crossed after selected commit deployment under the shared public replay observation",
+    "operational_family": "threshold crossed from the observed deployed state under the shared public replay observation",
+    "window": {
+      "duration": 10,
+      "unit": "minute",
+      "anchor": "score_time"
+    },
+    "thresholds": [
+      {
+        "metric": "p99_latency_seconds",
+        "operator": ">",
+        "value": 0.00210252,
+        "sustain": 60,
+        "sustain_unit": "second"
+      }
+    ]
+  },
+  "censoring": [
+    "build failure",
+    "runner failure",
+    "deployment failure",
+    "workload failure",
+    "incomplete observation window",
+    "invalid or unavailable telemetry"
+  ],
+  "prediction_boundary": {
+    "allowed_fields": ["commit_metadata_before_score_time"],
+    "forbidden_fields": ["post_deployment_latency", "post_score_time_telemetry"]
+  },
+  "feasibility_gates": {
+    "min_complete_records": 30,
+    "require_positive_and_negative": true,
+    "min_observation_rate": 0.66,
+    "repeatability": {
+      "required": true,
+      "revisions": 3,
+      "runs_per_revision": 3,
+      "baseline_data": "docs/stage2/whoami-repeatability-data-v2.json"
+    }
+  },
+  "external_anchor_reference": "https://github.com/AbstractLogix/isoprax/actions/workflows/stage2-anchor.yml",
+  "external_anchor_status": "unverified",
+  "supersedes": "whoami-pilot-predeclaration-v2.json",
+  "sigstore_attestation": {
+    "bundle_path": "tests/fixtures/whoami-pilot-predeclaration-v3.sigstore.json",
+    "signer_identity": "https://github.com/AbstractLogix/isoprax/.github/workflows/stage2-anchor.yml@refs/tags/stage2-anchor-v3",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject_name": "isoprax-stage2-predeclaration"
+  },
+  "predeclaration_commit": "filled by the commit that adds this file",
+  "corpus_data_commit_requirement": "must descend from the predeclaration commit",
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "filled by the sealing commit"
+}
