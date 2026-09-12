@@ -331,6 +331,9 @@ class CrossFamilyReport:
     pooled_ece: Optional[float] = None  # None when non-commensurable
     declarable_class: str = ""
     commensurability_level: str = "irreducible"
+    calibration_min_events: int = CONFORMANCE_MIN_EVENTS
+    calibration_n_bins: int = CONFORMANCE_N_BINS
+    calibration_max_ece: float = CONFORMANCE_MAX_ECE
 
     def render(self) -> str:
         lines = [
@@ -338,6 +341,10 @@ class CrossFamilyReport:
             f"ECE={self.left_ece:.4f} n={self.left_n}",
             f"  {self.right_family:12s} def={self.right_definition_id} "
             f"ECE={self.right_ece:.4f} n={self.right_n}",
+            "  calibration conformance: "
+            f"min_events={self.calibration_min_events}, "
+            f"n_bins={self.calibration_n_bins}, "
+            f"max_ece={self.calibration_max_ece}",
             f"  commensurable: {self.commensurable} — {self.commensurability_reason}",
             f"  commensurability level: {self.commensurability_level}",
         ]
@@ -366,6 +373,9 @@ def cross_family_report(
     *,
     attestation=None,
     retained_observations: bool = False,
+    min_events: int = CONFORMANCE_MIN_EVENTS,
+    n_bins: int = CONFORMANCE_N_BINS,
+    max_ece: float = CONFORMANCE_MAX_ECE,
 ) -> CrossFamilyReport:
     """Build a conformant cross-family result.
 
@@ -380,10 +390,22 @@ def cross_family_report(
         attestation=attestation,
         retained_observations=retained_observations,
     )
-    l_ece = expected_calibration_error(left_scores, left_outcomes)
-    r_ece = expected_calibration_error(right_scores, right_outcomes)
-    l_ok = check_calibration_conformance(left_scores, left_outcomes).passes
-    r_ok = check_calibration_conformance(right_scores, right_outcomes).passes
+    l_ece = expected_calibration_error(left_scores, left_outcomes, n_bins)
+    r_ece = expected_calibration_error(right_scores, right_outcomes, n_bins)
+    l_ok = check_calibration_conformance(
+        left_scores,
+        left_outcomes,
+        min_events=min_events,
+        n_bins=n_bins,
+        max_ece=max_ece,
+    ).passes
+    r_ok = check_calibration_conformance(
+        right_scores,
+        right_outcomes,
+        min_events=min_events,
+        n_bins=n_bins,
+        max_ece=max_ece,
+    ).passes
     calibrated = l_ok and r_ok
 
     pooled = None
@@ -391,6 +413,7 @@ def cross_family_report(
         pooled = expected_calibration_error(
             list(left_scores) + list(right_scores),
             list(left_outcomes) + list(right_outcomes),
+            n_bins,
         )
 
     cls = "Cross-Family Conformance (Structural)"
@@ -412,6 +435,9 @@ def cross_family_report(
         right_ece=r_ece,
         left_n=len(left_scores),
         right_n=len(right_scores),
+        calibration_min_events=min_events,
+        calibration_n_bins=n_bins,
+        calibration_max_ece=max_ece,
         commensurability_level=res.level,
         pooled_ece=pooled,
         declarable_class=cls,
