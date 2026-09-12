@@ -24,7 +24,7 @@ from isoprax import (
 @given(
     st.dictionaries(
         st.text(min_size=1, max_size=12),
-        st.integers(),
+        st.integers(min_value=-(2**53 - 1), max_value=2**53 - 1),
         min_size=1,
         max_size=12,
     )
