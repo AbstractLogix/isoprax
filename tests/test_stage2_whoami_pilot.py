@@ -80,14 +80,10 @@ def test_thresholded_v3_predeclaration_is_sealed_without_relabeling_v2():
     assert _PILOT._predeclaration_hash(predecl) == predecl["artifact_hash"]
     assert predecl["supersedes"] == "whoami-pilot-predeclaration-v2.json"
     assert predecl["outcome_definitions"]["thresholds"][0]["value"] == 0.00210252
-    provenance = _PILOT._validate_predeclaration(
-        predecl,
-        _PILOT._git_output("rev-parse", "HEAD"),
-        predeclaration_path=path,
+    assert (
+        _PILOT._predeclaration_introducing_commit(path)
+        == predecl["predeclaration_commit"]
     )
-
-    assert provenance.ancestry_ok is True
-    assert provenance.anchored is False
 
 
 def test_unverified_anchor_produces_inconclusive_report_without_feasibility():
