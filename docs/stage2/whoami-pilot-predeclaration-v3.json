@@ -113,8 +113,8 @@
     "issuer": "https://token.actions.githubusercontent.com",
     "subject_name": "isoprax-stage2-predeclaration"
   },
-  "predeclaration_commit": "filled by the commit that adds this file",
+  "predeclaration_commit": "8b9a5d4c28089a415dc6ec6b6a03147a6fb83811",
   "corpus_data_commit_requirement": "must descend from the predeclaration commit",
   "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
-  "artifact_hash": "filled by the sealing commit"
+  "artifact_hash": "676c4661f05284e7c584e556d556631facf9bfe58dc7f42e9c3d753fd697c03f"
 }
