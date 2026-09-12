@@ -129,3 +129,19 @@ an acquisition decision, not a corpus-evaluation sample size. At an illustrative
 20% observed positive rate, two-sided 95% Clopper-Pearson intervals are
 `[0.077, 0.386]` for 30 revisions and `[0.100, 0.337]` for 50; the pilot must
 not be treated as evidence-scale calibration.
+
+## Decision 9: Resolve the next scalar threshold from the repeatability baseline
+
+The nine raw p99 measurements in
+`docs/stage2/whoami-repeatability-data-v2.json` have content hash
+`86e522d21ee4802a7cc6776977c704edb4ddea7f4f87c49f91fc25336216ba76`.
+Their median is `0.00146439` seconds, the linear-interpolated IQR is
+`0.00021271` seconds, and the resolved scalar baseline threshold is
+`0.00210252` seconds (`median + 3 * IQR`).
+
+This scalar is eligible for a new thresholded predeclaration only; it must not
+relabel the v2 three-revision measurements. The new predeclaration must carry
+the scalar in structured threshold `value`, describe this derivation, and
+reference the baseline hash. Any future positive means the run exceeded the
+repeat-noise margin; it is not automatically a causal revision-regression
+claim.
