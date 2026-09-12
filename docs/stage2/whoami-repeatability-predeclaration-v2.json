@@ -47,7 +47,8 @@
     "raw_measurements_are": "threshold-selection evidence only"
   },
   "supersedes": "whoami-repeatability-predeclaration-v1",
-  "predeclaration_commit": "filled by the commit that adds this file",
+  "predeclaration_commit": "325f69e506ba6833bb3e3c6a3cfa88721afc7fcc",
   "corpus_data_commit_requirement": "must descend from the predeclaration commit",
-  "artifact_hash_basis": "canonical JSON with artifact_hash omitted"
+  "artifact_hash_basis": "canonical JSON with artifact_hash omitted",
+  "artifact_hash": "cec2872406ec036f60022836497190d3fbfbbb2ded4cf892efc45884dfa6bae4"
 }
