@@ -158,7 +158,7 @@ or relabeling any observed revision.
   corpus evidence.
 - [X] T042 Collect repeated runs of one frozen revision, then three revisions
   with three runs each, preserving raw p99 measurements and run identities.
-- [ ] T043 Select a resolved scalar threshold only from the repeatability
+- [X] T043 Select a resolved scalar threshold only from the repeatability
   baseline, record its derivation description and baseline content hash, and
   create a new predeclaration before any thresholded pilot acquisition.
 - [ ] T044 Require the later feasibility pilot to target 30-50 revisions, at

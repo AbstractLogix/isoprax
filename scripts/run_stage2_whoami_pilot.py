@@ -56,8 +56,10 @@ def _git_output(*args: str) -> str:
     ).stdout.strip()
 
 
-def _predeclaration_introducing_commit() -> str:
-    relative_path = PREDECLARATION_PATH.relative_to(ROOT)
+def _predeclaration_introducing_commit(
+    predeclaration_path: Path = PREDECLARATION_PATH,
+) -> str:
+    relative_path = predeclaration_path.relative_to(ROOT)
     commits = _git_output(
         "log", "--diff-filter=A", "--format=%H", "--", str(relative_path)
     ).splitlines()
@@ -113,6 +115,7 @@ def _validate_predeclaration(
     predecl: dict[str, object],
     corpus_data_commit: str,
     *,
+    predeclaration_path: Path = PREDECLARATION_PATH,
     attestation_bundle: Path | None = None,
     signer_identity: str | None = None,
     signer_issuer: str | None = None,
@@ -125,7 +128,7 @@ def _validate_predeclaration(
     if actual_hash != recorded_hash:
         raise ValueError("predeclaration artifact hash mismatch")
     declared_commit = str(predecl.get("predeclaration_commit", "")).strip()
-    introducing_commit = _predeclaration_introducing_commit()
+    introducing_commit = _predeclaration_introducing_commit(predeclaration_path)
     if declared_commit != introducing_commit:
         raise ValueError("predeclaration_commit does not match the introducing commit")
     (
@@ -345,6 +348,8 @@ def _capture(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=Path, default=DATA_PATH)
+    parser.add_argument("--predeclaration", type=Path, default=PREDECLARATION_PATH)
     parser.add_argument(
         "--output", type=Path, default=ROOT / "docs/stage2/whoami-pilot-report.json"
     )
@@ -353,13 +358,20 @@ def main() -> None:
     parser.add_argument("--attestation-issuer")
     parser.add_argument("--attestation-subject")
     args = parser.parse_args()
-    data = json.loads(DATA_PATH.read_text())
-    predecl = json.loads(PREDECLARATION_PATH.read_text())
+    data_path = args.data if args.data.is_absolute() else ROOT / args.data
+    predeclaration_path = (
+        args.predeclaration
+        if args.predeclaration.is_absolute()
+        else ROOT / args.predeclaration
+    )
+    data = json.loads(data_path.read_text(encoding="utf-8"))
+    predecl = json.loads(predeclaration_path.read_text(encoding="utf-8"))
     yield_estimate = _yield_estimate(data)
     data_commit = _git_output("rev-parse", "HEAD")
     provenance = _validate_predeclaration(
         predecl,
         data_commit,
+        predeclaration_path=predeclaration_path,
         attestation_bundle=args.attestation_bundle,
         signer_identity=args.attestation_identity,
         signer_issuer=args.attestation_issuer,
