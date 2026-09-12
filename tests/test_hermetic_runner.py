@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+import isoprax.hermetic_runner as hermetic_runner
 from isoprax.build_qualification import (
     BuildSample,
     LegalCoverageRecord,
@@ -12,6 +13,11 @@ from isoprax.hermetic_runner import (
     RunnerBackendResult,
     run_prepared_execution,
 )
+
+
+def test_module_documents_injected_runner_scope():
+    assert hermetic_runner.__doc__ is not None
+    assert "does not launch" in hermetic_runner.__doc__
 
 
 def prepared_sample():

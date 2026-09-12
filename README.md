@@ -153,9 +153,10 @@ establish those claims.
 
 The injected end-to-end path is exercised by
 `tests/test_stage2_pilot_integration.py`. It runs synthetic build qualification,
-hermetic execution, replay capture, and feasibility reporting. This verifies
-pipeline wiring only; a real feasibility result still requires a public project
-adapter and a predeclared pilot run.
+injected-runner evidence, replay capture, and feasibility reporting. This
+verifies pipeline wiring only; the reference module does not launch a container
+engine, and a real feasibility result still requires a public project adapter
+and a predeclared pilot run.
 
 The first bounded public pilot is recorded under `docs/stage2/` for
 `traefik/whoami`: three immutable revisions were built locally and each was
