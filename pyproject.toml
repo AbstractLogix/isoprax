@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "isoprax-reference"
-version = "0.1.0"
+version = "0.2.0"
 description = "Isoprax v0.3 cross-family conformance reference implementation"
 readme = "README.md"
 license = { file = "LICENSE" }
