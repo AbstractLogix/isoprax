@@ -153,10 +153,10 @@ and publish the exact evidence package without upgrading the claim boundary.
 **Purpose**: Measure run-to-run noise before creating a new outcome threshold
 or relabeling any observed revision.
 
-- [ ] T041 Add a new repeatability-baseline predeclaration for the existing
+- [X] T041 Add a new repeatability-baseline predeclaration for the existing
   whoami lane, explicitly excluding its raw runs from the v2 feasibility and
   corpus evidence.
-- [ ] T042 Collect repeated runs of one frozen revision, then three revisions
+- [X] T042 Collect repeated runs of one frozen revision, then three revisions
   with three runs each, preserving raw p99 measurements and run identities.
 - [ ] T043 Select a resolved scalar threshold only from the repeatability
   baseline, record its derivation description and baseline content hash, and

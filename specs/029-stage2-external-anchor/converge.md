@@ -8,10 +8,11 @@ then checks the in-toto binding to the exact predeclaration hash and commit.
 
 The producer now builds the canonical in-toto Statement with Sigstore's Python
 API and signs that same definition; it does not pass a nested Statement to the
-CLI predicate input. A real production Sigstore/Rekor bundle fixture is
-verified offline in CI to pin bundle shape and identity handling. The fixture
-is deliberately a third-party PyPI attestation, not an Isoprax Stage 2
-anchor, and is rejected by the Stage 2 predicate binding.
+CLI predicate input. A real third-party PyPI Sigstore/Rekor bundle is verified
+offline in CI to pin bundle shape and identity handling, then rejected by the
+Stage 2 predicate binding. A separate tagged GitHub Actions workflow is ready
+to produce the real Isoprax bundle needed for producer/consumer round-trip
+coverage; that external artifact remains pending until the workflow runs.
 
 The checked-in whoami pilot intentionally remains `inconclusive` because no
 attestation bundle is published with it. No feasibility evidence is fabricated
