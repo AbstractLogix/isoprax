@@ -52,6 +52,13 @@ As a researcher, I want a report that quantifies build and observation yield, th
 2. **Given** a pilot with insufficient positives, complete windows, build success, repeatability, or release evidence, **when** the report is generated, **then** it reports `inconclusive` and names the failed or underpowered dimension; it does not silently upgrade the result to feasible.
 3. **Given** a missing license, private/privileged telemetry dependency, broken provenance, or invalid predeclaration ordering, **when** the report is generated, **then** it reports `blocked` and identifies the blocking evidence gap.
 4. **Given** repeated execution of an identical lane, **when** terminal outcomes or labels disagree, **then** the report records the discrepancy and withholds a repeatability pass even if aggregate rates look acceptable.
+5. **Given** a repeatability baseline, **when** a new thresholded pilot is
+   declared, **then** its threshold is one resolved scalar derived from that
+   baseline, with the derivation rule and baseline content hash recorded; no
+   earlier observation is relabeled.
+6. **Given** a thresholded feasibility pilot, **when** usable outcomes are
+   reduced, **then** the report publishes a bounded positive/negative yield
+   estimate and withholds corpus planning when either class is absent.
 
 ### User Story 4 - Publish a bounded evidence package (Priority: P2)
 
@@ -98,6 +105,13 @@ As a reviewer, I want to inspect the pilot inputs, outputs, exclusions, and limi
 - **FR-014**: The system MUST emit exactly one pilot status from `feasible`, `inconclusive`, or `blocked`, with machine-readable reasons and supporting counts.
 - **FR-015**: The system MUST withhold Semantic conformance, pooled cross-family metrics, and full-corpus adequacy claims from this feasibility feature; those claims require a separately specified and completed Stage 2 corpus/evaluation gate.
 - **FR-016**: The system MUST provide deterministic validation of the evidence package so that an independent reader can recompute hashes, counts, lane identity, predeclaration ordering, and status from released artifacts.
+- **FR-017**: A thresholded replay pilot MUST use a resolved scalar threshold
+  derived only from a predeclared repeatability baseline; the baseline content
+  hash and derivation description MUST be recorded separately from the
+  machine-checked threshold value.
+- **FR-018**: The feasibility reducer MUST estimate usable positive and
+  negative outcome yield with bounded uncertainty and MUST report a
+  non-estimable status when either class has zero observed yield.
 
 ### Key Entities
 
@@ -120,6 +134,10 @@ As a reviewer, I want to inspect the pilot inputs, outputs, exclusions, and limi
 - **SC-006**: An independent validation run reproduces the evidence-manifest hashes, terminal-record counts, lane identity, status, and claim boundary without private or privileged access.
 - **SC-007**: Every pilot concludes with exactly one of `feasible`, `inconclusive`, or `blocked`; no pilot report produced by this feature claims Semantic conformance or pooled cross-family performance.
 - **SC-008**: The report includes a declared full-corpus extrapolation with observed throughput, resource/cost range, censoring assumptions, and uncertainty; it may recommend proceeding, revising, or stopping but cannot substitute estimation for corpus evidence.
+- **SC-009**: No thresholded pilot record can change outcome class without
+  failing validation against the structured predeclared threshold.
+- **SC-010**: A pilot with zero positive or zero negative usable events emits
+  no finite implied corpus size and names the missing class.
 
 ## Assumptions
 

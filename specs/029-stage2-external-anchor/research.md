@@ -18,8 +18,8 @@ bundle pins the third-party parsing, certificate, DSSE, inclusion-proof, and
 checkpoint boundary; Stage 2 deliberately rejects it because its predicate is
 not the Isoprax predicate.
 
-The producer/consumer round trip requires a second, real Isoprax bundle. A
-tagged GitHub Actions workflow now signs the fixed predeclaration with the
-workflow OIDC identity and uploads the bundle for review and commit. Until
-that workflow has run and its identity has been recorded, no test claims that
-the historical pilot is independently anchored.
+The producer/consumer round trip is covered by a second, real Isoprax bundle.
+The tagged `stage2-anchor-v3` GitHub Actions workflow signed the fixed
+predeclaration with the repository workflow OIDC identity; the resulting
+bundle is committed as a fixture and verified offline. The historical v2
+pilot remains unanchored because it has no matching bundle.

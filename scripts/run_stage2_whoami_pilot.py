@@ -100,12 +100,51 @@ def _optional_text(value: object) -> str | None:
     return text or None
 
 
-def _yield_estimate(data: Mapping[str, object]) -> dict[str, object]:
+def _resolved_outcome(row: Mapping[str, object], predecl: Mapping[str, object]) -> str:
+    declared = str(row.get("outcome_class", "")).strip()
+    if declared in {"censored", "blocked-before-compilation"}:
+        return declared
+    p99 = row.get("p99_seconds")
+    if not isinstance(p99, (int, float)) or isinstance(p99, bool):
+        raise ValueError("complete whoami records require numeric p99_seconds")
+    definitions = predecl.get("outcome_definitions")
+    if not isinstance(definitions, Mapping):
+        raise ValueError("outcome_definitions are required")
+    thresholds = definitions.get("thresholds")
+    if not isinstance(thresholds, list) or len(thresholds) != 1:
+        raise ValueError("whoami pilot requires exactly one threshold")
+    threshold = thresholds[0]
+    if not isinstance(threshold, Mapping):
+        raise ValueError("whoami threshold must be an object")
+    if threshold.get("metric") != "p99_latency_seconds":
+        raise ValueError("whoami threshold metric must be p99_latency_seconds")
+    value = threshold.get("value")
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise ValueError("whoami threshold value must be numeric")
+    operator = threshold.get("operator")
+    if operator == ">":
+        positive = p99 > value
+    elif operator == ">=":
+        positive = p99 >= value
+    else:
+        raise ValueError("whoami threshold operator must be > or >=")
+    resolved = "observed_positive" if positive else "observed_negative"
+    if declared and declared != resolved:
+        raise ValueError("record outcome_class does not match the declared threshold")
+    return resolved
+
+
+def _yield_estimate(
+    data: Mapping[str, object], predecl: Mapping[str, object] | None = None
+) -> dict[str, object]:
     records = data.get("records")
     if not isinstance(records, list):
         raise ValueError("pilot records are required for yield estimation")
+    declaration = predecl
+    if declaration is None:
+        declaration = json.loads(PREDECLARATION_PATH.read_text(encoding="utf-8"))
     return estimate_stage2_yield(
-        (str(row["outcome_class"]) for row in records),
+        (_resolved_outcome(row, declaration) for row in records),
         target_positive=YIELD_TARGET_POSITIVE,
         target_negative=YIELD_TARGET_NEGATIVE,
     ).to_dict()
@@ -251,6 +290,10 @@ def _profile(
     )
     gates = predecl["feasibility_gates"]
     boundary = predecl["prediction_boundary"]
+    repeatability = gates.get("repeatability")
+    require_repeatability = isinstance(repeatability, Mapping) and bool(
+        repeatability.get("required", False)
+    )
     return ReplayPilotProfile(
         "traefik-whoami",
         str(lane["system_id"]),
@@ -274,12 +317,12 @@ def _profile(
         int(gates["min_complete_records"]),
         bool(gates["require_positive_and_negative"]),
         float(gates["min_observation_rate"]),
-        False,
+        require_repeatability,
     )
 
 
 def _capture(
-    row: dict[str, object], profile: ReplayPilotProfile
+    row: dict[str, object], profile: ReplayPilotProfile, outcome_class: str
 ) -> ReplayCaptureRecord:
     commit = str(row["commit"])
     lane = ReplayLaneDefinition(
@@ -302,7 +345,7 @@ def _capture(
             "p99_seconds": row["p99_seconds"],
             "min_seconds": row["min_seconds"],
             "max_seconds": row["max_seconds"],
-            "threshold_met": row["outcome_class"] == "observed_positive",
+            "threshold_met": outcome_class == "observed_positive",
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -317,7 +360,7 @@ def _capture(
         True,
         True,
         True,
-        str(row["outcome_class"]) == "observed_positive",
+        outcome_class == "observed_positive",
         False,
         False,
         profile.allowed_evidence_scope,
@@ -341,7 +384,7 @@ def _capture(
         deployment,
         observation,
         (artifact,),
-        str(row["outcome_class"]),
+        outcome_class,
         row["censor_reason"],
     )
 
@@ -366,7 +409,10 @@ def main() -> None:
     )
     data = json.loads(data_path.read_text(encoding="utf-8"))
     predecl = json.loads(predeclaration_path.read_text(encoding="utf-8"))
-    yield_estimate = _yield_estimate(data)
+    outcome_classes = {
+        str(row["commit"]): _resolved_outcome(row, predecl) for row in data["records"]
+    }
+    yield_estimate = _yield_estimate(data, predecl)
     data_commit = _git_output("rev-parse", "HEAD")
     provenance = _validate_predeclaration(
         predecl,
@@ -391,7 +437,10 @@ def main() -> None:
         )
         return
     profile = _profile(predecl, provenance, data_commit)
-    captures = tuple(_capture(row, profile) for row in data["records"])
+    captures = tuple(
+        _capture(row, profile, outcome_classes[str(row["commit"])])
+        for row in data["records"]
+    )
     records = normalize_replay_records(
         profile,
         captures,

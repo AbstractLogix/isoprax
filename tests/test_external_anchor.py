@@ -22,6 +22,17 @@ REAL_SIGNER_IDENTITY = (
     ".github/workflows/release.yml@refs/tags/v4.5.0"
 )
 REAL_ISSUER = "https://token.actions.githubusercontent.com"
+ISOPRAX_PREDECLARATION = (
+    Path(__file__).parents[1] / "docs/stage2/whoami-pilot-predeclaration-v3.json"
+)
+ISOPRAX_BUNDLE = (
+    Path(__file__).parent / "fixtures/whoami-pilot-predeclaration-v3.sigstore.json"
+)
+ISOPRAX_SIGNER_IDENTITY = (
+    "https://github.com/AbstractLogix/isoprax/"
+    ".github/workflows/stage2-anchor.yml@refs/tags/stage2-anchor-v3"
+)
+ISOPRAX_ISSUER = "https://token.actions.githubusercontent.com"
 
 
 def _statement():
@@ -229,6 +240,27 @@ def test_real_bundle_is_rejected_as_an_isoprax_anchor():
 
     assert result.verified is False
     assert "predicate type" in result.reason
+
+
+def test_real_isoprax_bundle_verifies_offline_and_matches_builder():
+    predeclaration = json.loads(ISOPRAX_PREDECLARATION.read_text(encoding="utf-8"))
+    result = verify_sigstore_attestation(
+        ISOPRAX_BUNDLE,
+        artifact_hash=predeclaration["artifact_hash"],
+        predeclaration_commit=predeclaration["predeclaration_commit"],
+        signer_identity=ISOPRAX_SIGNER_IDENTITY,
+        issuer=ISOPRAX_ISSUER,
+    )
+
+    assert result.verified is True
+    assert result.anchor_reference == "rekor://2810335040"
+    assert result.rekor_log_index == "2810335040"
+    assert result.statement == json.loads(
+        build_stage2_statement(
+            predeclaration["artifact_hash"],
+            predeclaration["predeclaration_commit"],
+        )._contents
+    )
 
 
 def test_valid_application_binding_returns_verified_anchor(monkeypatch, tmp_path):

@@ -16,5 +16,5 @@
   acceptance scenario 2.
 - [x] T009 Remove the Sigstore minor-version private-field dependency from
   Rekor reference extraction per plan item 2: verifier stability.
-- [ ] T010 Run the tagged OIDC workflow, commit its real Isoprax bundle fixture,
+- [x] T010 Run the tagged OIDC workflow, commit its real Isoprax bundle fixture,
   and add the offline producer/consumer round-trip regression.

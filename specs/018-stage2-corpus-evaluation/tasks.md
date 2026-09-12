@@ -38,7 +38,7 @@ description: "Implementation tasks for the Stage 2 corpus evaluation gate"
 
 ## Phase 6: Evidence-scale defaults
 
-- [ ] T016 Raise the global corpus profile defaults to 800 test rows and 50
+- [X] T016 Raise the global corpus profile defaults to 800 test rows and 50
   positive/negative outcomes per family.
-- [ ] T017 Make all small structural fixtures explicitly override the evidence
+- [X] T017 Make all small structural fixtures explicitly override the evidence
   scale and document the intentional calibration-floor override.

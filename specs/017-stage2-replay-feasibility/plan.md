@@ -101,6 +101,12 @@ injected caller concern. No CLI or external contract is needed for this slice.
 6. Export the new public types from `isoprax.__init__`, add focused tests for
    happy paths and every fail-closed requirement, then run the documented
    focused and full checks.
+7. Establish run-to-run repeatability before selecting a new threshold. Store
+   the resolved scalar in the structured threshold value and store its
+   derivation rule and baseline content hash in the predeclaration metadata.
+8. Estimate positive and negative yield from all selected records, preserve
+   censored/blocked denominators, and withhold corpus planning when a class is
+   absent.
 
 ## Complexity Tracking
 
