@@ -12,15 +12,94 @@ from isoprax.replay_capture import (
 )
 from isoprax.stage2_feasibility import (
     CLAIM_BOUNDARY,
+    BootstrapYieldEstimate,
     FeasibilityGate,
     RepeatabilityCheck,
     ReplayPilotProfile,
     ReplayTerminalRecord,
     build_stage2_feasibility_report,
     compare_repeatability,
+    estimate_stage2_yield,
     normalize_replay_records,
     validate_stage2_feasibility_report,
 )
+
+
+def test_all_negative_yield_is_explicitly_non_estimable():
+    estimate = estimate_stage2_yield(
+        ["observed_negative"] * 3,
+        target_positive=2,
+        target_negative=2,
+        bootstrap_samples=200,
+        seed=7,
+    )
+
+    assert isinstance(estimate, BootstrapYieldEstimate)
+    assert estimate.status == "no_positive_events"
+    assert estimate.implied_records_point is None
+    assert estimate.implied_records_conservative is None
+    assert estimate.to_dict()["counts"] == {
+        "selected": 3,
+        "labeled": 3,
+        "positive": 0,
+        "negative": 3,
+        "censored": 0,
+        "blocked": 0,
+    }
+
+
+def test_bootstrap_yield_is_deterministic_and_reports_planning_size():
+    outcome_classes = (
+        "observed_positive",
+        "observed_negative",
+        "observed_negative",
+        "observed_positive",
+        "censored",
+    )
+    first = estimate_stage2_yield(
+        outcome_classes,
+        target_positive=2,
+        target_negative=2,
+        bootstrap_samples=200,
+        seed=11,
+    )
+    second = estimate_stage2_yield(
+        outcome_classes,
+        target_positive=2,
+        target_negative=2,
+        bootstrap_samples=200,
+        seed=11,
+    )
+
+    assert first == second
+    assert first.status == "estimable"
+    assert first.implied_records_point is not None
+    assert first.implied_records_conservative is None or (
+        first.implied_records_conservative >= first.implied_records_point
+    )
+    assert 0 <= first.positive_ci_low <= first.positive_ci_high <= 1
+    assert 0 <= first.negative_ci_low <= first.negative_ci_high <= 1
+
+
+@pytest.mark.parametrize(
+    "outcome_classes, target_positive, target_negative, bootstrap_samples, message",
+    [
+        (("observed_positive",), 0, 1, 200, "targets"),
+        (("observed_positive",), 1, 1, 99, "bootstrap_samples"),
+        ((), 1, 1, 200, "outcome classes"),
+        (("unknown",), 1, 1, 200, "unknown outcome classes"),
+    ],
+)
+def test_yield_estimate_rejects_invalid_inputs(
+    outcome_classes, target_positive, target_negative, bootstrap_samples, message
+):
+    with pytest.raises(ValueError, match=message):
+        estimate_stage2_yield(
+            outcome_classes,
+            target_positive=target_positive,
+            target_negative=target_negative,
+            bootstrap_samples=bootstrap_samples,
+        )
 
 
 def definition(identifier: str, *, window: str = "10m") -> OutcomeDefinition:

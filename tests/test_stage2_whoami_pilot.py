@@ -21,6 +21,23 @@ def test_published_predeclaration_hash_matches_its_content():
     assert _PILOT._predeclaration_hash(predecl) == predecl["artifact_hash"]
 
 
+def test_whoami_pilot_publishes_non_estimable_yield_when_all_events_are_negative():
+    data = json.loads(_PILOT.DATA_PATH.read_text(encoding="utf-8"))
+
+    estimate = _PILOT._yield_estimate(data)
+
+    assert estimate["status"] == "no_positive_events"
+    assert estimate["implied_records"]["point_estimate"] is None
+
+
+def test_checked_in_whoami_report_publishes_the_same_yield_estimate():
+    data = json.loads(_PILOT.DATA_PATH.read_text(encoding="utf-8"))
+    report_path = _PILOT.ROOT / "docs/stage2/whoami-pilot-report-v2.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    assert report["yield_estimate"] == _PILOT._yield_estimate(data)
+
+
 def test_tampered_predeclaration_is_rejected_before_provenance():
     predecl = copy.deepcopy(_predeclaration())
     predecl["workload"]["requests_per_commit"] = 121
@@ -68,4 +85,5 @@ def test_unverified_anchor_produces_inconclusive_report_without_feasibility():
     assert report["status"] == "inconclusive"
     assert report["external_anchor_status"] == "unverified"
     assert report["external_anchor_verification"]["status"] == "unverified"
+    assert "yield_estimate" not in report
     assert "feasibility_report" not in report

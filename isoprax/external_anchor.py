@@ -20,6 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
+from sigstore.dsse import Statement, StatementBuilder, Subject
+
 IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json"
 IN_TOTO_STATEMENT_TYPE = "https://in-toto.io/Statement/v1"
 PREDICATE_TYPE = "https://isoprax.dev/predicates/stage2-predeclaration/v1"
@@ -76,6 +78,52 @@ def _unverified(
     )
 
 
+def stage2_statement_payload(
+    artifact_hash: str,
+    predeclaration_commit: str,
+    *,
+    subject_name: str = DEFAULT_SUBJECT_NAME,
+) -> dict[str, Any]:
+    """Return the canonical Stage 2 in-toto Statement payload."""
+
+    if not _SHA256.fullmatch(artifact_hash):
+        raise ValueError("artifact_hash must be a lowercase SHA-256 digest")
+    if not isinstance(predeclaration_commit, str) or not predeclaration_commit.strip():
+        raise ValueError("predeclaration_commit is required")
+    if not isinstance(subject_name, str) or not subject_name.strip():
+        raise ValueError("subject_name is required")
+    return {
+        "_type": IN_TOTO_STATEMENT_TYPE,
+        "subject": [{"name": subject_name, "digest": {"sha256": artifact_hash}}],
+        "predicateType": PREDICATE_TYPE,
+        "predicate": {
+            "artifact_hash": artifact_hash,
+            "predeclaration_commit": predeclaration_commit,
+        },
+    }
+
+
+def build_stage2_statement(
+    artifact_hash: str,
+    predeclaration_commit: str,
+    *,
+    subject_name: str = DEFAULT_SUBJECT_NAME,
+) -> Statement:
+    """Build the canonical in-toto Statement used by signing and verification."""
+
+    payload = stage2_statement_payload(
+        artifact_hash,
+        predeclaration_commit,
+        subject_name=subject_name,
+    )
+    subject = payload["subject"][0]
+    return StatementBuilder(
+        subjects=[Subject(name=subject["name"], digest=subject["digest"])],
+        predicate_type=payload["predicateType"],
+        predicate=payload["predicate"],
+    ).build()
+
+
 def _validate_statement(
     statement: Mapping[str, Any],
     *,
@@ -83,9 +131,14 @@ def _validate_statement(
     predeclaration_commit: str,
     subject_name: str,
 ) -> None:
-    if statement.get("_type") != IN_TOTO_STATEMENT_TYPE:
+    expected = stage2_statement_payload(
+        artifact_hash,
+        predeclaration_commit,
+        subject_name=subject_name,
+    )
+    if statement.get("_type") != expected["_type"]:
         raise ValueError("attestation is not an in-toto Statement/v1")
-    if statement.get("predicateType") != PREDICATE_TYPE:
+    if statement.get("predicateType") != expected["predicateType"]:
         raise ValueError("attestation predicate type is not the Stage 2 type")
     subjects = statement.get("subject")
     if not isinstance(subjects, list):
@@ -112,16 +165,23 @@ def _validate_statement(
         raise ValueError(
             "attestation predicate does not match the predeclaration commit"
         )
+    if dict(statement) != expected:
+        raise ValueError("attestation statement does not match the Stage 2 shape")
 
 
 def _rekor_reference(bundle: Any, bundle_path: Path) -> tuple[str, str | None]:
     """Return a stable Rekor reference without depending on it for validity."""
 
     try:
-        entry = bundle.log_entry._inner
-        log_index = str(entry.log_index)
+        raw_bundle = json.loads(bundle.to_json())
+        entries = raw_bundle["verificationMaterial"]["tlogEntries"]
+        if not isinstance(entries, list) or len(entries) != 1:
+            raise ValueError("bundle must contain exactly one transparency-log entry")
+        log_index = str(entries[0]["logIndex"])
+        if not log_index.strip():
+            raise ValueError("transparency-log index is empty")
         return f"rekor://{log_index}", log_index
-    except (AttributeError, TypeError):
+    except (AttributeError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         return f"sigstore-bundle:{bundle_path.name}", None
 
 

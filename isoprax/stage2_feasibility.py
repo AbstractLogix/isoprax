@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+import random
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable, Mapping
@@ -24,6 +26,183 @@ CLAIM_BOUNDARY = (
     "Semantic or Full Conformance, pooled cross-family performance, model "
     "efficacy, or full-corpus adequacy."
 )
+
+
+def _percentile(values: list[float], quantile: float) -> float:
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * quantile
+    lower = math.floor(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    fraction = position - lower
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * fraction
+
+
+def _implied_records(rate: float, target: int) -> int | None:
+    if rate <= 0.0:
+        return None
+    return math.ceil(target / rate)
+
+
+@dataclass(frozen=True)
+class BootstrapYieldEstimate:
+    """A bounded, reproducible estimate of usable outcome-class yield."""
+
+    selected_records: int
+    labeled_records: int
+    positive_records: int
+    negative_records: int
+    censored_records: int
+    blocked_records: int
+    positive_rate: float
+    negative_rate: float
+    positive_ci_low: float
+    positive_ci_high: float
+    negative_ci_low: float
+    negative_ci_high: float
+    target_positive: int
+    target_negative: int
+    bootstrap_samples: int
+    seed: int
+    implied_records_point: int | None
+    implied_records_conservative: int | None
+    status: str
+    reason: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "reason": self.reason,
+            "counts": {
+                "selected": self.selected_records,
+                "labeled": self.labeled_records,
+                "positive": self.positive_records,
+                "negative": self.negative_records,
+                "censored": self.censored_records,
+                "blocked": self.blocked_records,
+            },
+            "rates": {
+                "positive": self.positive_rate,
+                "negative": self.negative_rate,
+            },
+            "bootstrap_95_percent_interval": {
+                "positive": [self.positive_ci_low, self.positive_ci_high],
+                "negative": [self.negative_ci_low, self.negative_ci_high],
+            },
+            "planning_target": {
+                "positive": self.target_positive,
+                "negative": self.target_negative,
+            },
+            "implied_records": {
+                "point_estimate": self.implied_records_point,
+                "conservative_95_percent": self.implied_records_conservative,
+            },
+            "bootstrap": {
+                "samples": self.bootstrap_samples,
+                "seed": self.seed,
+            },
+        }
+
+
+def estimate_stage2_yield(
+    outcome_classes: Iterable[str],
+    *,
+    target_positive: int,
+    target_negative: int,
+    bootstrap_samples: int = 2_000,
+    seed: int = 0,
+) -> BootstrapYieldEstimate:
+    """Estimate usable positive/negative yield without claiming efficacy.
+
+    Rates use all selected records as the denominator, so censored and blocked
+    records reduce usable yield.  The implied record counts are expected counts
+    under the observed rates, not guarantees; a missing class produces no
+    finite estimate.
+    """
+
+    if target_positive < 1 or target_negative < 1:
+        raise ValueError("yield planning targets must be positive")
+    if bootstrap_samples < 100:
+        raise ValueError("bootstrap_samples must be at least 100")
+    statuses = tuple(outcome_classes)
+    if not statuses:
+        raise ValueError("outcome classes are required")
+    allowed = TERMINAL_STATUSES
+    unknown = sorted(set(statuses) - allowed)
+    if unknown:
+        raise ValueError(f"unknown outcome classes: {unknown}")
+
+    selected = len(statuses)
+    positive = statuses.count("observed_positive")
+    negative = statuses.count("observed_negative")
+    labeled = positive + negative
+    censored = statuses.count("censored")
+    blocked = statuses.count("blocked-before-compilation")
+    positive_rate = positive / selected
+    negative_rate = negative / selected
+
+    generator = random.Random(seed)
+    positive_rates: list[float] = []
+    negative_rates: list[float] = []
+    for _ in range(bootstrap_samples):
+        sample = [statuses[generator.randrange(selected)] for _ in range(selected)]
+        positive_rates.append(sample.count("observed_positive") / selected)
+        negative_rates.append(sample.count("observed_negative") / selected)
+
+    point_estimate = (
+        None
+        if positive_rate <= 0.0 or negative_rate <= 0.0
+        else max(
+            _implied_records(positive_rate, target_positive),
+            _implied_records(negative_rate, target_negative),
+        )
+    )
+    positive_ci_low = _percentile(positive_rates, 0.025)
+    positive_ci_high = _percentile(positive_rates, 0.975)
+    negative_ci_low = _percentile(negative_rates, 0.025)
+    negative_ci_high = _percentile(negative_rates, 0.975)
+    conservative_estimates = (
+        _implied_records(positive_ci_low, target_positive),
+        _implied_records(negative_ci_low, target_negative),
+    )
+    conservative = (
+        None
+        if any(value is None for value in conservative_estimates)
+        else max(value for value in conservative_estimates if value is not None)
+    )
+    if labeled == 0:
+        status = "no_labeled_events"
+        reason = "pilot contains no observed positive or negative events"
+    elif positive == 0:
+        status = "no_positive_events"
+        reason = "pilot contains no observed positive events; no finite corpus estimate"
+    elif negative == 0:
+        status = "no_negative_events"
+        reason = "pilot contains no observed negative events; no finite corpus estimate"
+    else:
+        status = "estimable"
+        reason = "both observed outcome classes are present; estimate is pilot-only"
+    return BootstrapYieldEstimate(
+        selected,
+        labeled,
+        positive,
+        negative,
+        censored,
+        blocked,
+        positive_rate,
+        negative_rate,
+        positive_ci_low,
+        positive_ci_high,
+        negative_ci_low,
+        negative_ci_high,
+        target_positive,
+        target_negative,
+        bootstrap_samples,
+        seed,
+        point_estimate,
+        conservative,
+        status,
+        reason,
+    )
 
 
 def _parse_timestamp(value: str) -> datetime:
@@ -721,6 +900,7 @@ def validate_stage2_feasibility_report(report: FeasibilityReport) -> None:
 
 
 __all__ = [
+    "BootstrapYieldEstimate",
     "CLAIM_BOUNDARY",
     "FeasibilityGate",
     "FeasibilityReport",
@@ -730,6 +910,7 @@ __all__ = [
     "RepeatabilityCheck",
     "build_stage2_feasibility_report",
     "compare_repeatability",
+    "estimate_stage2_yield",
     "normalize_replay_records",
     "validate_stage2_feasibility_report",
 ]

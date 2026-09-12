@@ -92,3 +92,31 @@ conformance tests.
 
 **Rationale**: There is no network API or external service contract in scope.
 A quickstart and data model are sufficient for the implementation handoff.
+
+## Decision 6: Establish repeatability before selecting an outcome threshold
+
+**Decision**: Do not derive a threshold from the three one-run revision
+measurements in `whoami-pilot-data-v2.json`. First repeat the same frozen lane
+multiple times, beginning with one revision, so revision effect and run-to-run
+noise are not treated as the same signal. Select a resolved scalar threshold
+only after that baseline and place it in the structured threshold `value`.
+
+The derivation rule and the baseline sample's content hash belong in the
+predeclaration description and evidence manifest, respectively. They are
+audit context, not a replacement for the machine-checked scalar. The v2
+predeclaration and report remain unchanged historical evidence; a later
+threshold requires a new predeclaration and a new external anchor.
+
+**Rationale**: With one run per revision, the existing 35% spread cannot
+distinguish revision effect from run-to-run noise. A quantile, midpoint, or
+fitted constant over those same observations would move the labels after the
+fact. A positive in the repeatability-baseline phase is explicitly a slow-run
+signal, not yet a claim of revision regression; a future corpus threshold must
+clear measured repeat noise.
+
+## Decision 7: Use explicit evidence-scale corpus defaults
+
+The corpus gate defaults are 800 labeled test rows per family with at least 50
+positive and 50 negative outcomes. Small values remain available only through
+explicit structural smoke-test overrides. This keeps the default contract
+honest while preserving cheap reducer tests.

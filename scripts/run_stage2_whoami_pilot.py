@@ -27,6 +27,7 @@ from isoprax.replay_selection import evaluate_predeclaration_provenance
 from isoprax.stage2_feasibility import (
     ReplayPilotProfile,
     build_stage2_feasibility_report,
+    estimate_stage2_yield,
     normalize_replay_records,
     validate_stage2_feasibility_report,
 )
@@ -36,6 +37,8 @@ DATA_PATH = ROOT / "docs/stage2/whoami-pilot-data-v2.json"
 PREDECLARATION_PATH = ROOT / "docs/stage2/whoami-pilot-predeclaration-v2.json"
 SCORE_TIME = "2026-09-08T00:00:00Z"
 WINDOW_END = "2026-09-08T00:10:00Z"
+YIELD_TARGET_POSITIVE = 2
+YIELD_TARGET_NEGATIVE = 2
 
 
 def _predeclaration_hash(predecl: dict[str, object]) -> str:
@@ -93,6 +96,17 @@ def _configured_attestation(
 def _optional_text(value: object) -> str | None:
     text = str(value).strip() if value is not None else ""
     return text or None
+
+
+def _yield_estimate(data: Mapping[str, object]) -> dict[str, object]:
+    records = data.get("records")
+    if not isinstance(records, list):
+        raise ValueError("pilot records are required for yield estimation")
+    return estimate_stage2_yield(
+        (str(row["outcome_class"]) for row in records),
+        target_positive=YIELD_TARGET_POSITIVE,
+        target_negative=YIELD_TARGET_NEGATIVE,
+    ).to_dict()
 
 
 def _validate_predeclaration(
@@ -168,6 +182,7 @@ def _inconclusive_report(
     provenance,
     corpus_data_commit: str,
     verification: ExternalAnchorVerification | None = None,
+    yield_estimate: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     verification_data = (
         verification.to_dict()
@@ -184,7 +199,7 @@ def _inconclusive_report(
             )
         )
     )
-    return {
+    report = {
         "schema": "isoprax.stage2.whoami-pilot-report.v1",
         "status": "inconclusive",
         "reason": f"{reason}; no feasibility report is emitted",
@@ -203,6 +218,9 @@ def _inconclusive_report(
             "or Full Conformance claim is emitted without an independent anchor."
         ),
     }
+    if yield_estimate is not None:
+        report["yield_estimate"] = dict(yield_estimate)
+    return report
 
 
 def _definition(
@@ -337,6 +355,7 @@ def main() -> None:
     args = parser.parse_args()
     data = json.loads(DATA_PATH.read_text())
     predecl = json.loads(PREDECLARATION_PATH.read_text())
+    yield_estimate = _yield_estimate(data)
     data_commit = _git_output("rev-parse", "HEAD")
     provenance = _validate_predeclaration(
         predecl,
@@ -347,7 +366,9 @@ def main() -> None:
         attestation_subject=args.attestation_subject,
     )
     if not provenance.anchored:
-        output = _inconclusive_report(predecl, provenance, data_commit)
+        output = _inconclusive_report(
+            predecl, provenance, data_commit, yield_estimate=yield_estimate
+        )
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(output, indent=2, sort_keys=True) + "\n")
         print(
@@ -396,6 +417,7 @@ def main() -> None:
         "corpus_data_commit": data_commit,
         "predeclaration_is_ancestor": provenance.ancestry_ok,
         "observed_measurements": data,
+        "yield_estimate": yield_estimate,
         "feasibility_report": report.to_dict(),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

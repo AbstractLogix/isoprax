@@ -196,7 +196,12 @@ def test_malformed_stored_payload_is_rejected():
 
 
 def _legacy_database(
-    path, *, signal_version="1", outcome_event_id=None, outcome_strategy_id=None
+    path,
+    *,
+    signal_version="1",
+    signal_versions=None,
+    outcome_event_id=None,
+    outcome_strategy_id=None,
 ):
     conn = sqlite3.connect(path)
     conn.executescript(
@@ -219,10 +224,12 @@ def _legacy_database(
         );
         """
     )
-    conn.execute(
-        "INSERT INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        ("event-1", "strategy.v1", signal_version, "change", 0.5, "x", None, "{}"),
-    )
+    versions = signal_versions or (signal_version,)
+    for version in versions:
+        conn.execute(
+            "INSERT INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            ("event-1", "strategy.v1", version, "change", 0.5, "x", None, "{}"),
+        )
     if outcome_event_id is not None:
         conn.execute(
             "INSERT INTO outcomes VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -257,8 +264,51 @@ def test_unlinkable_legacy_outcome_fails_closed(tmp_path):
         path, outcome_event_id="missing", outcome_strategy_id="strategy.v1"
     )
 
-    with pytest.raises(ValueError, match="exactly one signal version"):
+    with pytest.raises(ValueError, match="offending rows: rowid 1"):
         SQLiteKB(path)
+
+
+def test_ambiguous_legacy_outcomes_are_listed_and_repairable(tmp_path):
+    path = str(tmp_path / "legacy.db")
+    _legacy_database(
+        path,
+        signal_versions=("1", "2"),
+        outcome_event_id="event-1",
+        outcome_strategy_id="strategy.v1",
+    )
+
+    ambiguities = SQLiteKB.legacy_outcome_ambiguities(path)
+    assert ambiguities == [
+        {
+            "rowid": 1,
+            "event_id": "event-1",
+            "signal_strategy_id": "strategy.v1",
+            "matching_versions": 2,
+        }
+    ]
+    with pytest.raises(ValueError, match="offending rows: rowid 1"):
+        SQLiteKB(path)
+
+    SQLiteKB.repair_legacy_outcomes(path, {1: "2"})
+    assert SQLiteKB.legacy_outcome_ambiguities(path) == []
+    with SQLiteKB(path) as kb:
+        row = kb.conn.execute("SELECT signal_strategy_version FROM outcomes").fetchone()
+        assert row[0] == "2"
+
+
+def test_legacy_outcome_repair_requires_exact_valid_resolutions(tmp_path):
+    path = str(tmp_path / "legacy.db")
+    _legacy_database(
+        path,
+        signal_versions=("1", "2"),
+        outcome_event_id="event-1",
+        outcome_strategy_id="strategy.v1",
+    )
+
+    with pytest.raises(ValueError, match="cover exactly"):
+        SQLiteKB.repair_legacy_outcomes(path, {})
+    with pytest.raises(ValueError, match="does not match one signal version"):
+        SQLiteKB.repair_legacy_outcomes(path, {1: "3"})
 
 
 def test_signal_lookup_and_pair_filters_reject_blank_versions():

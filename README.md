@@ -97,14 +97,14 @@ format verification, the coverage-enforced test suite, and the demo.
 
 ## Next steps
 
-1. Add adapters for real VCS/CI and operational telemetry backends.
-2. Expand Stage 1 with additional licensed public sources and sensitivity
-   analyses while preserving separately-scoped reporting.
-3. Use the Stage 2 replay-feasibility gate to estimate whether a predeclared,
-   shared-observation corpus is practical before attempting full acquisition.
-4. Build a deterministic replay corpus with predeclared thresholds and shared
-   observation semantics to enable Semantic conformance evaluation.
-4. Expand the conformance suite and publish repeatable evidence artifacts.
+1. Run an anchored pilot with both positive and negative outcome classes.
+2. Publish a bootstrapped outcome-yield estimate with its implied corpus size.
+3. Scale beyond the initial three revisions and freeze the predeclared corpus.
+4. Run Stage 2 corpus evaluation with non-degenerate per-family scores.
+5. Add adapters for real VCS/CI and operational telemetry backends.
+
+These gates remain evidence work: passing them does not by itself establish
+Semantic or Full Conformance.
 
 ## Stage 1 status (admission extension)
 
@@ -151,6 +151,11 @@ full corpus, publish pooled cross-family metrics, or claim model efficacy. A
 future corpus/evaluation stage must consume a feasible pilot and independently
 establish those claims.
 
+The pilot tooling also reports a deterministic bootstrap estimate of usable
+positive/negative outcome yield and an implied planning size. The current
+whoami measurements have no positive events, so the report publishes no finite
+corpus-size estimate and remains unsuitable for corpus evaluation.
+
 The injected end-to-end path is exercised by
 `tests/test_stage2_pilot_integration.py`. It runs synthetic build qualification,
 injected-runner evidence, replay capture, and feasibility reporting. This
@@ -165,7 +170,8 @@ report is intentionally `inconclusive` until a Sigstore DSSE bundle with a
 verified Rekor inclusion proof is supplied. All three observed outcomes were
 negative, so even an anchored report would be replay-feasibility evidence
 only; it would not establish positive-event yield, model efficacy, Semantic
-conformance, or full-corpus adequacy.
+conformance, or full-corpus adequacy. Its yield estimate is explicitly
+`no_positive_events` with no finite implied corpus size.
 
 Regenerate the report from the committed measurements with:
 
@@ -185,6 +191,11 @@ label yield, time-safe rows, and non-degenerate per-family scores. Calibration
 alone is insufficient: constant-score predictors remain inconclusive. Change
 and Operational evaluation stays separate, and pooled/Semantic claims remain
 withheld.
+
+The production corpus defaults require 800 labeled test rows per family,
+including at least 50 positive and 50 negative outcomes, with maximum ECE
+`0.05`. Smaller values are permitted only when explicitly declared by a
+structural smoke test; they are not evidence-scale defaults.
 
 ### Stage 1 independence constraints
 
