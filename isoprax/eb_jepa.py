@@ -185,7 +185,7 @@ class EBJEPAWorldModel:
                 "state_representation_identity": self.state_representation_identity,
                 "readouts": (
                     "change_embedding",
-                    "prediction_error_against_ema_post_state_embedding",
+                    "prediction_error_against_online_post_state_embedding",
                 ),
                 "non_decomposable": True,
             }

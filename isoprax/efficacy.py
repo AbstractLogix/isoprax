@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, fields
+from numbers import Real
 from types import MappingProxyType
 from typing import Any, Iterable, Mapping
 
@@ -47,7 +48,10 @@ def _profile_payload(profile: "EfficacyEvaluationProfile") -> dict[str, Any]:
     }
 
 
-def _provenance_reasons(profile: "EfficacyEvaluationProfile") -> list[str]:
+def _provenance_reasons(
+    profile: "EfficacyEvaluationProfile",
+    outcome_definition_ids: Iterable[str] | None = None,
+) -> list[str]:
     if profile.evidence_class != "real_labeled":
         return [
             "evidence class is synthetic; real labeled held-out evidence is required"
@@ -62,6 +66,13 @@ def _provenance_reasons(profile: "EfficacyEvaluationProfile") -> list[str]:
         reasons.append("provenance corpus identity does not match the profile")
     if payload.get("split_identity") != profile.split_identity:
         reasons.append("provenance split identity does not match the profile")
+    if outcome_definition_ids is not None:
+        declared = tuple(payload["outcome_definition_ids"])
+        expected = tuple(outcome_definition_ids)
+        if declared != expected:
+            reasons.append(
+                "provenance outcome definitions do not match the evaluated families"
+            )
     return reasons
 
 
@@ -210,7 +221,11 @@ def _passed_family_result_reasons(
     profile: EfficacyEvaluationProfile,
 ) -> list[str]:
     reasons: list[str] = []
-    if result.family != family or not result.outcome_definition_id.strip():
+    if (
+        result.family != family
+        or not isinstance(result.outcome_definition_id, str)
+        or not result.outcome_definition_id.strip()
+    ):
         reasons.append("family result identity is incomplete")
     required_metrics = (
         "candidate_auc",
@@ -221,15 +236,40 @@ def _passed_family_result_reasons(
         "baseline_ece",
         "auc_gain",
     )
+    metric_values: dict[str, float] = {}
     for name in required_metrics:
         value = result.metrics.get(name)
-        if value is None or not math.isfinite(float(value)):
+        if isinstance(value, bool) or not isinstance(value, Real):
+            reasons.append(f"family metric {name} is missing or non-numeric")
+            continue
+        numeric_value = float(value)
+        if not math.isfinite(numeric_value):
             reasons.append(f"family metric {name} is missing or non-finite")
+            continue
+        metric_values[name] = numeric_value
     required_counts = ("test_rows", "positive_events", "negative_events")
     for name in required_counts:
         value = result.counts.get(name)
         if isinstance(value, bool) or not isinstance(value, int) or value < 0:
             reasons.append(f"family count {name} is invalid")
+    if reasons:
+        return reasons
+    for name in (
+        "candidate_auc",
+        "baseline_auc",
+        "candidate_brier",
+        "baseline_brier",
+        "candidate_ece",
+        "baseline_ece",
+    ):
+        if not 0.0 <= metric_values[name] <= 1.0:
+            reasons.append(f"family metric {name} is outside the [0, 1] domain")
+    if not -1.0 <= metric_values["auc_gain"] <= 1.0:
+        reasons.append("family metric auc_gain is outside the [-1, 1] domain")
+    if result.counts["test_rows"] != (
+        result.counts["positive_events"] + result.counts["negative_events"]
+    ):
+        reasons.append("family counts are inconsistent with test_rows")
     if reasons:
         return reasons
     if result.counts["test_rows"] < profile.min_test_rows:
@@ -238,14 +278,14 @@ def _passed_family_result_reasons(
         reasons.append("family result is below the declared positive-event threshold")
     if result.counts["negative_events"] < profile.min_negative_events:
         reasons.append("family result is below the declared negative-event threshold")
-    if result.metrics["candidate_auc"] < profile.minimum_candidate_auc:
+    if metric_values["candidate_auc"] < profile.minimum_candidate_auc:
         reasons.append("family result candidate AUC is below the profile threshold")
-    if result.metrics["auc_gain"] < profile.minimum_auc_gain:
+    if metric_values["auc_gain"] < profile.minimum_auc_gain:
         reasons.append("family result AUC gain is below the profile threshold")
-    if result.metrics["candidate_ece"] > profile.max_candidate_ece:
+    if metric_values["candidate_ece"] > profile.max_candidate_ece:
         reasons.append("family result ECE exceeds the profile threshold")
-    if result.metrics["candidate_brier"] > (
-        result.metrics["baseline_brier"] + profile.max_brier_regression
+    if metric_values["candidate_brier"] > (
+        metric_values["baseline_brier"] + profile.max_brier_regression
     ):
         reasons.append("family result Brier score exceeds the baseline threshold")
     return reasons
@@ -363,13 +403,18 @@ class EfficacyReport:
                 raise ValueError(
                     "efficacy_supported requires run_configuration backend identity"
                 )
-            if _provenance_reasons(self.profile) or _protected_floor_reasons(
-                self.profile
-            ):
+            results = self.family_results
+            outcome_ids = tuple(
+                results[family].outcome_definition_id
+                for family in self.profile.required_families
+                if family in results
+            )
+            if _provenance_reasons(
+                self.profile, outcome_ids
+            ) or _protected_floor_reasons(self.profile):
                 raise ValueError(
                     "efficacy_supported requires verified real-labeled claim evidence"
                 )
-            results = self.family_results
             result_reasons = [
                 reason
                 for family, result in results.items()
@@ -495,10 +540,25 @@ def _family_result(
     outcomes: np.ndarray | None = None
     if not raw_outcomes:
         reasons.append("outcomes are missing")
-    elif any(isinstance(value, bool) or value not in (0, 1) for value in raw_outcomes):
-        reasons.append("outcomes must be binary")
     else:
-        outcomes = np.asarray(raw_outcomes, dtype=int)
+        try:
+            numeric_outcomes = np.asarray(raw_outcomes, dtype=float)
+        except (OverflowError, TypeError, ValueError):
+            reasons.append("outcomes must be one-dimensional binary integer labels")
+        else:
+            if numeric_outcomes.ndim != 1:
+                reasons.append("outcomes must be one-dimensional binary integer labels")
+            elif (
+                any(
+                    isinstance(value, bool) or not isinstance(value, Real)
+                    for value in raw_outcomes
+                )
+                or not np.isfinite(numeric_outcomes).all()
+                or not np.isin(numeric_outcomes, (0.0, 1.0)).all()
+            ):
+                reasons.append("outcomes must be binary")
+            else:
+                outcomes = numeric_outcomes.astype(int)
 
     def _probabilities(values: tuple[Any, ...], name: str) -> np.ndarray | None:
         if not values:
@@ -683,7 +743,8 @@ def evaluate_eb_jepa_efficacy(
         if family not in by_family:
             blocking_reasons.append(f"missing required family evidence: {family}")
     global_reasons = list(blocking_reasons)
-    global_reasons.extend(_provenance_reasons(profile))
+    provenance_reasons = _provenance_reasons(profile)
+    global_reasons.extend(provenance_reasons)
     global_reasons.extend(_protected_floor_reasons(profile))
     if blocking_reasons:
         family_results = {
@@ -707,6 +768,17 @@ def evaluate_eb_jepa_efficacy(
         }
     for result in family_results.values():
         global_reasons.extend(f"{result.family}: {reason}" for reason in result.reasons)
+    if not provenance_reasons and family_results:
+        global_reasons.extend(
+            _provenance_reasons(
+                profile,
+                tuple(
+                    family_results[family].outcome_definition_id
+                    for family in profile.required_families
+                    if family in family_results
+                ),
+            )
+        )
     status = "efficacy_supported" if not global_reasons else "not_claimable"
     claim_scope = f"{model_identity}:{profile.corpus_identity}:{profile.split_identity}"
     claim_scope = f"{claim_scope}:{run_configuration_identity}:{training_report_identity or 'missing'}"

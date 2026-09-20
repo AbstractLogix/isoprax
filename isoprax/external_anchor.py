@@ -57,6 +57,7 @@ class ExternalAnchorVerification:
             "issuer": self.issuer,
             "reason": self.reason,
             "rekor_log_index": self.rekor_log_index,
+            "statement": self.statement,
         }
 
 

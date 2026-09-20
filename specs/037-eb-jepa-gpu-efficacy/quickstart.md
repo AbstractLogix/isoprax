@@ -35,9 +35,10 @@ evidence. The profile defaults to `evidence_class="synthetic"`; set
 corpus with independent labels and externally verified provenance.
 
 The provenance must be supplied as a digest-backed `EvidenceProvenance` artifact
-whose corpus and split identities match the profile; a caller-controlled evidence
-class alone cannot produce a claim. Claimable profiles also preserve the 800-row,
-50-positive, and 50-negative per-family evidence floor.
+whose corpus, split, label, and outcome-definition identities match the evaluation
+and whose digest is bound to an externally verified anchor result. A caller-controlled
+evidence class or `verified` flag cannot produce a claim. Claimable profiles also
+preserve the 800-row, 50-positive, and 50-negative per-family evidence floor.
 
 ## Local verification snapshot
 

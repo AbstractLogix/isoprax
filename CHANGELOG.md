@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   anti-collapse weights affect trainable predictions.
 - Digest-backed provenance gates for semantic and efficacy evidence, plus report
   validation that preserves the protected per-family evidence floor.
+- Bound semantic and efficacy provenance to verifier-produced external-anchor
+  statements, including non-empty outcome-definition identities.
 - A real production Sigstore/Rekor bundle fixture with offline verifier
   coverage while keeping non-Isoprax predicates rejected.
 - Explicit listing and human-selected repair for ambiguous legacy SQLite
@@ -37,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the optional `gpu` dependency extra and refreshed the lockfile.
 - Made malformed efficacy evidence fail closed as report reasons rather than
   raising during metric evaluation.
+- Corrected EB-JEPA readout provenance to identify the online post-state encoder
+  used by anomaly scoring and hardened malformed outcome conversion.
 - Replaced the broken CLI attestation subprocess with Sigstore's Python
   signing API and one canonical in-toto Statement definition.
 - Removed the Sigstore minor-version private-field dependency from Rekor
@@ -58,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Validation
 
-- Full suite: 404 passed, 1 skipped; total coverage 95.24%.
+- Full suite: 409 passed, 1 skipped; total coverage 95.10%.
 - Ruff, formatting, pre-commit, and staged-diff checks passed.
 
 No predictive efficacy claim is made in this release entry; real labeled

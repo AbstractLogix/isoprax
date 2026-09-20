@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -17,6 +19,7 @@ from isoprax import (
     RunEvent,
     SQLiteKB,
 )
+from isoprax.external_anchor import ExternalAnchorVerification, stage2_statement_payload
 from isoprax.identity import content_hash
 from isoprax.jepa import JEPA_DEFECT_RISK, JEPA_OPERATIONAL_FAILURE
 from isoprax.stage2_corpus_evaluation import CORPUS_MIN_TEST_ROWS
@@ -65,8 +68,29 @@ def _provenance(verified: bool = True) -> EvidenceProvenance:
         "corpus_identity": "real-labeled-fixture-v1",
         "split_identity": "split-v1",
         "label_definition_identity": "labels-v1",
+        "outcome_definition_ids": (
+            JEPA_DEFECT_RISK.id,
+            JEPA_OPERATIONAL_FAILURE.id,
+        ),
+        "predeclaration_commit": "commit-fixture-v1",
     }
-    return EvidenceProvenance(payload, content_hash(payload), verified=verified)
+    verification = ExternalAnchorVerification(
+        status="verified" if verified else "unverified",
+        anchor_type="sigstore_rekor_dsse",
+        anchor_reference="rekor://fixture" if verified else "",
+        bundle_path="fixture.json",
+        signer_identity="fixture-signer" if verified else None,
+        issuer="fixture-issuer" if verified else None,
+        reason="fixture verification",
+        statement=(
+            stage2_statement_payload(
+                content_hash(payload), payload["predeclaration_commit"]
+            )
+            if verified
+            else None
+        ),
+    )
+    return EvidenceProvenance(payload, content_hash(payload), verification=verification)
 
 
 def test_jepa_fit_is_deterministic_and_self_supervised():
@@ -293,14 +317,54 @@ def test_jepa_semantic_evidence_rejects_invalid_declarations(kwargs, match):
 
 
 def test_evidence_provenance_requires_matching_digest_and_identities():
-    with pytest.raises(ValueError, match="corpus, split, and labels"):
+    with pytest.raises(ValueError, match="corpus, split, labels, outcomes"):
         EvidenceProvenance({"corpus_identity": "only"}, "digest")
     payload = {
         "corpus_identity": "real-labeled-fixture-v1",
         "split_identity": "split-v1",
         "label_definition_identity": "labels-v1",
+        "outcome_definition_ids": (JEPA_DEFECT_RISK.id, JEPA_OPERATIONAL_FAILURE.id),
+        "predeclaration_commit": "commit-fixture-v1",
     }
     with pytest.raises(ValueError, match="digest"):
         EvidenceProvenance(payload, "wrong")
     with pytest.raises(ValueError, match="verification"):
-        EvidenceProvenance(payload, content_hash(payload), verified="yes")
+        EvidenceProvenance(payload, content_hash(payload), verification="yes")
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    [
+        ("anchor_type", "other", "anchor type"),
+        ("anchor_reference", "", "anchor reference"),
+        ("signer_identity", "", "signer identity"),
+        ("statement", {}, "does not bind"),
+    ],
+)
+def test_evidence_provenance_requires_a_binding_verified_anchor(field, value, match):
+    provenance = _provenance()
+    verification = replace(provenance.verification, **{field: value})
+    with pytest.raises(ValueError, match=match):
+        EvidenceProvenance(
+            provenance.payload, provenance.digest, verification=verification
+        )
+
+
+def test_evidence_provenance_rejects_empty_identity_and_outcome_definitions():
+    provenance = _provenance()
+    empty_identity = dict(provenance.payload)
+    empty_identity["corpus_identity"] = ""
+    with pytest.raises(ValueError, match="non-empty string"):
+        EvidenceProvenance(
+            empty_identity,
+            content_hash(empty_identity),
+            verification=provenance.verification,
+        )
+    duplicate_outcomes = dict(provenance.payload)
+    duplicate_outcomes["outcome_definition_ids"] = (JEPA_DEFECT_RISK.id,) * 2
+    with pytest.raises(ValueError, match="unique"):
+        EvidenceProvenance(
+            duplicate_outcomes,
+            content_hash(duplicate_outcomes),
+            verification=provenance.verification,
+        )

@@ -20,6 +20,7 @@ import numpy as np
 
 from .commensurability import OutcomeDefinition
 from .events import ChangeEvent, RunEvent
+from .external_anchor import ExternalAnchorVerification, stage2_statement_payload
 from .identity import content_hash
 from .signals import AnomalySignal, CalibrationStatus, RiskSignal
 from .strategies import AnomalyStrategy, Calibrator, RiskStrategy
@@ -153,11 +154,11 @@ class JEPATrainingReport:
 
 @dataclass(frozen=True)
 class EvidenceProvenance:
-    """Digest-backed provenance supplied by an external evidence workflow."""
+    """Digest-backed provenance bound to an externally verified anchor."""
 
     payload: Mapping[str, Any]
     digest: str
-    verified: bool = False
+    verification: ExternalAnchorVerification | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.payload, Mapping) or not self.payload:
@@ -169,24 +170,107 @@ class EvidenceProvenance:
             "corpus_identity",
             "split_identity",
             "label_definition_identity",
+            "outcome_definition_ids",
+            "predeclaration_commit",
         }
         if not required_keys.issubset(payload):
             raise ValueError(
-                "evidence provenance must identify corpus, split, and labels"
+                "evidence provenance must identify corpus, split, labels, outcomes, "
+                "and predeclaration"
             )
+        for key in (
+            "corpus_identity",
+            "split_identity",
+            "label_definition_identity",
+            "predeclaration_commit",
+        ):
+            value = payload[key]
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    f"evidence provenance {key} must be a non-empty string"
+                )
+        outcome_ids = payload["outcome_definition_ids"]
+        if isinstance(outcome_ids, (str, bytes)) or not isinstance(
+            outcome_ids, Sequence
+        ):
+            raise ValueError(
+                "evidence provenance outcome_definition_ids must be a sequence"
+            )
+        normalized_outcome_ids = tuple(outcome_ids)
+        if not normalized_outcome_ids or any(
+            not isinstance(value, str) or not value.strip()
+            for value in normalized_outcome_ids
+        ):
+            raise ValueError(
+                "evidence provenance outcome_definition_ids must contain non-empty strings"
+            )
+        if len(set(normalized_outcome_ids)) != len(normalized_outcome_ids):
+            raise ValueError(
+                "evidence provenance outcome_definition_ids must be unique"
+            )
+        payload["outcome_definition_ids"] = normalized_outcome_ids
         if not isinstance(self.digest, str) or not self.digest.strip():
             raise ValueError("evidence provenance digest is required")
         if content_hash(payload) != self.digest:
             raise ValueError("evidence provenance digest does not match its payload")
-        if not isinstance(self.verified, bool):
-            raise ValueError("evidence provenance verification must be boolean")
+        if self.verification is not None and not isinstance(
+            self.verification, ExternalAnchorVerification
+        ):
+            raise ValueError(
+                "evidence provenance verification must be an external anchor result"
+            )
+        if self.verification is not None and self.verification.verified:
+            if (
+                not isinstance(self.verification.anchor_type, str)
+                or not self.verification.anchor_type.strip()
+            ):
+                raise ValueError("verified evidence provenance requires an anchor type")
+            if self.verification.anchor_type != "sigstore_rekor_dsse":
+                raise ValueError("evidence provenance anchor type is not supported")
+            if (
+                not isinstance(self.verification.anchor_reference, str)
+                or not self.verification.anchor_reference.strip()
+            ):
+                raise ValueError(
+                    "verified evidence provenance requires an anchor reference"
+                )
+            if (
+                not isinstance(self.verification.signer_identity, str)
+                or not self.verification.signer_identity.strip()
+            ):
+                raise ValueError(
+                    "verified evidence provenance requires a signer identity"
+                )
+            expected_statement = stage2_statement_payload(
+                self.digest, payload["predeclaration_commit"]
+            )
+            if (
+                not isinstance(self.verification.statement, Mapping)
+                or dict(self.verification.statement) != expected_statement
+            ):
+                raise ValueError(
+                    "verified evidence provenance anchor does not bind its digest"
+                )
         object.__setattr__(self, "payload", MappingProxyType(payload))
+
+    @property
+    def verified(self) -> bool:
+        """Whether an external verifier supplied a binding verified anchor."""
+        if self.verification is None or not self.verification.verified:
+            return False
+        return isinstance(self.verification.statement, Mapping) and dict(
+            self.verification.statement
+        ) == stage2_statement_payload(
+            self.digest, self.payload["predeclaration_commit"]
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "payload": dict(self.payload),
             "digest": self.digest,
-            "verified": self.verified,
+            "verification": (
+                self.verification.to_dict() if self.verification is not None else None
+            ),
         }
 
 
@@ -295,6 +379,11 @@ def _semantic_evidence_gate_reasons(
         reasons.append("semantic evidence lacks a provenance artifact")
     elif not evidence.provenance.verified:
         reasons.append("semantic evidence provenance is not externally verified")
+    elif set(evidence.provenance.payload["outcome_definition_ids"]) != {
+        JEPA_DEFECT_RISK.id,
+        JEPA_OPERATIONAL_FAILURE.id,
+    }:
+        reasons.append("semantic evidence provenance outcome definitions do not match")
     return reasons
 
 

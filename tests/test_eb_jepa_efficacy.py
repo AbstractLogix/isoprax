@@ -10,6 +10,7 @@ from isoprax import (
     FamilyEfficacyResult,
     evaluate_eb_jepa_efficacy,
 )
+from isoprax.external_anchor import ExternalAnchorVerification, stage2_statement_payload
 from isoprax.identity import content_hash
 
 
@@ -102,8 +103,29 @@ def _provenance(verified=False, corpus_identity="real-labeled-fixture-v1"):
         "corpus_identity": corpus_identity,
         "split_identity": "split-v1",
         "label_definition_identity": "labels-v1",
+        "outcome_definition_ids": (
+            "change.outcome.v1",
+            "operational.outcome.v1",
+        ),
+        "predeclaration_commit": "commit-fixture-v1",
     }
-    return EvidenceProvenance(payload, content_hash(payload), verified=verified)
+    verification = ExternalAnchorVerification(
+        status="verified" if verified else "unverified",
+        anchor_type="sigstore_rekor_dsse",
+        anchor_reference="rekor://fixture" if verified else "",
+        bundle_path="fixture.json",
+        signer_identity="fixture-signer" if verified else None,
+        issuer="fixture-issuer" if verified else None,
+        reason="fixture verification",
+        statement=(
+            stage2_statement_payload(
+                content_hash(payload), payload["predeclaration_commit"]
+            )
+            if verified
+            else None
+        ),
+    )
+    return EvidenceProvenance(payload, content_hash(payload), verification=verification)
 
 
 def _run_configuration():
@@ -292,6 +314,22 @@ def test_efficacy_family_scores_report_malformed_alignment_and_labels():
     )
     assert any("binary" in reason for reason in nonbinary.reasons)
 
+    nested_outcomes = _evaluate(
+        _profile(required_families=("change",)),
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-1"),
+                outcomes=((0, 1), (0, 1)),
+                candidate_scores=(0.1, 0.9),
+                baseline_scores=(0.5, 0.5),
+            ),
+        ),
+    )
+    assert any("one-dimensional" in reason for reason in nested_outcomes.reasons)
+
     duplicate = _evaluate(
         _profile(required_families=("change",)),
         split_row_ids=_splits(),
@@ -405,12 +443,44 @@ def test_efficacy_rejects_invalid_declarations_and_report_tampering():
             run_configuration=bad_config,
             run_configuration_identity=content_hash(bad_config),
         )
-    forged_result = FamilyEfficacyResult("change", "change.v1", "passed", {}, {}, ())
+    forged_result = FamilyEfficacyResult(
+        "change", "change.outcome.v1", "passed", {}, {}, ()
+    )
     with pytest.raises(ValueError, match="every required family"):
         replace(
             report,
             family_results={
                 "change": forged_result,
+                "operational": report.family_results["operational"],
+            },
+        )
+    forged_metrics = replace(
+        report.family_results["change"],
+        metrics={
+            **dict(report.family_results["change"].metrics),
+            "candidate_auc": 2.0,
+        },
+    )
+    with pytest.raises(ValueError, match="every required family"):
+        replace(
+            report,
+            family_results={
+                "change": forged_metrics,
+                "operational": report.family_results["operational"],
+            },
+        )
+    forged_counts = replace(
+        report.family_results["change"],
+        counts={
+            **dict(report.family_results["change"].counts),
+            "test_rows": 801,
+        },
+    )
+    with pytest.raises(ValueError, match="every required family"):
+        replace(
+            report,
+            family_results={
+                "change": forged_counts,
                 "operational": report.family_results["operational"],
             },
         )

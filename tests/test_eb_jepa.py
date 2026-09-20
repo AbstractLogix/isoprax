@@ -17,6 +17,10 @@ from isoprax import (  # noqa: E402
     RiskSignal,
     RunEvent,
 )
+from isoprax.external_anchor import (  # noqa: E402
+    ExternalAnchorVerification,
+    stage2_statement_payload,
+)
 from isoprax.identity import content_hash  # noqa: E402
 
 
@@ -61,8 +65,25 @@ def _provenance():
         "corpus_identity": "real-labeled-fixture-v1",
         "split_identity": "split-v1",
         "label_definition_identity": "labels-v1",
+        "outcome_definition_ids": (
+            "jepa.change_defect_risk.v1",
+            "jepa.operational_failure.v1",
+        ),
+        "predeclaration_commit": "commit-fixture-v1",
     }
-    return EvidenceProvenance(payload, content_hash(payload), verified=True)
+    verification = ExternalAnchorVerification(
+        status="verified",
+        anchor_type="sigstore_rekor_dsse",
+        anchor_reference="rekor://fixture",
+        bundle_path="fixture.json",
+        signer_identity="fixture-signer",
+        issuer="fixture-issuer",
+        reason="fixture verification",
+        statement=stage2_statement_payload(
+            content_hash(payload), payload["predeclaration_commit"]
+        ),
+    )
+    return EvidenceProvenance(payload, content_hash(payload), verification=verification)
 
 
 def test_eb_jepa_cpu_fit_is_deterministic_and_reports_regularization():
@@ -222,6 +243,11 @@ def test_eb_jepa_reports_structural_default_and_calibrates_both_readouts():
         anomaly.evaluate(run, cases[1][1]).calibration_status
         == CalibrationStatus.CALIBRATED
     )
+    predicted = model.predict_post(_change(1), cases[1][1]["pre_state"])
+    observed = np.asarray(model.encode_state(cases[1][1]["post_state"]), dtype=float)
+    assert model.prediction_error(
+        _change(1), cases[1][1]["pre_state"], cases[1][1]["post_state"]
+    ) == pytest.approx(float(np.mean((predicted - observed) ** 2)))
 
     synthetic = JEPASemanticEvidence(
         backend_identity=model.backend_identity,

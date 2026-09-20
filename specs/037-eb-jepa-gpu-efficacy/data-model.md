@@ -17,10 +17,11 @@ finite/completed status, backend identity, and claim boundary.
 Predeclared policy: corpus/split identity, baseline identity, minimum test rows and
 positive/negative counts per family, minimum AUC improvement, maximum allowed ECE,
 threshold version, and evidence class (`synthetic` or `real_labeled`). It is
-immutable and hashed into the report identity. Real-labeled evidence also carries
-an independently identified, digest-backed, externally verified `EvidenceProvenance`
-artifact tied to the corpus and split identities. Only verified `real_labeled`
-evidence can produce `efficacy_supported`.
+immutable and hashed into the report identity. Real-labeled evidence also carries an
+`EvidenceProvenance` artifact whose non-empty corpus, split, label, and outcome
+definition identities are digest-bound to a verifier-produced external anchor
+statement. Only that externally verified `real_labeled` evidence can produce
+`efficacy_supported`.
 
 ## `FamilyEfficacyResult`
 
