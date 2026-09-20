@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passing CUDA smoke test.
 - Clarified that GPU execution, synthetic fixtures, and runtime smoke tests do
   not establish predictive efficacy, Semantic Conformance, or Full Conformance.
+- Updated the CI matrix to install the declared `gpu` extra so optional EB-JEPA
+  tests and coverage are exercised on every supported Python version.
 - Recorded that the historical Stage 2 whoami pilot remains unanchored and all
   three observed outcomes remain negative; no feasibility, corpus, or
   conformance claim is published from it.
