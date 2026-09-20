@@ -61,6 +61,20 @@ from .corpus_manifest import (
     build_corpus_manifest,
     validate_corpus_manifest,
 )
+from .eb_jepa import (
+    EBJEPAAnomalyStrategy,
+    EBJEPAConfig,
+    EBJEPARiskStrategy,
+    EBJEPATrainingReport,
+    EBJEPAWorldModel,
+)
+from .efficacy import (
+    EfficacyEvaluationProfile,
+    EfficacyFamilyScores,
+    EfficacyReport,
+    FamilyEfficacyResult,
+    evaluate_eb_jepa_efficacy,
+)
 from .events import ChangeEvent, Event, Family, MetricSample, RunEvent
 from .evidence import PoolingHarmEvidence, build_pooling_harm_evidence
 from .evidence_reporting import (
@@ -84,6 +98,19 @@ from .hermetic_runner import (
     RunnerBackend,
     RunnerBackendResult,
     run_prepared_execution,
+)
+from .jepa import (
+    JEPA_DEFECT_RISK,
+    JEPA_OPERATIONAL_FAILURE,
+    EvidenceProvenance,
+    JEPAAnomalyStrategy,
+    JEPAAssessment,
+    JEPABackendConfig,
+    JEPARiskStrategy,
+    JEPASemanticEvidence,
+    JEPATrainingPair,
+    JEPATrainingReport,
+    JEPAWorldModel,
 )
 from .kb import KnowledgeBase, Outcome, SQLiteKB
 from .normative import NormativeCitation, resolve_citations, unresolved_citations

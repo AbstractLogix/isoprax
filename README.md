@@ -9,6 +9,26 @@ Stage 2 deterministic-replay feasibility reducer. It demonstrates shared
 event, signal, knowledge-base, feedback, calibration, and commensurability
 mechanics for the Change and Operational families.
 
+The repository also includes the bounded JEPA unified-predictor reference slice in
+[`specs/036-jepa-unified-predictor/`](specs/036-jepa-unified-predictor/). It uses a
+deterministic offline latent backend to emit both existing family Signal types from
+one shared model identity; it is research PoC evidence, not an efficacy claim.
+
+An optional EB-JEPA-style PyTorch backend is available through the `gpu` extra. It
+supports explicit CPU/CUDA execution, reports the actual runtime device, and fails
+closed when the installed wheel lacks the host GPU architecture. Install a
+host-appropriate PyTorch build before using it; the base package remains usable
+without PyTorch. The accompanying efficacy evaluator requires disjoint held-out
+labeled data, a named baseline, frozen per-family thresholds, a validated completed
+training report, canonical run configuration, and a digest-backed independently
+verified provenance artifact. Claimable profiles preserve the 800/50/50 per-family
+evidence floor. GPU execution or synthetic smoke tests cannot produce an efficacy
+claim.
+
+This backend was tested locally on an NVIDIA GeForce RTX 5070 (`sm_120`) using
+PyTorch 2.14.0+cu130 with CUDA available; the CUDA smoke test passed. That runtime
+validation establishes GPU execution only, not predictive efficacy.
+
 The implementation declares **Cross-Family Conformance (Structural)** only.
 Its baseline Outcome Definitions are deliberately non-commensurable, so it
 withholds pooled scores and makes no Semantic or Full Conformance claim.
@@ -42,8 +62,8 @@ that make real corpus work credible:
 - no private third-party production data or privileged telemetry requirements,
 - deterministic reporting that keeps admission as evidence infrastructure only.
 
-This is materially more mature and immediately useful than speculative JEPA or
-profile work, and it is the right near-term boundary for the project.
+This remains materially more mature and immediately useful than unsupported profile
+efficacy claims, and it is the right evidence boundary for the project.
 
 ## What this proves
 
