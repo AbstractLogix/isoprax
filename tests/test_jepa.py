@@ -396,3 +396,8 @@ def test_evidence_provenance_deeply_freezes_payload_snapshot():
     with pytest.raises(TypeError):
         provenance.payload["metadata"]["owner"]["team"] = "changed"
     assert provenance.verified
+
+    provenance.verification.statement["predicate"]["artifact_hash"] = "changed"
+    assert provenance.verification.verified is False
+    assert provenance.verified is False
+    assert provenance.to_dict()["verification"]["status"] == "unverified"

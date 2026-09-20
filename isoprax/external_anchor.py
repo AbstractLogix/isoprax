@@ -18,6 +18,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Mapping
 
 from sigstore.dsse import Statement, StatementBuilder, Subject
@@ -28,6 +29,24 @@ PREDICATE_TYPE = "https://isoprax.dev/predicates/stage2-predeclaration/v1"
 DEFAULT_SUBJECT_NAME = "isoprax-stage2-predeclaration"
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _VERIFIED_RESULT_TOKEN = object()
+
+
+def _freeze_anchor_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType(
+            {key: _freeze_anchor_value(item) for key, item in value.items()}
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_anchor_value(item) for item in value)
+    return value
+
+
+def _thaw_anchor_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _thaw_anchor_value(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw_anchor_value(item) for item in value]
+    return value
 
 
 @dataclass(frozen=True)
@@ -46,13 +65,43 @@ class ExternalAnchorVerification:
     _verification_token: object | None = field(
         default=None, init=False, repr=False, compare=False
     )
+    _statement_snapshot: Mapping[str, Any] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        if isinstance(self.statement, Mapping):
+            snapshot = _freeze_anchor_value(self.statement)
+            object.__setattr__(self, "_statement_snapshot", snapshot)
+            object.__setattr__(self, "statement", _thaw_anchor_value(snapshot))
+
+    @property
+    def _statement_matches_snapshot(self) -> bool:
+        return (
+            isinstance(self.statement, Mapping)
+            and self._statement_snapshot is not None
+            and _freeze_anchor_value(self.statement) == self._statement_snapshot
+        )
+
+    @property
+    def verifier_authenticated(self) -> bool:
+        """Whether this result carries the verifier-issued authenticity token."""
+        return self._verification_token is _VERIFIED_RESULT_TOKEN
 
     @property
     def verified(self) -> bool:
         return (
             self.status == "verified"
-            and self._verification_token is _VERIFIED_RESULT_TOKEN
+            and self.verifier_authenticated
+            and self._statement_matches_snapshot
         )
+
+    @property
+    def verified_statement(self) -> Mapping[str, Any] | None:
+        """Return a detached copy of the verifier-captured statement."""
+        if self._statement_snapshot is None:
+            return None
+        return _thaw_anchor_value(self._statement_snapshot)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -64,7 +113,7 @@ class ExternalAnchorVerification:
             "issuer": self.issuer,
             "reason": self.reason,
             "rekor_log_index": self.rekor_log_index,
-            "statement": self.statement if self.verified else None,
+            "statement": self.verified_statement if self.verified else None,
         }
 
 

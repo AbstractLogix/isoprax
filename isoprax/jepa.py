@@ -248,10 +248,18 @@ class EvidenceProvenance:
         if (
             self.verification is not None
             and self.verification.status == "verified"
-            and not self.verification.verified
+            and not self.verification.verifier_authenticated
         ):
             raise ValueError(
                 "verified evidence provenance must come from the external verifier"
+            )
+        if (
+            self.verification is not None
+            and self.verification.status == "verified"
+            and not self.verification.verified
+        ):
+            raise ValueError(
+                "verified evidence provenance anchor does not bind its statement"
             )
         if self.verification is not None and self.verification.verified:
             if (
@@ -279,8 +287,8 @@ class EvidenceProvenance:
                 self.digest, payload["predeclaration_commit"]
             )
             if (
-                not isinstance(self.verification.statement, Mapping)
-                or dict(self.verification.statement) != expected_statement
+                not isinstance(self.verification.verified_statement, Mapping)
+                or dict(self.verification.verified_statement) != expected_statement
             ):
                 raise ValueError(
                     "verified evidence provenance anchor does not bind its digest"
@@ -292,8 +300,9 @@ class EvidenceProvenance:
         """Whether an external verifier supplied a binding verified anchor."""
         if self.verification is None or not self.verification.verified:
             return False
-        return isinstance(self.verification.statement, Mapping) and dict(
-            self.verification.statement
+        statement = self.verification.verified_statement
+        return isinstance(statement, Mapping) and dict(
+            statement
         ) == stage2_statement_payload(
             self.digest, self.payload["predeclaration_commit"]
         )
