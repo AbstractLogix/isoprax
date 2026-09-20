@@ -71,7 +71,7 @@ def _provenance():
         ),
         "predeclaration_commit": "commit-fixture-v1",
     }
-    verification = ExternalAnchorVerification(
+    verification = ExternalAnchorVerification._from_verifier(
         status="verified",
         anchor_type="sigstore_rekor_dsse",
         anchor_reference="rekor://fixture",

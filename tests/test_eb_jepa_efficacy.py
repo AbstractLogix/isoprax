@@ -109,7 +109,12 @@ def _provenance(verified=False, corpus_identity="real-labeled-fixture-v1"):
         ),
         "predeclaration_commit": "commit-fixture-v1",
     }
-    verification = ExternalAnchorVerification(
+    verification_factory = (
+        ExternalAnchorVerification._from_verifier
+        if verified
+        else ExternalAnchorVerification
+    )
+    verification = verification_factory(
         status="verified" if verified else "unverified",
         anchor_type="sigstore_rekor_dsse",
         anchor_reference="rekor://fixture" if verified else "",

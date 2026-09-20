@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -27,6 +27,7 @@ IN_TOTO_STATEMENT_TYPE = "https://in-toto.io/Statement/v1"
 PREDICATE_TYPE = "https://isoprax.dev/predicates/stage2-predeclaration/v1"
 DEFAULT_SUBJECT_NAME = "isoprax-stage2-predeclaration"
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_VERIFIED_RESULT_TOKEN = object()
 
 
 @dataclass(frozen=True)
@@ -42,10 +43,22 @@ class ExternalAnchorVerification:
     reason: str
     rekor_log_index: str | None = None
     statement: Mapping[str, Any] | None = None
+    _verification_token: object | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    @classmethod
+    def _from_verifier(cls, **kwargs: Any) -> "ExternalAnchorVerification":
+        result = cls(**kwargs)
+        object.__setattr__(result, "_verification_token", _VERIFIED_RESULT_TOKEN)
+        return result
 
     @property
     def verified(self) -> bool:
-        return self.status == "verified"
+        return (
+            self.status == "verified"
+            and self._verification_token is _VERIFIED_RESULT_TOKEN
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -262,7 +275,7 @@ def verify_sigstore_attestation(
             reason=f"Sigstore/Rekor verification failed: {error}",
         )
 
-    return ExternalAnchorVerification(
+    return ExternalAnchorVerification._from_verifier(
         status="verified",
         anchor_type="sigstore_rekor_dsse",
         anchor_reference=reference,

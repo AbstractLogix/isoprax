@@ -1,5 +1,3 @@
-from dataclasses import replace
-
 import numpy as np
 import pytest
 
@@ -74,7 +72,12 @@ def _provenance(verified: bool = True) -> EvidenceProvenance:
         ),
         "predeclaration_commit": "commit-fixture-v1",
     }
-    verification = ExternalAnchorVerification(
+    verification_factory = (
+        ExternalAnchorVerification._from_verifier
+        if verified
+        else ExternalAnchorVerification
+    )
+    verification = verification_factory(
         status="verified" if verified else "unverified",
         anchor_type="sigstore_rekor_dsse",
         anchor_reference="rekor://fixture" if verified else "",
@@ -330,6 +333,20 @@ def test_evidence_provenance_requires_matching_digest_and_identities():
         EvidenceProvenance(payload, "wrong")
     with pytest.raises(ValueError, match="verification"):
         EvidenceProvenance(payload, content_hash(payload), verification="yes")
+    manual_verified = ExternalAnchorVerification(
+        status="verified",
+        anchor_type="sigstore_rekor_dsse",
+        anchor_reference="rekor://manual",
+        bundle_path="missing.json",
+        signer_identity="manual-signer",
+        issuer="manual-issuer",
+        reason="manually constructed",
+        statement=stage2_statement_payload(
+            content_hash(payload), payload["predeclaration_commit"]
+        ),
+    )
+    with pytest.raises(ValueError, match="external verifier"):
+        EvidenceProvenance(payload, content_hash(payload), verification=manual_verified)
 
 
 @pytest.mark.parametrize(
@@ -343,7 +360,20 @@ def test_evidence_provenance_requires_matching_digest_and_identities():
 )
 def test_evidence_provenance_requires_a_binding_verified_anchor(field, value, match):
     provenance = _provenance()
-    verification = replace(provenance.verification, **{field: value})
+    base = provenance.verification
+    verification_values = {
+        "status": base.status,
+        "anchor_type": base.anchor_type,
+        "anchor_reference": base.anchor_reference,
+        "bundle_path": base.bundle_path,
+        "signer_identity": base.signer_identity,
+        "issuer": base.issuer,
+        "reason": base.reason,
+        "rekor_log_index": base.rekor_log_index,
+        "statement": base.statement,
+    }
+    verification_values[field] = value
+    verification = ExternalAnchorVerification._from_verifier(**verification_values)
     with pytest.raises(ValueError, match=match):
         EvidenceProvenance(
             provenance.payload, provenance.digest, verification=verification

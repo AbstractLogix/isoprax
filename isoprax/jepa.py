@@ -219,6 +219,14 @@ class EvidenceProvenance:
             raise ValueError(
                 "evidence provenance verification must be an external anchor result"
             )
+        if (
+            self.verification is not None
+            and self.verification.status == "verified"
+            and not self.verification.verified
+        ):
+            raise ValueError(
+                "verified evidence provenance must come from the external verifier"
+            )
         if self.verification is not None and self.verification.verified:
             if (
                 not isinstance(self.verification.anchor_type, str)
