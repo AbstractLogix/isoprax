@@ -56,7 +56,7 @@ class ExternalAnchorVerification:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "status": self.status,
+            "status": "verified" if self.verified else "unverified",
             "anchor_type": self.anchor_type,
             "anchor_reference": self.anchor_reference,
             "bundle_path": self.bundle_path,

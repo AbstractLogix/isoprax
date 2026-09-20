@@ -51,6 +51,32 @@ JEPA_OPERATIONAL_FAILURE = OutcomeDefinition(
 )
 
 
+def _copy_evidence_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _copy_evidence_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return tuple(_copy_evidence_value(item) for item in value)
+    return value
+
+
+def _freeze_evidence_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType(
+            {key: _freeze_evidence_value(item) for key, item in value.items()}
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_evidence_value(item) for item in value)
+    return value
+
+
+def _thaw_evidence_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _thaw_evidence_value(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw_evidence_value(item) for item in value]
+    return value
+
+
 def _state_array(value: Sequence[Sequence[float]], name: str) -> np.ndarray:
     try:
         array = np.asarray(value, dtype=float)
@@ -163,7 +189,7 @@ class EvidenceProvenance:
     def __post_init__(self) -> None:
         if not isinstance(self.payload, Mapping) or not self.payload:
             raise ValueError("evidence provenance payload is required")
-        payload = dict(self.payload)
+        payload = _copy_evidence_value(self.payload)
         if any(not isinstance(key, str) or not key.strip() for key in payload):
             raise ValueError("evidence provenance keys must be non-empty strings")
         required_keys = {
@@ -259,7 +285,7 @@ class EvidenceProvenance:
                 raise ValueError(
                     "verified evidence provenance anchor does not bind its digest"
                 )
-        object.__setattr__(self, "payload", MappingProxyType(payload))
+        object.__setattr__(self, "payload", _freeze_evidence_value(payload))
 
     @property
     def verified(self) -> bool:
@@ -274,7 +300,7 @@ class EvidenceProvenance:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "payload": dict(self.payload),
+            "payload": _thaw_evidence_value(self.payload),
             "digest": self.digest,
             "verification": (
                 self.verification.to_dict() if self.verification is not None else None

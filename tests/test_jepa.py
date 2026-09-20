@@ -338,6 +338,8 @@ def test_evidence_provenance_requires_matching_digest_and_identities():
             content_hash(payload), payload["predeclaration_commit"]
         ),
     )
+    assert manual_verified.verified is False
+    assert manual_verified.to_dict()["status"] == "unverified"
     with pytest.raises(ValueError, match="external verifier"):
         EvidenceProvenance(payload, content_hash(payload), verification=manual_verified)
 
@@ -379,3 +381,18 @@ def test_evidence_provenance_rejects_empty_identity_and_outcome_definitions():
             content_hash(duplicate_outcomes),
             verification=provenance.verification,
         )
+
+
+def test_evidence_provenance_deeply_freezes_payload_snapshot():
+    source = dict(_provenance().payload)
+    source["metadata"] = {"owner": {"team": "platform"}}
+    verification = verified_anchor(source)
+    provenance = EvidenceProvenance(
+        source, content_hash(source), verification=verification
+    )
+
+    source["metadata"]["owner"]["team"] = "changed"
+    assert provenance.payload["metadata"]["owner"]["team"] == "platform"
+    with pytest.raises(TypeError):
+        provenance.payload["metadata"]["owner"]["team"] = "changed"
+    assert provenance.verified
