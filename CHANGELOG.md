@@ -66,7 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Validation
 
-- Full suite: 411 passed, 1 skipped; total coverage 95.09%.
+- Full suite: 439 passed, 1 skipped; total coverage 97.93%; every production
+  module meets the 95% branch-aware coverage gate.
 - Ruff, formatting, pre-commit, and staged-diff checks passed.
 
 No predictive efficacy claim is made in this release entry; real labeled

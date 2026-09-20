@@ -10,6 +10,7 @@ from isoprax import (  # noqa: E402
     EBJEPAAnomalyStrategy,
     EBJEPAConfig,
     EBJEPARiskStrategy,
+    EBJEPATrainingReport,
     EBJEPAWorldModel,
     EvidenceProvenance,
     JEPASemanticEvidence,
@@ -18,6 +19,7 @@ from isoprax import (  # noqa: E402
     RunEvent,
 )
 from isoprax.identity import content_hash  # noqa: E402
+from isoprax.jepa import JEPA_DEFECT_RISK, JEPA_OPERATIONAL_FAILURE  # noqa: E402
 from tests.provenance_helpers import verified_anchor  # noqa: E402
 
 
@@ -95,6 +97,64 @@ def test_eb_jepa_cpu_fit_is_deterministic_and_reports_regularization():
     )
 
 
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"learning_rate": "bad"},
+        {"variance_weight": -1.0},
+    ],
+)
+def test_eb_jepa_config_rejects_invalid_numeric_weights(kwargs):
+    with pytest.raises(ValueError):
+        EBJEPAConfig(**{**_config().__dict__, **kwargs})
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    [
+        ({"pair_count": 1}, "pair_count"),
+        ({"epochs_completed": 0}, "completed"),
+        ({"completed": False}, "completed"),
+        ({"final_prediction_loss": float("nan")}, "finite"),
+    ],
+)
+def test_eb_jepa_training_report_rejects_invalid_values(kwargs, match):
+    values = {
+        "pair_count": 4,
+        "state_input_dim": 10,
+        "change_input_dim": 12,
+        "state_embedding_dim": 6,
+        "requested_device": "cpu",
+        "actual_device": "cpu",
+        "torch_version": "test",
+        "cuda_available": False,
+        "seed": 17,
+        "epochs_completed": 4,
+        "final_prediction_loss": 0.1,
+        "final_variance_loss": 0.2,
+        "final_covariance_loss": 0.01,
+        "backend_identity": "model-v1",
+        "state_representation_identity": "state-v1",
+    }
+    values.update(kwargs)
+    with pytest.raises(ValueError, match=match):
+        EBJEPATrainingReport(**values)
+
+
+def test_eb_jepa_unfitted_guards_and_inconsistent_pairs():
+    model = EBJEPAWorldModel(_config())
+    assert model.shared_representation_proof == ""
+    with pytest.raises(ValueError, match="fit before"):
+        _ = model.training_report
+    wider = JEPATrainingPair(
+        _change(99),
+        ((1.0, 2.0, 3.0),),
+        ((1.1, 2.1, 3.1),),
+    )
+    with pytest.raises(ValueError, match="same state width"):
+        model._validate_pairs([_pair(), wider])
+
+
 def test_eb_jepa_regularization_weights_affect_trainable_predictions():
     pairs = [_pair(index) for index in range(8)]
     unregularized = EBJEPAWorldModel(
@@ -147,6 +207,28 @@ def test_eb_jepa_cuda_request_does_not_silently_downgrade():
         pytest.skip("CUDA is available; use the CUDA smoke test for this host")
     with pytest.raises(RuntimeError, match="CUDA"):
         EBJEPAWorldModel(_config("cuda")).fit([_pair(index) for index in range(4)])
+
+
+def test_eb_jepa_cuda_resolution_reports_specific_failures(monkeypatch):
+    model = EBJEPAWorldModel(_config("cuda"))
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    with pytest.raises(RuntimeError, match="CUDA-enabled PyTorch"):
+        model._resolve_device()
+
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda device: (9, 0))
+    monkeypatch.setattr(torch.cuda, "get_arch_list", lambda: [])
+    with pytest.raises(RuntimeError, match="does not include sm_90"):
+        model._resolve_device()
+
+    monkeypatch.setattr(torch.cuda, "get_arch_list", lambda: ["sm_90"])
+
+    def fail_empty(*args, **kwargs):
+        raise RuntimeError("runtime init failed")
+
+    monkeypatch.setattr(torch, "empty", fail_empty)
+    with pytest.raises(RuntimeError, match="CUDA runtime initialization failed"):
+        model._resolve_device()
 
 
 def test_eb_jepa_cuda_initialization_error_keeps_runtime_category(monkeypatch):
@@ -221,6 +303,31 @@ def test_eb_jepa_rejects_invalid_fit_and_inference_inputs():
         model.encode_change(object())
 
 
+def test_eb_jepa_rejects_nonfinite_training_loss_and_diagnostics(monkeypatch):
+    model = EBJEPAWorldModel(_config())
+    monkeypatch.setattr(
+        model,
+        "_regularizers",
+        lambda predicted: (torch.tensor(float("nan")), torch.tensor(0.0)),
+    )
+    with pytest.raises(ValueError, match="non-finite loss"):
+        model.fit([_pair(index) for index in range(4)])
+
+    model = EBJEPAWorldModel(_config())
+    calls = 0
+
+    def finite_then_nonfinite(predicted):
+        nonlocal calls
+        calls += 1
+        if calls > 2 * model.config.epochs:
+            return torch.tensor(float("nan")), torch.tensor(0.0)
+        return torch.tensor(0.0), torch.tensor(0.0)
+
+    monkeypatch.setattr(model, "_regularizers", finite_then_nonfinite)
+    with pytest.raises(ValueError, match="diagnostics are non-finite"):
+        model.fit([_pair(index) for index in range(4)])
+
+
 def test_eb_jepa_reports_structural_default_and_calibrates_both_readouts():
     model = EBJEPAWorldModel(_config())
     model.fit([_pair(index) for index in range(8)])
@@ -274,6 +381,60 @@ def test_eb_jepa_reports_structural_default_and_calibrates_both_readouts():
         provenance=_provenance(),
     )
     assert model.assess(evidence).tier == "Semantic"
+
+
+def test_eb_jepa_assessment_reports_identity_and_constant_evidence_failures():
+    model = EBJEPAWorldModel(_config())
+    assert "not fitted" in model.assess().reasons[0]
+    model.fit([_pair(index) for index in range(8)])
+    evidence = JEPASemanticEvidence(
+        backend_identity="wrong",
+        state_representation_identity="wrong",
+        non_decomposable=False,
+        jit_scores=(0.2, 0.2, 0.2),
+        aiops_scores=(0.3, 0.3, 0.3),
+        sample_count=3,
+        shared_representation_proof="wrong",
+    )
+    assessment = model.assess(evidence)
+    assert assessment.tier == "Structural"
+    assert any("identity" in reason for reason in assessment.reasons)
+    assert any("constant" in reason for reason in assessment.reasons)
+
+
+def test_eb_jepa_strategy_rejects_bad_calibration_inputs_and_context():
+    model = EBJEPAWorldModel(_config())
+    model.fit([_pair(index) for index in range(4)])
+    with pytest.raises(ValueError, match="EBJEPAWorldModel"):
+        EBJEPARiskStrategy(object())
+    with pytest.raises(ValueError, match="EBJEPAWorldModel"):
+        EBJEPAAnomalyStrategy(object())
+    risk = EBJEPARiskStrategy(model, outcome_definition=JEPA_DEFECT_RISK)
+    with pytest.raises(ValueError, match="non-empty"):
+        risk.fit_calibrator([], [])
+    with pytest.raises(ValueError, match="aligned"):
+        risk.fit_calibrator([_change()], [])
+    anomaly = EBJEPAAnomalyStrategy(model, outcome_definition=JEPA_OPERATIONAL_FAILURE)
+    with pytest.raises(ValueError, match="non-empty"):
+        anomaly.fit_calibrator([], [])
+    with pytest.raises(ValueError, match="aligned"):
+        anomaly.fit_calibrator(
+            [
+                (
+                    RunEvent(job_type="service", exit_status="ok"),
+                    {
+                        "change": _change(),
+                        "pre_state": _pair().pre_state,
+                        "post_state": _pair().post_state,
+                    },
+                )
+            ],
+            [],
+        )
+    with pytest.raises(ValueError, match="pre_state and post_state"):
+        anomaly.evaluate(
+            RunEvent(job_type="service", exit_status="ok"), {"change": _change()}
+        )
 
 
 def test_eb_jepa_rejects_unsupported_device_and_bad_anomaly_context():

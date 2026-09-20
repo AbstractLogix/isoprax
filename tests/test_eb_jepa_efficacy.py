@@ -2,6 +2,7 @@ from dataclasses import replace
 
 import pytest
 
+import isoprax.efficacy as efficacy
 from isoprax import (
     EBJEPATrainingReport,
     EfficacyEvaluationProfile,
@@ -136,6 +137,22 @@ def _run_configuration():
     }
 
 
+def _claimable_report():
+    return _evaluate(
+        _profile(
+            corpus_identity="real-labeled-fixture-v1",
+            evidence_class="real_labeled",
+            provenance=_provenance(True),
+            min_test_rows=800,
+            min_positive_events=50,
+            min_negative_events=50,
+        ),
+        split_row_ids=_claimable_splits(),
+        family_scores=(_claimable_family(), _claimable_family("operational")),
+        model_identity="model-v1",
+    )
+
+
 def _evaluate(
     profile, *, split_row_ids, family_scores, model_identity="model-v1", **overrides
 ):
@@ -152,6 +169,141 @@ def _evaluate(
         model_identity=model_identity,
         **values,
     )
+
+
+def test_efficacy_provenance_and_family_identity_gates():
+    no_provenance = _profile(
+        corpus_identity="real-labeled-fixture-v1", evidence_class="real_labeled"
+    )
+    report = _evaluate(
+        no_provenance,
+        split_row_ids=_splits(),
+        family_scores=(_family(), _family("operational")),
+    )
+    assert any("provenance artifact" in reason for reason in report.reasons)
+
+    mismatched = _profile(
+        corpus_identity="real-labeled-fixture-v1",
+        split_identity="split-v1",
+        evidence_class="real_labeled",
+        provenance=_provenance(True, corpus_identity="different-corpus"),
+    )
+    mismatch_report = _evaluate(
+        mismatched,
+        split_row_ids=_splits(),
+        family_scores=(_family(), _family("operational")),
+    )
+    assert any("corpus identity" in reason for reason in mismatch_report.reasons)
+
+    with pytest.raises(ValueError, match="family is required"):
+        EfficacyFamilyScores("", "change.v1", (), (), (), ())
+    with pytest.raises(ValueError, match="outcome_definition_id is required"):
+        EfficacyFamilyScores("change", "", (), (), (), ())
+
+
+def test_efficacy_family_result_validation_gates():
+    report = _claimable_report()
+    base = report.family_results["change"]
+
+    cases = [
+        (replace(base, family="other"), "identity is incomplete"),
+        (replace(base, test_row_ids_digest="bad"), "digest is missing"),
+        (
+            replace(
+                base,
+                metrics={**dict(base.metrics), "candidate_auc": float("nan")},
+            ),
+            "non-finite",
+        ),
+        (
+            replace(
+                base,
+                metrics={**dict(base.metrics), "auc_gain": 2.0},
+            ),
+            "outside",
+        ),
+        (
+            replace(
+                base,
+                counts={
+                    **dict(base.counts),
+                    "test_rows": 799,
+                    "negative_events": 399,
+                },
+            ),
+            "test-row threshold",
+        ),
+        (
+            replace(
+                base,
+                counts={
+                    **dict(base.counts),
+                    "test_rows": 849,
+                    "positive_events": 49,
+                    "negative_events": 800,
+                },
+            ),
+            "positive-event threshold",
+        ),
+        (
+            replace(
+                base,
+                counts={
+                    **dict(base.counts),
+                    "test_rows": 849,
+                    "positive_events": 800,
+                    "negative_events": 49,
+                },
+            ),
+            "negative-event threshold",
+        ),
+        (
+            replace(
+                base,
+                metrics={**dict(base.metrics), "candidate_auc": 0.5},
+            ),
+            "candidate AUC",
+        ),
+        (
+            replace(
+                base,
+                metrics={**dict(base.metrics), "auc_gain": 0.0},
+            ),
+            "AUC gain",
+        ),
+        (
+            replace(
+                base,
+                metrics={**dict(base.metrics), "candidate_ece": 0.3},
+            ),
+            "ECE",
+        ),
+        (
+            replace(
+                base,
+                metrics={
+                    **dict(base.metrics),
+                    "candidate_brier": dict(base.metrics)["baseline_brier"] + 0.1,
+                },
+            ),
+            "Brier",
+        ),
+    ]
+    for result, reason in cases:
+        assert any(
+            reason.lower() in item.lower()
+            for item in efficacy._passed_family_result_reasons(
+                "change", result, report.profile
+            )
+        ), reason
+        with pytest.raises(ValueError, match="every required family"):
+            replace(
+                report,
+                family_results={
+                    "change": result,
+                    "operational": report.family_results["operational"],
+                },
+            )
 
 
 def test_efficacy_is_not_claimable_without_completed_training():
@@ -574,6 +726,119 @@ def test_efficacy_converts_invalid_controls_and_scores_to_reasons():
         family_scores=(_family(), _family("operational")),
     )
     assert malformed_report.status == "not_claimable"
+
+
+def test_efficacy_converts_missing_outcomes_and_split_duplicates(monkeypatch):
+    profile = _profile(required_families=("change",))
+    missing_outcomes = _evaluate(
+        profile,
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0",),
+                outcomes=(),
+                candidate_scores=(0.5,),
+                baseline_scores=(0.5,),
+            ),
+        ),
+    )
+    assert any("outcomes are missing" in reason for reason in missing_outcomes.reasons)
+
+    invalid_outcomes = _evaluate(
+        profile,
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0",),
+                outcomes=("bad",),
+                candidate_scores=(0.5,),
+                baseline_scores=(0.5,),
+            ),
+        ),
+    )
+    assert any("binary integer labels" in reason for reason in invalid_outcomes.reasons)
+
+    duplicate_splits = _splits()
+    duplicate_splits["test"] = duplicate_splits["test"] + ("change-0",)
+    duplicate_report = _evaluate(
+        profile,
+        split_row_ids=duplicate_splits,
+        family_scores=(_family(),),
+    )
+    assert any("duplicated" in reason for reason in duplicate_report.reasons)
+
+    original_hash = efficacy.content_hash
+
+    def fail_row_digest(value):
+        if isinstance(value, tuple) and value and value[0] == "change-0":
+            raise ValueError("digest failure")
+        return original_hash(value)
+
+    monkeypatch.setattr(efficacy, "content_hash", fail_row_digest)
+    result = efficacy._family_result(_family(), profile, set(_splits()["test"]))
+    assert result.test_row_ids_digest == ""
+
+
+def test_efficacy_report_constructor_guards():
+    report = _claimable_report()
+    with pytest.raises(ValueError, match="status is invalid"):
+        replace(report, status="invalid")
+    with pytest.raises(ValueError, match="pooled"):
+        replace(report, pooled_score=0.5)
+    with pytest.raises(ValueError, match="profile must"):
+        replace(report, profile=object())
+    with pytest.raises(ValueError, match="profile_identity"):
+        replace(report, profile_identity="tampered")
+    with pytest.raises(ValueError, match="EBJEPATrainingReport"):
+        replace(report, training_report=object())
+    with pytest.raises(ValueError, match="backend identity does not match"):
+        replace(
+            report,
+            training_report=replace(report.training_report, backend_identity="other"),
+        )
+    with pytest.raises(ValueError, match="training_report_identity"):
+        replace(report, training_report_identity="tampered")
+    with pytest.raises(ValueError, match="validated training report"):
+        replace(report, training_report=None, training_report_identity="present")
+    with pytest.raises(ValueError, match="canonical JSON"):
+        replace(report, run_configuration={"bad": object()})
+    with pytest.raises(ValueError, match="run_configuration_identity"):
+        replace(report, run_configuration_identity="tampered")
+    with pytest.raises(ValueError, match="FamilyEfficacyResult"):
+        replace(report, family_results={"change": object()})
+    with pytest.raises(ValueError, match="run_configuration"):
+        replace(
+            report, run_configuration={}, run_configuration_identity=content_hash({})
+        )
+
+    synthetic_profile = _profile()
+    with pytest.raises(ValueError, match="verified real-labeled"):
+        replace(
+            report,
+            profile=synthetic_profile,
+            profile_identity=synthetic_profile.identity,
+        )
+
+
+def test_efficacy_rejects_invalid_top_level_controls():
+    with pytest.raises(ValueError, match="profile must"):
+        evaluate_eb_jepa_efficacy(
+            object(),
+            split_row_ids=_splits(),
+            family_scores=(),
+            model_identity="model-v1",
+        )
+    with pytest.raises(ValueError, match="model_identity"):
+        evaluate_eb_jepa_efficacy(
+            _profile(),
+            split_row_ids=_splits(),
+            family_scores=(),
+            model_identity="",
+        )
 
 
 def test_efficacy_requires_training_and_run_provenance_for_a_claim():

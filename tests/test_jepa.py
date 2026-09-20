@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -19,7 +21,11 @@ from isoprax import (
 )
 from isoprax.external_anchor import ExternalAnchorVerification, stage2_statement_payload
 from isoprax.identity import content_hash
-from isoprax.jepa import JEPA_DEFECT_RISK, JEPA_OPERATIONAL_FAILURE
+from isoprax.jepa import (
+    JEPA_DEFECT_RISK,
+    JEPA_OPERATIONAL_FAILURE,
+    state_feature_vector,
+)
 from isoprax.stage2_corpus_evaluation import CORPUS_MIN_TEST_ROWS
 from tests.provenance_helpers import verified_anchor
 
@@ -128,8 +134,49 @@ def test_jepa_rejects_invalid_training_pairs(pre_state, post_state):
         JEPATrainingPair(_change(), pre_state, post_state)
 
 
+@pytest.mark.parametrize(
+    "window,match",
+    [
+        ((("bad",),), "rectangular"),
+        ((), "non-empty"),
+        (((float("nan"),),), "finite"),
+    ],
+)
+def test_jepa_state_feature_vector_rejects_invalid_windows(window, match):
+    with pytest.raises(ValueError, match=match):
+        state_feature_vector(window)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"change_embedding_dim": 1},
+        {"state_embedding_dim": 1},
+        {"ridge_lambda": float("nan")},
+        {"hash_seed": ""},
+    ],
+)
+def test_jepa_backend_config_rejects_invalid_values(kwargs):
+    with pytest.raises(ValueError):
+        JEPABackendConfig(**kwargs)
+
+
+def test_jepa_training_pair_and_report_validation():
+    with pytest.raises(ValueError, match="ChangeEvent"):
+        JEPATrainingPair(object(), ((1.0, 2.0),), ((1.0, 2.0),))
+    report = _model().training_report
+    assert report.to_dict()["pair_count"] == 6
+    with pytest.raises(ValueError, match="pair_count"):
+        replace(report, pair_count=1)
+    with pytest.raises(ValueError, match="finite"):
+        replace(report, mean_latent_prediction_error=float("nan"))
+
+
 def test_jepa_requires_training_before_prediction():
     model = JEPAWorldModel()
+    assert model.shared_representation_proof == ""
+    with pytest.raises(ValueError, match="training report"):
+        _ = model.training_report
     with pytest.raises(ValueError, match="fit"):
         model.predict_post(_change(), ((1.0, 2.0),))
     with pytest.raises(ValueError, match="fit"):
@@ -168,6 +215,25 @@ def test_jepa_anomaly_requires_complete_context():
             RunEvent(job_type="service", exit_status="ok"),
             {"change": _change()},
         )
+
+
+def test_jepa_fit_rejects_invalid_pair_collections_and_state_width():
+    model = JEPAWorldModel()
+    with pytest.raises(ValueError, match="at least two"):
+        model.fit([_pair()])
+    with pytest.raises(ValueError, match="JEPATrainingPair"):
+        model.fit([_pair(), object()])
+    wider = JEPATrainingPair(
+        _change(99),
+        ((1.0, 2.0, 3.0),),
+        ((1.1, 2.1, 3.1),),
+    )
+    with pytest.raises(ValueError, match="same state width"):
+        model.fit([_pair(), wider])
+
+    fitted = _model()
+    with pytest.raises(ValueError, match="state width"):
+        fitted.encode_state(((1.0, 2.0, 3.0),))
 
 
 def test_jepa_calibration_does_not_change_backend_or_conformance_tier():
@@ -284,6 +350,51 @@ def test_jepa_semantic_assessment_is_fail_closed():
     assert model.assess(decomposable).tier == "Structural"
 
 
+def test_jepa_semantic_assessment_reports_all_binding_failures():
+    model = _model()
+    constant = JEPASemanticEvidence(
+        backend_identity=model.backend_identity,
+        state_representation_identity="wrong",
+        non_decomposable=False,
+        jit_scores=(0.2, 0.2, 0.2),
+        aiops_scores=(0.3, 0.3, 0.3),
+        sample_count=3,
+        shared_representation_proof="wrong",
+    )
+    reasons = model.assess(constant).reasons
+    assert any("representation identity" in reason for reason in reasons)
+    assert any("shared representation" in reason for reason in reasons)
+    assert any("decomposable" in reason for reason in reasons)
+    assert any("JIT evidence is constant" in reason for reason in reasons)
+    assert any("AIOps evidence is constant" in reason for reason in reasons)
+
+    no_provenance = replace(
+        constant,
+        evidence_class="real_labeled",
+        state_representation_identity=model.state_representation_identity,
+        shared_representation_proof=model.shared_representation_proof,
+        non_decomposable=True,
+    )
+    assert any(
+        "lacks a provenance" in reason for reason in model.assess(no_provenance).reasons
+    )
+
+    wrong_outcomes = dict(_provenance().payload)
+    wrong_outcomes["outcome_definition_ids"] = ("wrong.v1", "other.v1")
+    wrong_provenance = EvidenceProvenance(
+        wrong_outcomes,
+        content_hash(wrong_outcomes),
+        verification=verified_anchor(wrong_outcomes),
+    )
+    mismatched = replace(
+        no_provenance,
+        provenance=wrong_provenance,
+    )
+    assert any(
+        "outcome definitions" in reason for reason in model.assess(mismatched).reasons
+    )
+
+
 @pytest.mark.parametrize(
     "kwargs,match",
     [
@@ -343,6 +454,29 @@ def test_evidence_provenance_requires_matching_digest_and_identities():
     with pytest.raises(ValueError, match="external verifier"):
         EvidenceProvenance(payload, content_hash(payload), verification=manual_verified)
 
+    with pytest.raises(ValueError, match="required"):
+        EvidenceProvenance(payload, "")
+    invalid_key = dict(payload)
+    invalid_key[""] = "bad"
+    with pytest.raises(ValueError, match="keys"):
+        EvidenceProvenance(invalid_key, content_hash(invalid_key))
+    nonsequence = dict(payload)
+    nonsequence["outcome_definition_ids"] = "not-a-sequence"
+    with pytest.raises(ValueError, match="sequence"):
+        EvidenceProvenance(nonsequence, content_hash(nonsequence))
+    empty_outcomes = dict(payload)
+    empty_outcomes["outcome_definition_ids"] = ()
+    with pytest.raises(ValueError, match="non-empty"):
+        EvidenceProvenance(empty_outcomes, content_hash(empty_outcomes))
+    bad_outcomes = dict(payload)
+    bad_outcomes["outcome_definition_ids"] = ("",)
+    with pytest.raises(ValueError, match="non-empty"):
+        EvidenceProvenance(bad_outcomes, content_hash(bad_outcomes))
+
+    wrong_anchor = verified_anchor({**payload, "corpus_identity": "other"})
+    with pytest.raises(ValueError, match="does not bind its digest"):
+        EvidenceProvenance(payload, content_hash(payload), verification=wrong_anchor)
+
 
 @pytest.mark.parametrize(
     "field,value,match",
@@ -401,3 +535,54 @@ def test_evidence_provenance_deeply_freezes_payload_snapshot():
     assert provenance.verification.verified is False
     assert provenance.verified is False
     assert provenance.to_dict()["verification"]["status"] == "unverified"
+
+
+def test_jepa_change_encoder_covers_typed_features_and_zero_norm(monkeypatch):
+    model = JEPAWorldModel(JEPABackendConfig(change_embedding_dim=12))
+    event = _change()
+    event = replace(
+        event,
+        features={
+            "flag": True,
+            "number": 2.0,
+            "ignored": object(),
+            "nan": float("nan"),
+        },
+    )
+    encoded = model._change_encoder.encode(event)
+    assert np.isclose(np.linalg.norm(encoded), 1.0)
+    monkeypatch.setattr(np.linalg, "norm", lambda vector: 0.0)
+    fallback = model._change_encoder.encode(event)
+    assert fallback[0] == 1.0
+
+
+def test_jepa_strategies_reject_invalid_models_and_calibration_inputs():
+    with pytest.raises(ValueError, match="JEPAWorldModel"):
+        JEPARiskStrategy(object())
+    with pytest.raises(ValueError, match="JEPAWorldModel"):
+        JEPAAnomalyStrategy(object())
+    model = _model()
+    risk = JEPARiskStrategy(model, outcome_definition=JEPA_DEFECT_RISK)
+    with pytest.raises(ValueError, match="non-empty"):
+        risk.fit_calibrator([], [])
+    with pytest.raises(ValueError, match="aligned"):
+        risk.fit_calibrator([_change()], [])
+    anomaly = JEPAAnomalyStrategy(model, outcome_definition=JEPA_OPERATIONAL_FAILURE)
+    with pytest.raises(ValueError, match="non-empty"):
+        anomaly.fit_calibrator([], [])
+    context = {
+        "change": _change(),
+        "pre_state": _pair().pre_state,
+        "post_state": _pair().post_state,
+    }
+    with pytest.raises(ValueError, match="aligned"):
+        anomaly.fit_calibrator(
+            [(RunEvent(job_type="service", exit_status="ok"), context)], []
+        )
+    with pytest.raises(ValueError, match="mapping"):
+        anomaly.evaluate(RunEvent(job_type="service", exit_status="ok"), [])
+    with pytest.raises(ValueError, match="ChangeEvent"):
+        anomaly.evaluate(
+            RunEvent(job_type="service", exit_status="ok"),
+            {"change": object(), "pre_state": (), "post_state": ()},
+        )
