@@ -21,6 +21,7 @@ from isoprax.external_anchor import ExternalAnchorVerification, stage2_statement
 from isoprax.identity import content_hash
 from isoprax.jepa import JEPA_DEFECT_RISK, JEPA_OPERATIONAL_FAILURE
 from isoprax.stage2_corpus_evaluation import CORPUS_MIN_TEST_ROWS
+from tests.provenance_helpers import verified_anchor
 
 
 def _change(index: int = 0) -> ChangeEvent:
@@ -72,26 +73,18 @@ def _provenance(verified: bool = True) -> EvidenceProvenance:
         ),
         "predeclaration_commit": "commit-fixture-v1",
     }
-    verification_factory = (
-        ExternalAnchorVerification._from_verifier
+    verification = (
+        verified_anchor(payload)
         if verified
-        else ExternalAnchorVerification
-    )
-    verification = verification_factory(
-        status="verified" if verified else "unverified",
-        anchor_type="sigstore_rekor_dsse",
-        anchor_reference="rekor://fixture" if verified else "",
-        bundle_path="fixture.json",
-        signer_identity="fixture-signer" if verified else None,
-        issuer="fixture-issuer" if verified else None,
-        reason="fixture verification",
-        statement=(
-            stage2_statement_payload(
-                content_hash(payload), payload["predeclaration_commit"]
-            )
-            if verified
-            else None
-        ),
+        else ExternalAnchorVerification(
+            status="unverified",
+            anchor_type="sigstore_rekor_dsse",
+            anchor_reference="",
+            bundle_path="fixture.json",
+            signer_identity=None,
+            issuer=None,
+            reason="fixture verification",
+        )
     )
     return EvidenceProvenance(payload, content_hash(payload), verification=verification)
 
@@ -360,20 +353,8 @@ def test_evidence_provenance_requires_matching_digest_and_identities():
 )
 def test_evidence_provenance_requires_a_binding_verified_anchor(field, value, match):
     provenance = _provenance()
-    base = provenance.verification
-    verification_values = {
-        "status": base.status,
-        "anchor_type": base.anchor_type,
-        "anchor_reference": base.anchor_reference,
-        "bundle_path": base.bundle_path,
-        "signer_identity": base.signer_identity,
-        "issuer": base.issuer,
-        "reason": base.reason,
-        "rekor_log_index": base.rekor_log_index,
-        "statement": base.statement,
-    }
-    verification_values[field] = value
-    verification = ExternalAnchorVerification._from_verifier(**verification_values)
+    verification = verified_anchor(provenance.payload)
+    object.__setattr__(verification, field, value)
     with pytest.raises(ValueError, match=match):
         EvidenceProvenance(
             provenance.payload, provenance.digest, verification=verification

@@ -10,8 +10,9 @@ from isoprax import (
     FamilyEfficacyResult,
     evaluate_eb_jepa_efficacy,
 )
-from isoprax.external_anchor import ExternalAnchorVerification, stage2_statement_payload
+from isoprax.external_anchor import ExternalAnchorVerification
 from isoprax.identity import content_hash
+from tests.provenance_helpers import verified_anchor
 
 
 def _profile(**overrides):
@@ -109,26 +110,18 @@ def _provenance(verified=False, corpus_identity="real-labeled-fixture-v1"):
         ),
         "predeclaration_commit": "commit-fixture-v1",
     }
-    verification_factory = (
-        ExternalAnchorVerification._from_verifier
+    verification = (
+        verified_anchor(payload)
         if verified
-        else ExternalAnchorVerification
-    )
-    verification = verification_factory(
-        status="verified" if verified else "unverified",
-        anchor_type="sigstore_rekor_dsse",
-        anchor_reference="rekor://fixture" if verified else "",
-        bundle_path="fixture.json",
-        signer_identity="fixture-signer" if verified else None,
-        issuer="fixture-issuer" if verified else None,
-        reason="fixture verification",
-        statement=(
-            stage2_statement_payload(
-                content_hash(payload), payload["predeclaration_commit"]
-            )
-            if verified
-            else None
-        ),
+        else ExternalAnchorVerification(
+            status="unverified",
+            anchor_type="sigstore_rekor_dsse",
+            anchor_reference="",
+            bundle_path="fixture.json",
+            signer_identity=None,
+            issuer=None,
+            reason="fixture verification",
+        )
     )
     return EvidenceProvenance(payload, content_hash(payload), verification=verification)
 
@@ -229,6 +222,9 @@ def test_efficacy_supported_is_scoped_and_never_pooled():
     assert report.pooled_score is None
     assert report.claim_scope.startswith("model-v1:real-labeled-fixture-v1:split-v1:")
     assert report.to_dict()["pooled_score"] is None
+    assert report.family_results["change"].test_row_ids_digest == content_hash(
+        tuple(f"change-{index}" for index in range(800))
+    )
 
 
 def test_synthetic_evidence_cannot_become_an_efficacy_claim():
@@ -540,6 +536,44 @@ def test_efficacy_converts_invalid_controls_and_scores_to_reasons():
         ),
     )
     assert any("one-dimensional" in reason for reason in invalid_report.reasons)
+
+    invalid_report = _evaluate(
+        profile,
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-1"),
+                outcomes=(0, 1),
+                candidate_scores=(10**1000, 0.9),
+                baseline_scores=(0.5, 0.5),
+            ),
+        ),
+    )
+    assert any("numeric probabilities" in reason for reason in invalid_report.reasons)
+
+    unverified = _provenance(False)
+    unverified_anchor = replace(
+        unverified.verification,
+        statement={"malformed": object()},
+    )
+    malformed_provenance = EvidenceProvenance(
+        unverified.payload,
+        unverified.digest,
+        verification=unverified_anchor,
+    )
+    malformed_profile = _profile(
+        corpus_identity="real-labeled-fixture-v1",
+        evidence_class="real_labeled",
+        provenance=malformed_provenance,
+    )
+    malformed_report = _evaluate(
+        malformed_profile,
+        split_row_ids=_splits(),
+        family_scores=(_family(), _family("operational")),
+    )
+    assert malformed_report.status == "not_claimable"
 
 
 def test_efficacy_requires_training_and_run_provenance_for_a_claim():

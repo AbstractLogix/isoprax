@@ -25,8 +25,9 @@ statement. Only that externally verified `real_labeled` evidence can produce
 
 ## `FamilyEfficacyResult`
 
-One-family test result: family and outcome-definition IDs, candidate/baseline AUC,
-Brier, ECE, counts, threshold comparisons, and unavailable-evidence reasons.
+One-family test result: family and outcome-definition IDs, a canonical digest of the
+exact evaluated test-row IDs, candidate/baseline AUC, Brier, ECE, counts, threshold
+comparisons, and unavailable-evidence reasons.
 
 ## `EfficacyReport`
 

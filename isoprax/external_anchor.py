@@ -47,12 +47,6 @@ class ExternalAnchorVerification:
         default=None, init=False, repr=False, compare=False
     )
 
-    @classmethod
-    def _from_verifier(cls, **kwargs: Any) -> "ExternalAnchorVerification":
-        result = cls(**kwargs)
-        object.__setattr__(result, "_verification_token", _VERIFIED_RESULT_TOKEN)
-        return result
-
     @property
     def verified(self) -> bool:
         return (
@@ -70,7 +64,7 @@ class ExternalAnchorVerification:
             "issuer": self.issuer,
             "reason": self.reason,
             "rekor_log_index": self.rekor_log_index,
-            "statement": self.statement,
+            "statement": self.statement if self.verified else None,
         }
 
 
@@ -275,7 +269,7 @@ def verify_sigstore_attestation(
             reason=f"Sigstore/Rekor verification failed: {error}",
         )
 
-    return ExternalAnchorVerification._from_verifier(
+    result = ExternalAnchorVerification(
         status="verified",
         anchor_type="sigstore_rekor_dsse",
         anchor_reference=reference,
@@ -286,3 +280,5 @@ def verify_sigstore_attestation(
         rekor_log_index=log_index,
         statement=statement,
     )
+    object.__setattr__(result, "_verification_token", _VERIFIED_RESULT_TOKEN)
+    return result

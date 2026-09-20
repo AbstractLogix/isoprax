@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the optional `gpu` dependency extra and refreshed the lockfile.
 - Made malformed efficacy evidence fail closed as report reasons rather than
   raising during metric evaluation.
+- Included a canonical per-family test-row identity digest in efficacy results so
+  the report scope cannot silently change under identical aggregate metrics.
 - Corrected EB-JEPA readout provenance to identify the online post-state encoder
   used by anomaly scoring and hardened malformed outcome conversion.
 - Replaced the broken CLI attestation subprocess with Sigstore's Python

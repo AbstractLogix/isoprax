@@ -17,11 +17,8 @@ from isoprax import (  # noqa: E402
     RiskSignal,
     RunEvent,
 )
-from isoprax.external_anchor import (  # noqa: E402
-    ExternalAnchorVerification,
-    stage2_statement_payload,
-)
 from isoprax.identity import content_hash  # noqa: E402
+from tests.provenance_helpers import verified_anchor  # noqa: E402
 
 
 def _change(index=0):
@@ -71,18 +68,7 @@ def _provenance():
         ),
         "predeclaration_commit": "commit-fixture-v1",
     }
-    verification = ExternalAnchorVerification._from_verifier(
-        status="verified",
-        anchor_type="sigstore_rekor_dsse",
-        anchor_reference="rekor://fixture",
-        bundle_path="fixture.json",
-        signer_identity="fixture-signer",
-        issuer="fixture-issuer",
-        reason="fixture verification",
-        statement=stage2_statement_payload(
-            content_hash(payload), payload["predeclaration_commit"]
-        ),
-    )
+    verification = verified_anchor(payload)
     return EvidenceProvenance(payload, content_hash(payload), verification=verification)
 
 

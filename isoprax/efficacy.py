@@ -197,6 +197,7 @@ class FamilyEfficacyResult:
     metrics: Mapping[str, float | None]
     counts: Mapping[str, int]
     reasons: tuple[str, ...]
+    test_row_ids_digest: str = ""
 
     def __post_init__(self) -> None:
         if self.status not in {"passed", "not_claimable"}:
@@ -212,6 +213,7 @@ class FamilyEfficacyResult:
             "metrics": dict(self.metrics),
             "counts": dict(self.counts),
             "reasons": list(self.reasons),
+            "test_row_ids_digest": self.test_row_ids_digest,
         }
 
 
@@ -227,6 +229,15 @@ def _passed_family_result_reasons(
         or not result.outcome_definition_id.strip()
     ):
         reasons.append("family result identity is incomplete")
+    if (
+        not isinstance(result.test_row_ids_digest, str)
+        or len(result.test_row_ids_digest) != 64
+        or any(
+            character not in "0123456789abcdef"
+            for character in result.test_row_ids_digest
+        )
+    ):
+        reasons.append("family test-row identity digest is missing or invalid")
     required_metrics = (
         "candidate_auc",
         "baseline_auc",
@@ -566,7 +577,7 @@ def _family_result(
             return None
         try:
             array = np.asarray(values, dtype=float)
-        except (TypeError, ValueError):
+        except (OverflowError, TypeError, ValueError):
             reasons.append(f"{name} scores must be numeric probabilities")
             return None
         if array.ndim != 1:
@@ -651,6 +662,14 @@ def _family_result(
         "positive_events": positives,
         "negative_events": negatives,
     }
+    try:
+        row_ids_digest = (
+            content_hash(row_ids)
+            if row_ids and all(isinstance(value, str) and value for value in row_ids)
+            else ""
+        )
+    except (TypeError, ValueError):
+        row_ids_digest = ""
     return FamilyEfficacyResult(
         family=item.family,
         outcome_definition_id=item.outcome_definition_id,
@@ -658,6 +677,7 @@ def _family_result(
         metrics=metrics,
         counts=counts,
         reasons=tuple(reasons),
+        test_row_ids_digest=row_ids_digest,
     )
 
 
