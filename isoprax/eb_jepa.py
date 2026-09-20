@@ -207,19 +207,24 @@ class EBJEPAWorldModel:
                 )
             try:
                 device = torch.device(requested)
-                torch.empty(1, device=device)
                 capability = torch.cuda.get_device_capability(device)
                 architecture = f"sm_{capability[0]}{capability[1]}"
-                if architecture not in torch.cuda.get_arch_list():
-                    raise RuntimeError(
-                        f"PyTorch wheel does not include {architecture} kernels"
-                    )
+                supported_architectures = torch.cuda.get_arch_list()
+            except Exception as error:
+                raise RuntimeError(
+                    f"CUDA device initialization failed for {requested}: {error}"
+                ) from error
+            if architecture not in supported_architectures:
+                raise RuntimeError(
+                    f"PyTorch wheel does not include {architecture} kernels; install "
+                    "a compatible CUDA 12.8+ build"
+                )
+            try:
+                torch.empty(1, device=device)
                 torch.zeros(1, device=device).add_(1.0)
             except Exception as error:
                 raise RuntimeError(
-                    "CUDA was requested but the installed PyTorch wheel does not "
-                    "support this GPU architecture; install a compatible CUDA 12.8+ "
-                    "build"
+                    f"CUDA runtime initialization failed for {requested}: {error}"
                 ) from error
             return device
         try:

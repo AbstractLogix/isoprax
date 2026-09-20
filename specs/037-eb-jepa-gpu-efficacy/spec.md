@@ -10,19 +10,6 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
-
 ### User Story 1 - Train the optional EB-JEPA backend (Priority: P1)
 
 As an Isoprax researcher, I can train an optional PyTorch backend on the existing
@@ -114,14 +101,10 @@ smoke test as predictive validation.
 
 ---
 
-[Add more user stories as needed, each with an assigned priority]
+No additional user stories are required; the three prioritized journeys above cover
+the optional backend, shared readouts, and the evidence-gated efficacy decision.
 
 ### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
 
 - PyTorch is not installed: the base package remains importable and GPU-only tests
   are skipped or reported as unavailable; no GPU claim is emitted.
@@ -141,11 +124,6 @@ smoke test as predictive validation.
   threshold: the overall claim remains `not_claimable`.
 
 ## Requirements *(mandatory)*
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
 
 ### Functional Requirements
 
@@ -205,11 +183,6 @@ smoke test as predictive validation.
 
 ## Success Criteria *(mandatory)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
 - **SC-001**: On an optional-dependency fixture, the backend completes a bounded fit
@@ -229,12 +202,6 @@ smoke test as predictive validation.
   score or upgrades the existing Structural conformance boundary from this feature.
 
 ## Assumptions
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
 
 - The GPU backend is an optional research/reference path; the project’s base install
   remains dependency-light and CPU-capable.

@@ -149,6 +149,22 @@ def test_eb_jepa_cuda_request_does_not_silently_downgrade():
         EBJEPAWorldModel(_config("cuda")).fit([_pair(index) for index in range(4)])
 
 
+def test_eb_jepa_cuda_initialization_error_keeps_runtime_category(monkeypatch):
+    model = EBJEPAWorldModel(_config("cuda"))
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+
+    def fail_capability(_device):
+        raise RuntimeError("driver init failed")
+
+    monkeypatch.setattr(
+        torch.cuda,
+        "get_device_capability",
+        fail_capability,
+    )
+    with pytest.raises(RuntimeError, match="CUDA device initialization failed"):
+        model._resolve_device()
+
+
 def test_eb_jepa_cuda_smoke_uses_actual_device_when_available():
     if not torch.cuda.is_available():
         pytest.skip("CUDA-enabled PyTorch is unavailable")
