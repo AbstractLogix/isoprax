@@ -103,9 +103,11 @@ smoke test as predictive validation.
    and does not substitute neutral values.
 3. **Given** independent train/calibration/test partitions, a named baseline, both
    classes in each family, finite non-degenerate scores, and predeclared improvement
-   and calibration thresholds met for both families, **When** evaluation runs,
-   **Then** it returns `efficacy_supported` only for the evaluated corpus, model,
-   split, and outcome definitions.
+   and calibration thresholds met for both families, plus a validated completed
+   training report, canonical run configuration, and independently verified
+   real-labeled provenance, **When** evaluation runs, **Then** it returns
+   `efficacy_supported` only for the evaluated corpus, model, split, run, and
+   outcome definitions.
 4. **Given** valid per-family results but different Change and Operational outcome
    definitions, **When** the report is produced, **Then** it does not emit a pooled
    cross-family efficacy score or a Semantic/Full Conformance claim.
@@ -165,15 +167,20 @@ smoke test as predictive validation.
   `AnomalySignal`, `Calibrator`, Outcome Definition, and persistence contracts.
 - **FR-007**: The evaluator MUST require explicit, disjoint train/calibration/test
   partitions, a named baseline, both outcome classes per evaluated family, finite
-  scores, and a completed run before producing efficacy evidence.
+  scores, a validated completed training report tied to the model identity, a
+  canonical run configuration tied to that backend, and a completed run before
+  producing efficacy evidence.
 - **FR-008**: The evaluator MUST compare the GPU backend with the named baseline per
   family using predeclared thresholds for discrimination and calibration; thresholds
   MUST be recorded in the report rather than inferred after seeing results.
 - **FR-009**: The evaluator MUST return an explicit claim status and machine-readable
-  failure reasons; absent or insufficient evidence MUST be `not_claimable`.
+  failure reasons; malformed, absent, unverified, or insufficient evidence MUST be
+  represented as `not_claimable` rather than raising during metric evaluation.
 - **FR-010**: A successful evaluator report MUST scope any efficacy claim to the
   corpus identity, split identity, model/backend identity, run configuration,
-  outcome definitions, and metrics actually evaluated.
+  validated training report, independently verified evidence provenance, outcome
+  definitions, and metrics actually evaluated. The report identity MUST cover that
+  complete scope.
 - **FR-011**: The evaluator MUST NOT pool or rank the separate Change and Operational
   outcomes when the existing commensurability check does not permit it.
 - **FR-012**: Synthetic fixtures and GPU smoke tests MUST be labeled implementation

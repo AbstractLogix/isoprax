@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   EMA target encoding, anti-collapse diagnostics, runtime device metadata, and
   fail-closed GPU architecture validation.
 - A per-family efficacy evaluator requiring disjoint held-out labeled data, a
-  named baseline, frozen thresholds, and complete evidence before it can return
-  `efficacy_supported`.
+  named baseline, frozen thresholds, validated training/run provenance, and
+  complete evidence before it can return `efficacy_supported`.
 - Focused conformance tests and Spec Kit artifacts for both feature slices.
+- A torch-blocked base-import check and a regression test proving EB-JEPA
+  anti-collapse weights affect trainable predictions.
 - A real production Sigstore/Rekor bundle fixture with offline verifier
   coverage while keeping non-Isoprax predicates rejected.
 - Explicit listing and human-selected repair for ambiguous legacy SQLite
@@ -31,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exported the JEPA, EB-JEPA, and efficacy-gate APIs from the package surface
   without requiring PyTorch for base-package imports.
 - Added the optional `gpu` dependency extra and refreshed the lockfile.
+- Made malformed efficacy evidence fail closed as report reasons rather than
+  raising during metric evaluation.
 - Replaced the broken CLI attestation subprocess with Sigstore's Python
   signing API and one canonical in-toto Statement definition.
 - Removed the Sigstore minor-version private-field dependency from Rekor

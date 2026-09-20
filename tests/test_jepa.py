@@ -187,8 +187,49 @@ def test_jepa_semantic_assessment_is_fail_closed():
         aiops_scores=(0.2, 0.5, 0.9),
         sample_count=3,
         shared_representation_proof=model.shared_representation_proof,
+        evidence_class="real_labeled",
     )
     assert model.assess(valid).tier == "Semantic"
+
+    synthetic = JEPASemanticEvidence(
+        backend_identity=model.backend_identity,
+        state_representation_identity=model.state_representation_identity,
+        non_decomposable=True,
+        jit_scores=(0.1, 0.4, 0.8),
+        aiops_scores=(0.2, 0.5, 0.9),
+        sample_count=3,
+        shared_representation_proof=model.shared_representation_proof,
+    )
+    assert model.assess(synthetic).tier == "Structural"
+    assert any("synthetic" in reason for reason in model.assess(synthetic).reasons)
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    [
+        ({"backend_identity": ""}, "backend"),
+        ({"shared_representation_proof": ""}, "proof"),
+        ({"evidence_class": "gpu_smoke"}, "evidence_class"),
+        ({"non_decomposable": "yes"}, "boolean"),
+        ({"sample_count": 1}, "sample_count"),
+        ({"jit_scores": (float("nan"), 0.4, 0.8)}, "finite"),
+    ],
+)
+def test_jepa_semantic_evidence_rejects_invalid_declarations(kwargs, match):
+    model = _model()
+    values = {
+        "backend_identity": model.backend_identity,
+        "state_representation_identity": model.state_representation_identity,
+        "non_decomposable": True,
+        "jit_scores": (0.1, 0.4, 0.8),
+        "aiops_scores": (0.2, 0.5, 0.9),
+        "sample_count": 3,
+        "shared_representation_proof": model.shared_representation_proof,
+        "evidence_class": "real_labeled",
+    }
+    values.update(kwargs)
+    with pytest.raises(ValueError, match=match):
+        JEPASemanticEvidence(**values)
 
     wrong_backend = JEPASemanticEvidence(
         backend_identity="wrong",

@@ -17,8 +17,9 @@ finite/completed status, backend identity, and claim boundary.
 Predeclared policy: corpus/split identity, baseline identity, minimum test rows and
 positive/negative counts per family, minimum AUC improvement, maximum allowed ECE,
 threshold version, and evidence class (`synthetic` or `real_labeled`). It is
-immutable and hashed into the report identity. Only `real_labeled` evidence can
-produce `efficacy_supported`.
+immutable and hashed into the report identity. Real-labeled evidence also carries
+an independently identified, externally verified provenance identity. Only
+verified `real_labeled` evidence can produce `efficacy_supported`.
 
 ## `FamilyEfficacyResult`
 
@@ -28,13 +29,18 @@ Brier, ECE, counts, threshold comparisons, and unavailable-evidence reasons.
 ## `EfficacyReport`
 
 Top-level decision with status `not_claimable` or `efficacy_supported`, scoped model,
-corpus, split, baseline, and profile identities, the serialized frozen profile,
-per-family results, reasons, and a claim boundary. It never contains a pooled score
-for non-commensurable families.
+corpus, split, baseline, training-report, run-configuration, and profile identities,
+the serialized frozen profile and configuration, per-family results, reasons, and a
+claim boundary. It recomputes its identity and never contains a pooled score for
+non-commensurable families.
 
 ## Invariants
 
 - Device, seed, configuration, and split metadata are explicit.
+- A supported report contains a validated completed training report whose backend
+  identity matches the model identity.
+- A supported report contains a canonical run configuration whose backend identity
+  matches the model identity.
 - Row IDs across train, calibration, and test partitions are pairwise disjoint.
 - Test scores and labels are aligned, binary, finite, and within probability bounds.
 - A report is `efficacy_supported` only when every required family passes every gate.

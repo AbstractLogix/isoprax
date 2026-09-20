@@ -19,8 +19,9 @@ supports explicit CPU/CUDA execution, reports the actual runtime device, and fai
 closed when the installed wheel lacks the host GPU architecture. Install a
 host-appropriate PyTorch build before using it; the base package remains usable
 without PyTorch. The accompanying efficacy evaluator requires disjoint held-out
-labeled data, a named baseline, and frozen per-family thresholds. GPU execution or
-synthetic smoke tests cannot produce an efficacy claim.
+labeled data, a named baseline, frozen per-family thresholds, a validated completed
+training report, canonical run configuration, and independently verified provenance.
+GPU execution or synthetic smoke tests cannot produce an efficacy claim.
 
 This backend was tested locally on an NVIDIA GeForce RTX 5070 (`sm_120`) using
 PyTorch 2.14.0+cu130 with CUDA available; the CUDA smoke test passed. That runtime

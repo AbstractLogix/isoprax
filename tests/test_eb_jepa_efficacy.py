@@ -1,10 +1,14 @@
+from dataclasses import replace
+
 import pytest
 
 from isoprax import (
+    EBJEPATrainingReport,
     EfficacyEvaluationProfile,
     EfficacyFamilyScores,
     evaluate_eb_jepa_efficacy,
 )
+from isoprax.identity import content_hash
 
 
 def _profile(**overrides):
@@ -21,6 +25,7 @@ def _profile(**overrides):
         "max_candidate_ece": 0.2,
         "max_brier_regression": 0.0,
         "required_families": ("change", "operational"),
+        "evidence_provenance_identity": "synthetic-fixture-manifest-v1",
     }
     values.update(overrides)
     return EfficacyEvaluationProfile(**values)
@@ -48,8 +53,56 @@ def _splits():
     }
 
 
+def _training_report():
+    return EBJEPATrainingReport(
+        pair_count=8,
+        state_input_dim=10,
+        change_input_dim=12,
+        state_embedding_dim=6,
+        requested_device="cpu",
+        actual_device="cpu",
+        torch_version="test",
+        cuda_available=False,
+        seed=17,
+        epochs_completed=4,
+        final_prediction_loss=0.1,
+        final_variance_loss=0.2,
+        final_covariance_loss=0.01,
+        backend_identity="model-v1",
+        state_representation_identity="state-v1",
+    )
+
+
+def _run_configuration():
+    return {
+        "backend_identity": "model-v1",
+        "device": "cpu",
+        "seed": 17,
+        "epochs": 4,
+        "batch_size": 4,
+    }
+
+
+def _evaluate(
+    profile, *, split_row_ids, family_scores, model_identity="model-v1", **overrides
+):
+    values = {
+        "training_completed": True,
+        "training_report": _training_report(),
+        "run_configuration": _run_configuration(),
+    }
+    values.update(overrides)
+    return evaluate_eb_jepa_efficacy(
+        profile,
+        split_row_ids=split_row_ids,
+        family_scores=family_scores,
+        model_identity=model_identity,
+        **values,
+    )
+
+
 def test_efficacy_is_not_claimable_without_completed_training():
-    report = evaluate_eb_jepa_efficacy(
+    report = _evaluate(
         _profile(),
         split_row_ids=_splits(),
         family_scores=(_family(), _family("operational")),
@@ -65,7 +118,7 @@ def test_efficacy_rejects_overlapping_splits_before_metrics():
     splits = _splits()
     splits["calibration"] = ("change-0",)
 
-    report = evaluate_eb_jepa_efficacy(
+    report = _evaluate(
         _profile(),
         split_row_ids=splits,
         family_scores=(_family(), _family("operational")),
@@ -85,7 +138,7 @@ def test_efficacy_rejects_overlapping_splits_before_metrics():
     ],
 )
 def test_efficacy_reports_family_failure_reasons(kwargs, reason):
-    report = evaluate_eb_jepa_efficacy(
+    report = _evaluate(
         _profile(),
         split_row_ids=_splits(),
         family_scores=(_family(**kwargs), _family("operational")),
@@ -97,8 +150,13 @@ def test_efficacy_reports_family_failure_reasons(kwargs, reason):
 
 
 def test_efficacy_supported_is_scoped_and_never_pooled():
-    report = evaluate_eb_jepa_efficacy(
-        _profile(evidence_class="real_labeled"),
+    report = _evaluate(
+        _profile(
+            corpus_identity="real-labeled-fixture-v1",
+            evidence_class="real_labeled",
+            evidence_provenance_identity="independent-label-manifest-v1",
+            evidence_provenance_verified=True,
+        ),
         split_row_ids=_splits(),
         family_scores=(_family(), _family("operational")),
         model_identity="model-v1",
@@ -107,24 +165,24 @@ def test_efficacy_supported_is_scoped_and_never_pooled():
     assert report.status == "efficacy_supported"
     assert set(report.family_results) == {"change", "operational"}
     assert report.pooled_score is None
-    assert report.claim_scope == "model-v1:synthetic-corpus:split-v1"
+    assert report.claim_scope.startswith("model-v1:real-labeled-fixture-v1:split-v1:")
     assert report.to_dict()["pooled_score"] is None
 
 
 def test_synthetic_evidence_cannot_become_an_efficacy_claim():
-    report = evaluate_eb_jepa_efficacy(
-        _profile(),
+    report = _evaluate(
+        _profile(evidence_class="real_labeled"),
         split_row_ids=_splits(),
         family_scores=(_family(), _family("operational")),
         model_identity="model-v1",
     )
 
     assert report.status == "not_claimable"
-    assert any("synthetic" in reason for reason in report.reasons)
+    assert any("provenance" in reason for reason in report.reasons)
 
 
 def test_efficacy_rejects_missing_required_family_and_nonfinite_values():
-    missing = evaluate_eb_jepa_efficacy(
+    missing = _evaluate(
         _profile(),
         split_row_ids=_splits(),
         family_scores=(_family(),),
@@ -133,15 +191,22 @@ def test_efficacy_rejects_missing_required_family_and_nonfinite_values():
     assert missing.status == "not_claimable"
     assert any("operational" in reason for reason in missing.reasons)
 
-    with pytest.raises(ValueError, match="finite"):
-        EfficacyFamilyScores(
-            family="change",
-            outcome_definition_id="change.v1",
-            test_row_ids=("a", "b"),
-            outcomes=(0, 1),
-            candidate_scores=(float("nan"), 0.9),
-            baseline_scores=(0.5, 0.5),
-        )
+    nonfinite = _evaluate(
+        _profile(required_families=("change",)),
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-1"),
+                outcomes=(0, 1),
+                candidate_scores=(float("nan"), 0.9),
+                baseline_scores=(0.5, 0.5),
+            ),
+        ),
+    )
+    assert nonfinite.status == "not_claimable"
+    assert any("finite" in reason for reason in nonfinite.reasons)
 
 
 @pytest.mark.parametrize(
@@ -159,38 +224,58 @@ def test_efficacy_profile_rejects_invalid_declarations(kwargs):
         _profile(**kwargs)
 
 
-def test_efficacy_family_scores_reject_malformed_alignment_and_labels():
-    with pytest.raises(ValueError, match="aligned"):
-        EfficacyFamilyScores(
-            family="change",
-            outcome_definition_id="change.v1",
-            test_row_ids=("a", "b"),
-            outcomes=(0,),
-            candidate_scores=(0.1, 0.9),
-            baseline_scores=(0.5, 0.5),
-        )
-    with pytest.raises(ValueError, match="binary"):
-        EfficacyFamilyScores(
-            family="change",
-            outcome_definition_id="change.v1",
-            test_row_ids=("a", "b"),
-            outcomes=(0, 2),
-            candidate_scores=(0.1, 0.9),
-            baseline_scores=(0.5, 0.5),
-        )
-    with pytest.raises(ValueError, match="unique"):
-        EfficacyFamilyScores(
-            family="change",
-            outcome_definition_id="change.v1",
-            test_row_ids=("a", "a"),
-            outcomes=(0, 1),
-            candidate_scores=(0.1, 0.9),
-            baseline_scores=(0.5, 0.5),
-        )
+def test_efficacy_family_scores_report_malformed_alignment_and_labels():
+    malformed = _evaluate(
+        _profile(required_families=("change",)),
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-1"),
+                outcomes=(0,),
+                candidate_scores=(0.1, 0.9),
+                baseline_scores=(0.5, 0.5),
+            ),
+        ),
+    )
+    assert any("aligned" in reason for reason in malformed.reasons)
+
+    nonbinary = _evaluate(
+        _profile(required_families=("change",)),
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-1"),
+                outcomes=(0, 2),
+                candidate_scores=(0.1, 0.9),
+                baseline_scores=(0.5, 0.5),
+            ),
+        ),
+    )
+    assert any("binary" in reason for reason in nonbinary.reasons)
+
+    duplicate = _evaluate(
+        _profile(required_families=("change",)),
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-0"),
+                outcomes=(0, 1),
+                candidate_scores=(0.1, 0.9),
+                baseline_scores=(0.5, 0.5),
+            ),
+        ),
+    )
+    assert any("unique" in reason for reason in duplicate.reasons)
 
 
 def test_efficacy_rejects_missing_or_malformed_splits_and_duplicate_families():
-    missing = evaluate_eb_jepa_efficacy(
+    missing = _evaluate(
         _profile(),
         split_row_ids={"train": ("train-1",)},
         family_scores=(_family(), _family("operational")),
@@ -199,7 +284,7 @@ def test_efficacy_rejects_missing_or_malformed_splits_and_duplicate_families():
     assert missing.status == "not_claimable"
     assert any("missing calibration" in reason for reason in missing.reasons)
 
-    malformed = evaluate_eb_jepa_efficacy(
+    malformed = _evaluate(
         _profile(),
         split_row_ids=[],
         family_scores=(_family(), _family("operational")),
@@ -207,7 +292,7 @@ def test_efficacy_rejects_missing_or_malformed_splits_and_duplicate_families():
     )
     assert any("mapping" in reason for reason in malformed.reasons)
 
-    duplicate = evaluate_eb_jepa_efficacy(
+    duplicate = _evaluate(
         _profile(required_families=("change",)),
         split_row_ids=_splits(),
         family_scores=(_family(), _family()),
@@ -217,7 +302,7 @@ def test_efficacy_rejects_missing_or_malformed_splits_and_duplicate_families():
 
 
 def test_efficacy_rejects_family_rows_outside_test_and_one_class():
-    outside = evaluate_eb_jepa_efficacy(
+    outside = _evaluate(
         _profile(required_families=("change",)),
         split_row_ids=_splits(),
         family_scores=(
@@ -237,10 +322,134 @@ def test_efficacy_rejects_family_rows_outside_test_and_one_class():
         candidate_scores=(0.1, 0.2, 0.3, 0.4),
         baseline_scores=(0.5, 0.5, 0.5, 0.5),
     )
-    report = evaluate_eb_jepa_efficacy(
+    report = _evaluate(
         _profile(required_families=("change",)),
         split_row_ids=_splits(),
         family_scores=(one_class,),
         model_identity="model-v1",
     )
     assert any("only one class" in reason for reason in report.reasons)
+
+
+def test_efficacy_rejects_invalid_declarations_and_report_tampering():
+    invalid_profiles = (
+        {"minimum_auc_gain": "bad"},
+        {"minimum_auc_gain": float("nan")},
+        {"evidence_class": "real_labeled", "evidence_provenance_identity": ""},
+        {"evidence_provenance_verified": "yes"},
+        {"required_families": ("",)},
+    )
+    for kwargs in invalid_profiles:
+        with pytest.raises(ValueError):
+            _profile(**kwargs)
+
+    with pytest.raises(ValueError, match="family efficacy status"):
+        from isoprax.efficacy import FamilyEfficacyResult
+
+        FamilyEfficacyResult("change", "change.v1", "invalid", {}, {}, ())
+
+    report = _evaluate(
+        _profile(
+            corpus_identity="real-labeled-fixture-v1",
+            evidence_class="real_labeled",
+            evidence_provenance_identity="independent-label-manifest-v1",
+            evidence_provenance_verified=True,
+        ),
+        split_row_ids=_splits(),
+        family_scores=(_family(), _family("operational")),
+    )
+    with pytest.raises(ValueError, match="report_identity"):
+        replace(report, report_identity="tampered")
+    with pytest.raises(ValueError, match="failure reasons"):
+        replace(report, status="not_claimable", reasons=())
+    with pytest.raises(ValueError, match="validated training report"):
+        replace(report, training_report=None, training_report_identity="")
+    bad_config = {"backend_identity": "other"}
+    with pytest.raises(ValueError, match="backend identity"):
+        replace(
+            report,
+            run_configuration=bad_config,
+            run_configuration_identity=content_hash(bad_config),
+        )
+
+
+def test_efficacy_converts_invalid_controls_and_scores_to_reasons():
+    profile = _profile(required_families=("change",))
+    invalid_report = _evaluate(
+        profile,
+        split_row_ids={"train": None, "calibration": (), "test": None},
+        family_scores=None,
+    )
+    assert invalid_report.status == "not_claimable"
+    assert any("iterable" in reason for reason in invalid_report.reasons)
+
+    invalid_report = _evaluate(
+        profile,
+        split_row_ids=_splits(),
+        family_scores=(object(),),
+    )
+    assert any("EfficacyFamilyScores" in reason for reason in invalid_report.reasons)
+
+    invalid_report = _evaluate(
+        profile,
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=None,
+                outcomes="01",
+                candidate_scores=0.5,
+                baseline_scores=(),
+            ),
+        ),
+    )
+    assert invalid_report.status == "not_claimable"
+    assert any("missing" in reason for reason in invalid_report.reasons)
+
+    invalid_report = _evaluate(
+        profile,
+        split_row_ids=_splits(),
+        family_scores=(
+            EfficacyFamilyScores(
+                family="change",
+                outcome_definition_id="change.v1",
+                test_row_ids=("change-0", "change-1"),
+                outcomes=(0, 1),
+                candidate_scores=((0.1, 0.2), (0.3, 0.4)),
+                baseline_scores=("bad", "values"),
+            ),
+        ),
+    )
+    assert any("one-dimensional" in reason for reason in invalid_report.reasons)
+
+
+def test_efficacy_requires_training_and_run_provenance_for_a_claim():
+    profile = _profile(
+        corpus_identity="real-labeled-fixture-v1",
+        evidence_class="real_labeled",
+        evidence_provenance_identity="independent-label-manifest-v1",
+        evidence_provenance_verified=True,
+        required_families=("change",),
+    )
+    kwargs = {
+        "split_row_ids": _splits(),
+        "family_scores": (_family(),),
+        "model_identity": "model-v1",
+    }
+    missing_training = evaluate_eb_jepa_efficacy(profile, **kwargs)
+    assert any("training report" in reason for reason in missing_training.reasons)
+    mismatch = _evaluate(
+        profile,
+        **kwargs,
+        training_report=replace(_training_report(), backend_identity="other"),
+    )
+    assert any("backend identity" in reason for reason in mismatch.reasons)
+    missing_config = _evaluate(profile, **kwargs, run_configuration=None)
+    assert any("run_configuration" in reason for reason in missing_config.reasons)
+    invalid_config = _evaluate(profile, **kwargs, run_configuration={"bad": object()})
+    assert any("canonical JSON" in reason for reason in invalid_config.reasons)
+    wrong_config = _evaluate(
+        profile, **kwargs, run_configuration={"backend_identity": "other"}
+    )
+    assert any("backend_identity" in reason for reason in wrong_config.reasons)

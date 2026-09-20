@@ -30,7 +30,9 @@ identity. It reports training evidence only, not predictive efficacy.
 Evidence supplied by an evaluation workflow, containing backend identity, state
 representation identity, a backend-derived shared-representation proof,
 `non_decomposable`, finite non-constant JIT and AIOps readout values, and the
-sample count used. The validator rejects mismatches or degenerate evidence.
+sample count used, and an evidence class (`synthetic` or `real_labeled`). The
+validator rejects mismatches or degenerate evidence; only independently
+identified real-labeled evidence can produce a Semantic assessment.
 
 ## `JEPAAssessment`
 

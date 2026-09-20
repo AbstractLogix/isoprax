@@ -161,6 +161,7 @@ class JEPASemanticEvidence:
     aiops_scores: tuple[float, ...]
     sample_count: int
     shared_representation_proof: str = ""
+    evidence_class: str = "synthetic"
 
     def __post_init__(self) -> None:
         if (
@@ -174,6 +175,8 @@ class JEPASemanticEvidence:
             raise ValueError(
                 "semantic evidence must include a shared representation proof"
             )
+        if self.evidence_class not in {"synthetic", "real_labeled"}:
+            raise ValueError("evidence_class must be synthetic or real_labeled")
         if not isinstance(self.non_decomposable, bool):
             raise ValueError("non_decomposable must be boolean evidence")
         jit = tuple(float(value) for value in self.jit_scores)
@@ -473,6 +476,10 @@ class JEPAWorldModel:
             if evidence.shared_representation_proof != self.shared_representation_proof:
                 reasons.append(
                     "semantic evidence shared representation proof does not match"
+                )
+            if evidence.evidence_class != "real_labeled":
+                reasons.append(
+                    "semantic evidence is synthetic; real labeled evidence is required"
                 )
             if not evidence.non_decomposable:
                 reasons.append(

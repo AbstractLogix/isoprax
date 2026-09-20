@@ -105,6 +105,15 @@ conformance tests for optional runtime behavior and fail-closed evidence gates.
 - [x] T022 Run focused backend/evaluator tests, the full pytest suite, Ruff, formatting, and pre-commit; record results in `specs/037-eb-jepa-gpu-efficacy/quickstart.md`
 - [x] T023 Run Spec Kit convergence review and append any remaining implementation gaps to `specs/037-eb-jepa-gpu-efficacy/tasks.md`
 
+## Phase 7: Review hardening
+
+- [x] T024 Make malformed family evidence fail closed as report reasons instead of
+  constructor exceptions, and add validated training/run provenance to reports
+- [x] T025 Apply anti-collapse regularizers to trainable predictor outputs and add a
+  regression test proving the weights affect predictions
+- [x] T026 Add a torch-blocked base-import test and document `uv sync --extra gpu`
+  as the reproducible optional-runtime path
+
 ---
 
 ## Dependencies & Execution Order

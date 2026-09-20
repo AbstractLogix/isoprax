@@ -77,6 +77,28 @@ def test_eb_jepa_cpu_fit_is_deterministic_and_reports_regularization():
     )
 
 
+def test_eb_jepa_regularization_weights_affect_trainable_predictions():
+    pairs = [_pair(index) for index in range(8)]
+    unregularized = EBJEPAWorldModel(
+        EBJEPAConfig(
+            **{**_config().__dict__, "variance_weight": 0.0, "covariance_weight": 0.0}
+        )
+    )
+    regularized = EBJEPAWorldModel(
+        EBJEPAConfig(
+            **{**_config().__dict__, "variance_weight": 2.0, "covariance_weight": 2.0}
+        )
+    )
+
+    unregularized.fit(pairs)
+    regularized.fit(pairs)
+
+    assert not np.allclose(
+        unregularized.predict_post(_change(2), pairs[2].pre_state),
+        regularized.predict_post(_change(2), pairs[2].pre_state),
+    )
+
+
 def test_eb_jepa_preserves_signal_contracts_and_shared_identity():
     model = EBJEPAWorldModel(_config())
     model.fit([_pair(index) for index in range(8)])
@@ -198,6 +220,7 @@ def test_eb_jepa_reports_structural_default_and_calibrates_both_readouts():
         aiops_scores=(0.2, 0.5, 0.9),
         sample_count=3,
         shared_representation_proof=model.shared_representation_proof,
+        evidence_class="real_labeled",
     )
     assert model.assess(evidence).tier == "Semantic"
 

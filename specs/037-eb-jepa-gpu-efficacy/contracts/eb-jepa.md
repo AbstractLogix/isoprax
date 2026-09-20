@@ -22,10 +22,13 @@ constructed or fitted.
 2. reject missing, overlapping, one-class, non-finite, or constant evidence;
 3. compute candidate and baseline per-family AUC/Brier/ECE diagnostics;
 4. apply only thresholds present in the immutable profile;
-5. reject synthetic/runtime evidence as `not_claimable` even when metric fixtures
-   pass;
-6. return `not_claimable` with reasons unless every required family passes; and
-7. return `efficacy_supported` only with an exact evidence scope and no pooled score
+5. require a validated completed `EBJEPATrainingReport` tied to the model identity
+   and a canonical run configuration tied to that backend;
+6. reject synthetic/runtime evidence or unverified provenance as `not_claimable`
+   even when metric fixtures pass;
+7. return `not_claimable` with reasons for malformed evidence instead of raising
+   while evaluating family metrics; and
+8. return `efficacy_supported` only with an exact evidence scope and no pooled score
    when definitions are non-commensurable.
 
 The report status is evidence metadata, not a Semantic or Full Conformance upgrade.

@@ -346,7 +346,7 @@ class EBJEPAWorldModel:
                 target_z = self._target_state_net(post_tensor[start:stop]).detach()
                 predicted_z = self._predictor(torch.cat((pre_z, change_z), dim=1))
                 prediction_loss = torch.nn.functional.mse_loss(predicted_z, target_z)
-                variance_loss, covariance_loss = self._regularizers(target_z)
+                variance_loss, covariance_loss = self._regularizers(predicted_z)
                 loss = (
                     self.config.prediction_weight * prediction_loss
                     + self.config.variance_weight * variance_loss
@@ -364,7 +364,7 @@ class EBJEPAWorldModel:
             target_z = self._target_state_net(post_tensor)
             predicted_z = self._predictor(torch.cat((pre_z, change_z), dim=1))
             prediction_loss = torch.nn.functional.mse_loss(predicted_z, target_z)
-            variance_loss, covariance_loss = self._regularizers(target_z)
+            variance_loss, covariance_loss = self._regularizers(predicted_z)
             errors = torch.mean((predicted_z - target_z) ** 2, dim=1)
         final_losses = (
             prediction_loss,

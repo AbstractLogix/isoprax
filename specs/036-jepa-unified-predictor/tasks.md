@@ -50,6 +50,11 @@
 - [x] T013 Run focused and full tests, Ruff, formatting, and pre-commit checks; record only obtained evidence
 - [x] T014 Run `speckit-converge`-equivalent review against `spec.md`, `plan.md`, and `tasks.md`; append no speculative work
 
+## Phase 7: Review hardening
+
+- [x] T015 Add explicit real-labeled provenance gating to semantic evidence and
+  preserve Structural status for synthetic fixtures in `isoprax/jepa.py` and tests
+
 ## Dependencies and execution order
 
 - T001 → T002/T003 → T004/T005/T006 → T007/T008/T009 → T010/T011 → T012/T013/T014.

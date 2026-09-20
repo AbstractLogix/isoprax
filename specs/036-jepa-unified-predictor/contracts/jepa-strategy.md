@@ -39,5 +39,7 @@ honestly.
 returns Semantic only when the evidence identifies the exact fitted backend and
 state representation, carries the backend-derived shared-representation proof,
 marks the representation non-decomposable, and contains finite non-constant
-evidence for both readouts. It does not alter Outcome Definition commensurability
-or authorize pooled scores.
+evidence for both readouts. The evidence must also be explicitly classified as
+independently identified `real_labeled` evidence; synthetic evidence remains
+Structural. It does not alter Outcome Definition commensurability or authorize
+pooled scores.
