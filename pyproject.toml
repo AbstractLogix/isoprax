@@ -17,6 +17,11 @@ dependencies = [
   "scipy>=1.11,<2",
 ]
 
+[project.optional-dependencies]
+gpu = [
+  "torch>=2.7,<3",
+]
+
 [dependency-groups]
 dev = [
   "diff-cover>=9,<10",
