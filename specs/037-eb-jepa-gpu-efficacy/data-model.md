@@ -18,8 +18,9 @@ Predeclared policy: corpus/split identity, baseline identity, minimum test rows 
 positive/negative counts per family, minimum AUC improvement, maximum allowed ECE,
 threshold version, and evidence class (`synthetic` or `real_labeled`). It is
 immutable and hashed into the report identity. Real-labeled evidence also carries
-an independently identified, externally verified provenance identity. Only
-verified `real_labeled` evidence can produce `efficacy_supported`.
+an independently identified, digest-backed, externally verified `EvidenceProvenance`
+artifact tied to the corpus and split identities. Only verified `real_labeled`
+evidence can produce `efficacy_supported`.
 
 ## `FamilyEfficacyResult`
 
@@ -41,6 +42,8 @@ non-commensurable families.
   identity matches the model identity.
 - A supported report contains a canonical run configuration whose backend identity
   matches the model identity.
+- A claimable profile cannot lower the protected 800-row, 50-positive, and
+  50-negative per-family evidence floor.
 - Row IDs across train, calibration, and test partitions are pairwise disjoint.
 - Test scores and labels are aligned, binary, finite, and within probability bounds.
 - A report is `efficacy_supported` only when every required family passes every gate.

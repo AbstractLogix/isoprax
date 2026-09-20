@@ -6,6 +6,8 @@ from isoprax import (
     EBJEPATrainingReport,
     EfficacyEvaluationProfile,
     EfficacyFamilyScores,
+    EvidenceProvenance,
+    FamilyEfficacyResult,
     evaluate_eb_jepa_efficacy,
 )
 from isoprax.identity import content_hash
@@ -25,7 +27,6 @@ def _profile(**overrides):
         "max_candidate_ece": 0.2,
         "max_brier_regression": 0.0,
         "required_families": ("change", "operational"),
-        "evidence_provenance_identity": "synthetic-fixture-manifest-v1",
     }
     values.update(overrides)
     return EfficacyEvaluationProfile(**values)
@@ -53,6 +54,29 @@ def _splits():
     }
 
 
+def _claimable_family(family="change"):
+    outcomes = tuple(index % 2 for index in range(800))
+    return EfficacyFamilyScores(
+        family=family,
+        outcome_definition_id=f"{family}.outcome.v1",
+        test_row_ids=tuple(f"{family}-{index}" for index in range(800)),
+        outcomes=outcomes,
+        candidate_scores=tuple(0.95 if outcome else 0.05 for outcome in outcomes),
+        baseline_scores=(0.5,) * 800,
+    )
+
+
+def _claimable_splits():
+    return {
+        "train": ("train-1",),
+        "calibration": ("cal-1",),
+        "test": tuple(
+            [f"change-{index}" for index in range(800)]
+            + [f"operational-{index}" for index in range(800)]
+        ),
+    }
+
+
 def _training_report():
     return EBJEPATrainingReport(
         pair_count=8,
@@ -71,6 +95,15 @@ def _training_report():
         backend_identity="model-v1",
         state_representation_identity="state-v1",
     )
+
+
+def _provenance(verified=False, corpus_identity="real-labeled-fixture-v1"):
+    payload = {
+        "corpus_identity": corpus_identity,
+        "split_identity": "split-v1",
+        "label_definition_identity": "labels-v1",
+    }
+    return EvidenceProvenance(payload, content_hash(payload), verified=verified)
 
 
 def _run_configuration():
@@ -154,11 +187,13 @@ def test_efficacy_supported_is_scoped_and_never_pooled():
         _profile(
             corpus_identity="real-labeled-fixture-v1",
             evidence_class="real_labeled",
-            evidence_provenance_identity="independent-label-manifest-v1",
-            evidence_provenance_verified=True,
+            provenance=_provenance(True),
+            min_test_rows=800,
+            min_positive_events=50,
+            min_negative_events=50,
         ),
-        split_row_ids=_splits(),
-        family_scores=(_family(), _family("operational")),
+        split_row_ids=_claimable_splits(),
+        family_scores=(_claimable_family(), _claimable_family("operational")),
         model_identity="model-v1",
     )
 
@@ -171,7 +206,7 @@ def test_efficacy_supported_is_scoped_and_never_pooled():
 
 def test_synthetic_evidence_cannot_become_an_efficacy_claim():
     report = _evaluate(
-        _profile(evidence_class="real_labeled"),
+        _profile(evidence_class="real_labeled", provenance=_provenance()),
         split_row_ids=_splits(),
         family_scores=(_family(), _family("operational")),
         model_identity="model-v1",
@@ -335,8 +370,7 @@ def test_efficacy_rejects_invalid_declarations_and_report_tampering():
     invalid_profiles = (
         {"minimum_auc_gain": "bad"},
         {"minimum_auc_gain": float("nan")},
-        {"evidence_class": "real_labeled", "evidence_provenance_identity": ""},
-        {"evidence_provenance_verified": "yes"},
+        {"provenance": "invalid"},
         {"required_families": ("",)},
     )
     for kwargs in invalid_profiles:
@@ -344,19 +378,19 @@ def test_efficacy_rejects_invalid_declarations_and_report_tampering():
             _profile(**kwargs)
 
     with pytest.raises(ValueError, match="family efficacy status"):
-        from isoprax.efficacy import FamilyEfficacyResult
-
         FamilyEfficacyResult("change", "change.v1", "invalid", {}, {}, ())
 
     report = _evaluate(
         _profile(
             corpus_identity="real-labeled-fixture-v1",
             evidence_class="real_labeled",
-            evidence_provenance_identity="independent-label-manifest-v1",
-            evidence_provenance_verified=True,
+            provenance=_provenance(True),
+            min_test_rows=800,
+            min_positive_events=50,
+            min_negative_events=50,
         ),
-        split_row_ids=_splits(),
-        family_scores=(_family(), _family("operational")),
+        split_row_ids=_claimable_splits(),
+        family_scores=(_claimable_family(), _claimable_family("operational")),
     )
     with pytest.raises(ValueError, match="report_identity"):
         replace(report, report_identity="tampered")
@@ -370,6 +404,15 @@ def test_efficacy_rejects_invalid_declarations_and_report_tampering():
             report,
             run_configuration=bad_config,
             run_configuration_identity=content_hash(bad_config),
+        )
+    forged_result = FamilyEfficacyResult("change", "change.v1", "passed", {}, {}, ())
+    with pytest.raises(ValueError, match="every required family"):
+        replace(
+            report,
+            family_results={
+                "change": forged_result,
+                "operational": report.family_results["operational"],
+            },
         )
 
 
@@ -428,8 +471,7 @@ def test_efficacy_requires_training_and_run_provenance_for_a_claim():
     profile = _profile(
         corpus_identity="real-labeled-fixture-v1",
         evidence_class="real_labeled",
-        evidence_provenance_identity="independent-label-manifest-v1",
-        evidence_provenance_verified=True,
+        provenance=_provenance(True),
         required_families=("change",),
     )
     kwargs = {

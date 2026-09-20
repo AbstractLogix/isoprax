@@ -13,6 +13,7 @@ import hashlib
 import math
 import re
 from dataclasses import asdict, dataclass
+from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -151,6 +152,45 @@ class JEPATrainingReport:
 
 
 @dataclass(frozen=True)
+class EvidenceProvenance:
+    """Digest-backed provenance supplied by an external evidence workflow."""
+
+    payload: Mapping[str, Any]
+    digest: str
+    verified: bool = False
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.payload, Mapping) or not self.payload:
+            raise ValueError("evidence provenance payload is required")
+        payload = dict(self.payload)
+        if any(not isinstance(key, str) or not key.strip() for key in payload):
+            raise ValueError("evidence provenance keys must be non-empty strings")
+        required_keys = {
+            "corpus_identity",
+            "split_identity",
+            "label_definition_identity",
+        }
+        if not required_keys.issubset(payload):
+            raise ValueError(
+                "evidence provenance must identify corpus, split, and labels"
+            )
+        if not isinstance(self.digest, str) or not self.digest.strip():
+            raise ValueError("evidence provenance digest is required")
+        if content_hash(payload) != self.digest:
+            raise ValueError("evidence provenance digest does not match its payload")
+        if not isinstance(self.verified, bool):
+            raise ValueError("evidence provenance verification must be boolean")
+        object.__setattr__(self, "payload", MappingProxyType(payload))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "payload": dict(self.payload),
+            "digest": self.digest,
+            "verified": self.verified,
+        }
+
+
+@dataclass(frozen=True)
 class JEPASemanticEvidence:
     """Evaluation evidence required before a Semantic status can be reported."""
 
@@ -162,6 +202,7 @@ class JEPASemanticEvidence:
     sample_count: int
     shared_representation_proof: str = ""
     evidence_class: str = "synthetic"
+    provenance: EvidenceProvenance | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -177,6 +218,10 @@ class JEPASemanticEvidence:
             )
         if self.evidence_class not in {"synthetic", "real_labeled"}:
             raise ValueError("evidence_class must be synthetic or real_labeled")
+        if self.provenance is not None and not isinstance(
+            self.provenance, EvidenceProvenance
+        ):
+            raise ValueError("provenance must be an EvidenceProvenance")
         if not isinstance(self.non_decomposable, bool):
             raise ValueError("non_decomposable must be boolean evidence")
         jit = tuple(float(value) for value in self.jit_scores)
@@ -205,6 +250,17 @@ class JEPAAssessment:
     state_representation_identity: str
     reasons: tuple[str, ...]
     claim_boundary: str = _CLAIM_BOUNDARY
+    families: tuple[str, ...] = ("change", "operational")
+    event_types: tuple[str, ...] = ("ChangeEvent", "RunEvent")
+    strategy_types: tuple[str, ...] = ("RiskStrategy", "AnomalyStrategy")
+    outcome_definition_ids: tuple[str, ...] = (
+        JEPA_DEFECT_RISK.id,
+        JEPA_OPERATIONAL_FAILURE.id,
+    )
+    commensurability: str = "non-commensurable; pooled score withheld"
+    calibration_qualifier: str = (
+        "readouts may be independently calibrated; calibration does not upgrade tier"
+    )
 
     @property
     def declarable_class(self) -> str:
@@ -218,7 +274,28 @@ class JEPAAssessment:
             "reasons": list(self.reasons),
             "declarable_class": self.declarable_class,
             "claim_boundary": self.claim_boundary,
+            "families": list(self.families),
+            "event_types": list(self.event_types),
+            "strategy_types": list(self.strategy_types),
+            "outcome_definition_ids": list(self.outcome_definition_ids),
+            "commensurability": self.commensurability,
+            "calibration_qualifier": self.calibration_qualifier,
         }
+
+
+def _semantic_evidence_gate_reasons(
+    evidence: JEPASemanticEvidence,
+) -> list[str]:
+    reasons: list[str] = []
+    if evidence.evidence_class != "real_labeled":
+        reasons.append(
+            "semantic evidence is synthetic; real labeled evidence is required"
+        )
+    elif evidence.provenance is None:
+        reasons.append("semantic evidence lacks a provenance artifact")
+    elif not evidence.provenance.verified:
+        reasons.append("semantic evidence provenance is not externally verified")
+    return reasons
 
 
 class _ChangeEncoder:
@@ -477,10 +554,7 @@ class JEPAWorldModel:
                 reasons.append(
                     "semantic evidence shared representation proof does not match"
                 )
-            if evidence.evidence_class != "real_labeled":
-                reasons.append(
-                    "semantic evidence is synthetic; real labeled evidence is required"
-                )
+            reasons.extend(_semantic_evidence_gate_reasons(evidence))
             if not evidence.non_decomposable:
                 reasons.append(
                     "semantic evidence marks the representation decomposable"
@@ -635,6 +709,7 @@ class JEPAAnomalyStrategy(AnomalyStrategy):
 
 
 __all__ = [
+    "EvidenceProvenance",
     "JEPAAnomalyStrategy",
     "JEPAAssessment",
     "JEPABackendConfig",

@@ -102,6 +102,7 @@ from .hermetic_runner import (
 from .jepa import (
     JEPA_DEFECT_RISK,
     JEPA_OPERATIONAL_FAILURE,
+    EvidenceProvenance,
     JEPAAnomalyStrategy,
     JEPAAssessment,
     JEPABackendConfig,

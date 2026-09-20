@@ -34,11 +34,17 @@ evidence. The profile defaults to `evidence_class="synthetic"`; set
 `evidence_class="real_labeled"` only for a separately identified, access-controlled
 corpus with independent labels and externally verified provenance.
 
+The provenance must be supplied as a digest-backed `EvidenceProvenance` artifact
+whose corpus and split identities match the profile; a caller-controlled evidence
+class alone cannot produce a claim. Claimable profiles also preserve the 800-row,
+50-positive, and 50-negative per-family evidence floor.
+
 ## Local verification snapshot
 
 On 2026-09-20 in the Isoprax WSL workspace, the optional runtime reported PyTorch
 2.14.0+cu130, CUDA available, and an NVIDIA GeForce RTX 5070 with `sm_120` support.
-The CUDA smoke test completed successfully. The full repository suite completed with
-392 passed, 1 skipped, and 95.38% total coverage; Ruff, formatting, and pre-commit
-also passed. These are implementation/runtime checks only. No Isoprax efficacy claim
-was made because no independent labeled train/calibration/test corpus was supplied.
+The CUDA smoke test completed successfully. The latest recorded full repository
+suite, Ruff, formatting, and pre-commit gates are listed in the changelog. These are
+implementation/runtime checks only. No Isoprax efficacy claim was made because no
+independent labeled train/calibration/test corpus with verified provenance was
+supplied.

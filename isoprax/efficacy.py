@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, fields
 from types import MappingProxyType
 from typing import Any, Iterable, Mapping
 
@@ -13,12 +13,16 @@ from sklearn.metrics import roc_auc_score
 from .eb_jepa import EBJEPATrainingReport
 from .evaluation import brier_score, expected_calibration_error
 from .identity import content_hash
+from .jepa import EvidenceProvenance
 
 CLAIM_BOUNDARY = (
     "Scoped per-family held-out efficacy evidence only; does not establish Semantic "
     "or Full Conformance, does not authorize cross-family pooling, and does not "
     "imply efficacy beyond the declared corpus, split, model, baseline, and thresholds."
 )
+_CLAIMABLE_MIN_TEST_ROWS = 800
+_CLAIMABLE_MIN_POSITIVE_EVENTS = 50
+_CLAIMABLE_MIN_NEGATIVE_EVENTS = 50
 
 
 def _materialize(value: Any) -> tuple[Any, ...]:
@@ -30,6 +34,52 @@ def _materialize(value: Any) -> tuple[Any, ...]:
         return tuple(value)
     except TypeError:
         return (value,)
+
+
+def _profile_payload(profile: "EfficacyEvaluationProfile") -> dict[str, Any]:
+    return {
+        field.name: (
+            profile.provenance.to_dict()
+            if field.name == "provenance" and profile.provenance is not None
+            else getattr(profile, field.name)
+        )
+        for field in fields(profile)
+    }
+
+
+def _provenance_reasons(profile: "EfficacyEvaluationProfile") -> list[str]:
+    if profile.evidence_class != "real_labeled":
+        return [
+            "evidence class is synthetic; real labeled held-out evidence is required"
+        ]
+    if profile.provenance is None:
+        return ["real labeled evidence lacks a provenance artifact"]
+    if not profile.provenance.verified:
+        return ["real labeled evidence provenance is not externally verified"]
+    payload = profile.provenance.payload
+    reasons: list[str] = []
+    if payload.get("corpus_identity") != profile.corpus_identity:
+        reasons.append("provenance corpus identity does not match the profile")
+    if payload.get("split_identity") != profile.split_identity:
+        reasons.append("provenance split identity does not match the profile")
+    return reasons
+
+
+def _protected_floor_reasons(profile: "EfficacyEvaluationProfile") -> list[str]:
+    if profile.evidence_class != "real_labeled":
+        return []
+    reasons: list[str] = []
+    if profile.min_test_rows < _CLAIMABLE_MIN_TEST_ROWS:
+        reasons.append("claimable evidence requires at least 800 test rows per family")
+    if profile.min_positive_events < _CLAIMABLE_MIN_POSITIVE_EVENTS:
+        reasons.append(
+            "claimable evidence requires at least 50 positive events per family"
+        )
+    if profile.min_negative_events < _CLAIMABLE_MIN_NEGATIVE_EVENTS:
+        reasons.append(
+            "claimable evidence requires at least 50 negative events per family"
+        )
+    return reasons
 
 
 @dataclass(frozen=True)
@@ -49,8 +99,7 @@ class EfficacyEvaluationProfile:
     max_brier_regression: float = 0.0
     required_families: tuple[str, ...] = ("change", "operational")
     evidence_class: str = "synthetic"
-    evidence_provenance_identity: str = ""
-    evidence_provenance_verified: bool = False
+    provenance: EvidenceProvenance | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -85,15 +134,10 @@ class EfficacyEvaluationProfile:
             raise ValueError("probability thresholds must be at most 1")
         if self.evidence_class not in {"synthetic", "real_labeled"}:
             raise ValueError("evidence_class must be synthetic or real_labeled")
-        if (
-            self.evidence_class == "real_labeled"
-            and not self.evidence_provenance_identity.strip()
+        if self.provenance is not None and not isinstance(
+            self.provenance, EvidenceProvenance
         ):
-            raise ValueError(
-                "real_labeled evidence requires an independent provenance identity"
-            )
-        if not isinstance(self.evidence_provenance_verified, bool):
-            raise ValueError("evidence_provenance_verified must be boolean")
+            raise ValueError("provenance must be an EvidenceProvenance")
         families = tuple(self.required_families)
         if not families or len(set(families)) != len(families):
             raise ValueError("required_families must be non-empty and unique")
@@ -105,7 +149,7 @@ class EfficacyEvaluationProfile:
 
     @property
     def identity(self) -> str:
-        return content_hash(asdict(self))
+        return content_hash(_profile_payload(self))
 
 
 @dataclass(frozen=True)
@@ -160,6 +204,53 @@ class FamilyEfficacyResult:
         }
 
 
+def _passed_family_result_reasons(
+    family: str,
+    result: FamilyEfficacyResult,
+    profile: EfficacyEvaluationProfile,
+) -> list[str]:
+    reasons: list[str] = []
+    if result.family != family or not result.outcome_definition_id.strip():
+        reasons.append("family result identity is incomplete")
+    required_metrics = (
+        "candidate_auc",
+        "baseline_auc",
+        "candidate_brier",
+        "baseline_brier",
+        "candidate_ece",
+        "baseline_ece",
+        "auc_gain",
+    )
+    for name in required_metrics:
+        value = result.metrics.get(name)
+        if value is None or not math.isfinite(float(value)):
+            reasons.append(f"family metric {name} is missing or non-finite")
+    required_counts = ("test_rows", "positive_events", "negative_events")
+    for name in required_counts:
+        value = result.counts.get(name)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            reasons.append(f"family count {name} is invalid")
+    if reasons:
+        return reasons
+    if result.counts["test_rows"] < profile.min_test_rows:
+        reasons.append("family result is below the declared test-row threshold")
+    if result.counts["positive_events"] < profile.min_positive_events:
+        reasons.append("family result is below the declared positive-event threshold")
+    if result.counts["negative_events"] < profile.min_negative_events:
+        reasons.append("family result is below the declared negative-event threshold")
+    if result.metrics["candidate_auc"] < profile.minimum_candidate_auc:
+        reasons.append("family result candidate AUC is below the profile threshold")
+    if result.metrics["auc_gain"] < profile.minimum_auc_gain:
+        reasons.append("family result AUC gain is below the profile threshold")
+    if result.metrics["candidate_ece"] > profile.max_candidate_ece:
+        reasons.append("family result ECE exceeds the profile threshold")
+    if result.metrics["candidate_brier"] > (
+        result.metrics["baseline_brier"] + profile.max_brier_regression
+    ):
+        reasons.append("family result Brier score exceeds the baseline threshold")
+    return reasons
+
+
 def _report_identity_payload(
     *,
     status: str,
@@ -176,7 +267,7 @@ def _report_identity_payload(
 ) -> dict[str, Any]:
     return {
         "status": status,
-        "profile": asdict(profile),
+        "profile": _profile_payload(profile),
         "model_identity": model_identity,
         "training_report": (
             training_report.to_dict() if training_report is not None else None
@@ -272,17 +363,24 @@ class EfficacyReport:
                 raise ValueError(
                     "efficacy_supported requires run_configuration backend identity"
                 )
-            if (
-                self.profile.evidence_class != "real_labeled"
-                or not self.profile.evidence_provenance_verified
+            if _provenance_reasons(self.profile) or _protected_floor_reasons(
+                self.profile
             ):
                 raise ValueError(
-                    "efficacy_supported requires verified real-labeled provenance"
+                    "efficacy_supported requires verified real-labeled claim evidence"
                 )
             results = self.family_results
+            result_reasons = [
+                reason
+                for family, result in results.items()
+                for reason in _passed_family_result_reasons(
+                    family, result, self.profile
+                )
+            ]
             if (
                 self.reasons
                 or set(results) != required
+                or result_reasons
                 or any(
                     result.status != "passed" or result.reasons
                     for result in results.values()
@@ -314,7 +412,7 @@ class EfficacyReport:
             "status": self.status,
             "report_identity": self.report_identity,
             "profile_identity": self.profile_identity,
-            "profile": asdict(self.profile),
+            "profile": _profile_payload(self.profile),
             "model_identity": self.model_identity,
             "training_report": (
                 self.training_report.to_dict()
@@ -387,10 +485,11 @@ def _family_result(
             "family test row ids are not contained in the declared test split"
         )
 
-    if (
+    aligned = (
         len({len(row_ids), len(raw_outcomes), len(raw_candidate), len(raw_baseline)})
-        != 1
-    ):
+        == 1
+    )
+    if not aligned:
         reasons.append("family scores and row ids must be aligned")
 
     outcomes: np.ndarray | None = None
@@ -448,7 +547,7 @@ def _family_result(
         "baseline_ece": None,
         "auc_gain": None,
     }
-    if outcomes is None or candidate is None or baseline is None:
+    if not aligned or outcomes is None or candidate is None or baseline is None:
         reasons.append("metrics are unavailable because evidence is invalid")
     elif positives == 0 or negatives == 0:
         reasons.append("test outcomes contain only one class; auc is unavailable")
@@ -584,14 +683,8 @@ def evaluate_eb_jepa_efficacy(
         if family not in by_family:
             blocking_reasons.append(f"missing required family evidence: {family}")
     global_reasons = list(blocking_reasons)
-    if profile.evidence_class != "real_labeled":
-        global_reasons.append(
-            "evidence class is synthetic; real labeled held-out evidence is required"
-        )
-    elif not profile.evidence_provenance_verified:
-        global_reasons.append(
-            "real labeled evidence lacks independently verified provenance"
-        )
+    global_reasons.extend(_provenance_reasons(profile))
+    global_reasons.extend(_protected_floor_reasons(profile))
     if blocking_reasons:
         family_results = {
             family: FamilyEfficacyResult(

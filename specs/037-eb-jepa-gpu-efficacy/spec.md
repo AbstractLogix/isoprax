@@ -105,7 +105,7 @@ smoke test as predictive validation.
    classes in each family, finite non-degenerate scores, and predeclared improvement
    and calibration thresholds met for both families, plus a validated completed
    training report, canonical run configuration, and independently verified
-   real-labeled provenance, **When** evaluation runs, **Then** it returns
+   digest-backed real-labeled provenance, **When** evaluation runs, **Then** it returns
    `efficacy_supported` only for the evaluated corpus, model, split, run, and
    outcome definitions.
 4. **Given** valid per-family results but different Change and Operational outcome
@@ -178,16 +178,19 @@ smoke test as predictive validation.
   represented as `not_claimable` rather than raising during metric evaluation.
 - **FR-010**: A successful evaluator report MUST scope any efficacy claim to the
   corpus identity, split identity, model/backend identity, run configuration,
-  validated training report, independently verified evidence provenance, outcome
-  definitions, and metrics actually evaluated. The report identity MUST cover that
-  complete scope.
+  validated training report, independently verified digest-backed evidence
+  provenance, outcome definitions, and metrics actually evaluated. The report
+  identity MUST cover that complete scope.
 - **FR-011**: The evaluator MUST NOT pool or rank the separate Change and Operational
   outcomes when the existing commensurability check does not permit it.
 - **FR-012**: Synthetic fixtures and GPU smoke tests MUST be labeled implementation
   evidence only and MUST NOT satisfy the project’s real-data efficacy or Stage 2
   admission claim by themselves.
 - **FR-013**: Existing deterministic NumPy behavior, the repository’s current
-  admission floor, and all existing tests MUST remain intact.
+  admission floor, and all existing tests MUST remain intact. A claimable profile
+  MUST preserve the protected floor of at least 800 test rows, 50 positive events,
+  and 50 negative events per family; lower fixture thresholds remain
+  `not_claimable`.
 
 ### Key Entities
 

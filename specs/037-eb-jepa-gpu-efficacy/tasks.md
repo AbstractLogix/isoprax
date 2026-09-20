@@ -113,6 +113,8 @@ conformance tests for optional runtime behavior and fail-closed evidence gates.
   regression test proving the weights affect predictions
 - [x] T026 Add a torch-blocked base-import test and document `uv sync --extra gpu`
   as the reproducible optional-runtime path
+- [x] T027 Add digest-backed provenance validation, protected 800/50/50 claim floors,
+  and report-level metric/identity checks for claimable results
 
 ---
 

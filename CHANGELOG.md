@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Focused conformance tests and Spec Kit artifacts for both feature slices.
 - A torch-blocked base-import check and a regression test proving EB-JEPA
   anti-collapse weights affect trainable predictions.
+- Digest-backed provenance gates for semantic and efficacy evidence, plus report
+  validation that preserves the protected per-family evidence floor.
 - A real production Sigstore/Rekor bundle fixture with offline verifier
   coverage while keeping non-Isoprax predicates rejected.
 - Explicit listing and human-selected repair for ambiguous legacy SQLite
@@ -56,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Validation
 
-- Full suite: 392 passed, 1 skipped; total coverage 95.38%.
+- Full suite: 404 passed, 1 skipped; total coverage 95.24%.
 - Ruff, formatting, pre-commit, and staged-diff checks passed.
 
 No predictive efficacy claim is made in this release entry; real labeled

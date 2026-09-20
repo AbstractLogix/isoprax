@@ -81,7 +81,8 @@ report Structural.
    decomposable, **When** conformance is reported, **Then** Semantic is withheld.
 3. **Given** synthetic evidence with otherwise non-trivial readout values, **When**
    conformance is reported, **Then** Semantic is withheld until independently
-   identified real-labeled evidence is supplied.
+   identified real-labeled evidence with a verified digest-backed provenance
+   artifact is supplied.
 
 ### Edge Cases
 
@@ -117,9 +118,10 @@ report Structural.
 - **FR-007**: The implementation MUST declare Structural conformance by default and
   MUST NOT declare Semantic conformance from calibration or shared code alone.
 - **FR-008**: A Semantic claim MUST require independently identified real-labeled,
-  validated evidence identifying the same non-decomposable representation and
-  successful, non-trivial evidence for both readouts; synthetic evidence MUST leave
-  the report Structural.
+  digest-backed and externally verified provenance, validated evidence identifying
+  the same non-decomposable representation, and successful, non-trivial evidence
+  for both readouts; synthetic or unverified evidence MUST leave the report
+  Structural.
 - **FR-009**: The reference implementation MUST be deterministic for identical
   inputs and MUST perform no network access during training or inference.
 - **FR-010**: The implementation MUST preserve the existing admission floor and all

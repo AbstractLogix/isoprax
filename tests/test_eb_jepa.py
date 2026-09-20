@@ -11,11 +11,13 @@ from isoprax import (  # noqa: E402
     EBJEPAConfig,
     EBJEPARiskStrategy,
     EBJEPAWorldModel,
+    EvidenceProvenance,
     JEPASemanticEvidence,
     JEPATrainingPair,
     RiskSignal,
     RunEvent,
 )
+from isoprax.identity import content_hash  # noqa: E402
 
 
 def _change(index=0):
@@ -52,6 +54,15 @@ def _config(device="cpu"):
         device=device,
         seed=17,
     )
+
+
+def _provenance():
+    payload = {
+        "corpus_identity": "real-labeled-fixture-v1",
+        "split_identity": "split-v1",
+        "label_definition_identity": "labels-v1",
+    }
+    return EvidenceProvenance(payload, content_hash(payload), verified=True)
 
 
 def test_eb_jepa_cpu_fit_is_deterministic_and_reports_regularization():
@@ -212,6 +223,17 @@ def test_eb_jepa_reports_structural_default_and_calibrates_both_readouts():
         == CalibrationStatus.CALIBRATED
     )
 
+    synthetic = JEPASemanticEvidence(
+        backend_identity=model.backend_identity,
+        state_representation_identity=model.state_representation_identity,
+        non_decomposable=True,
+        jit_scores=(0.1, 0.4, 0.8),
+        aiops_scores=(0.2, 0.5, 0.9),
+        sample_count=3,
+        shared_representation_proof=model.shared_representation_proof,
+    )
+    assert model.assess(synthetic).tier == "Structural"
+
     evidence = JEPASemanticEvidence(
         backend_identity=model.backend_identity,
         state_representation_identity=model.state_representation_identity,
@@ -221,6 +243,7 @@ def test_eb_jepa_reports_structural_default_and_calibrates_both_readouts():
         sample_count=3,
         shared_representation_proof=model.shared_representation_proof,
         evidence_class="real_labeled",
+        provenance=_provenance(),
     )
     assert model.assess(evidence).tier == "Semantic"
 

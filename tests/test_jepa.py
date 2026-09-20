@@ -6,6 +6,7 @@ from isoprax import (
     CalibrationStatus,
     Calibrator,
     ChangeEvent,
+    EvidenceProvenance,
     JEPAAnomalyStrategy,
     JEPABackendConfig,
     JEPARiskStrategy,
@@ -16,6 +17,7 @@ from isoprax import (
     RunEvent,
     SQLiteKB,
 )
+from isoprax.identity import content_hash
 from isoprax.jepa import JEPA_DEFECT_RISK, JEPA_OPERATIONAL_FAILURE
 from isoprax.stage2_corpus_evaluation import CORPUS_MIN_TEST_ROWS
 
@@ -56,6 +58,15 @@ def _model() -> JEPAWorldModel:
     )
     model.fit([_pair(i, 0.1 + i * 0.02) for i in range(6)])
     return model
+
+
+def _provenance(verified: bool = True) -> EvidenceProvenance:
+    payload = {
+        "corpus_identity": "real-labeled-fixture-v1",
+        "split_identity": "split-v1",
+        "label_definition_identity": "labels-v1",
+    }
+    return EvidenceProvenance(payload, content_hash(payload), verified=verified)
 
 
 def test_jepa_fit_is_deterministic_and_self_supervised():
@@ -178,6 +189,14 @@ def test_jepa_semantic_assessment_is_fail_closed():
     structural = model.assess()
     assert structural.tier == "Structural"
     assert "Semantic" in structural.claim_boundary
+    structural_dict = structural.to_dict()
+    assert structural_dict["families"] == ["change", "operational"]
+    assert structural_dict["outcome_definition_ids"] == [
+        JEPA_DEFECT_RISK.id,
+        JEPA_OPERATIONAL_FAILURE.id,
+    ]
+    assert "commensurable" in structural_dict["commensurability"]
+    assert "calibrated" in structural_dict["calibration_qualifier"]
 
     valid = JEPASemanticEvidence(
         backend_identity=model.backend_identity,
@@ -188,6 +207,7 @@ def test_jepa_semantic_assessment_is_fail_closed():
         sample_count=3,
         shared_representation_proof=model.shared_representation_proof,
         evidence_class="real_labeled",
+        provenance=_provenance(),
     )
     assert model.assess(valid).tier == "Semantic"
 
@@ -202,6 +222,46 @@ def test_jepa_semantic_assessment_is_fail_closed():
     )
     assert model.assess(synthetic).tier == "Structural"
     assert any("synthetic" in reason for reason in model.assess(synthetic).reasons)
+
+    unverified = JEPASemanticEvidence(
+        backend_identity=model.backend_identity,
+        state_representation_identity=model.state_representation_identity,
+        non_decomposable=True,
+        jit_scores=(0.1, 0.4, 0.8),
+        aiops_scores=(0.2, 0.5, 0.9),
+        sample_count=3,
+        shared_representation_proof=model.shared_representation_proof,
+        evidence_class="real_labeled",
+        provenance=_provenance(False),
+    )
+    assert model.assess(unverified).tier == "Structural"
+    assert any("verified" in reason for reason in model.assess(unverified).reasons)
+
+    wrong_backend = JEPASemanticEvidence(
+        backend_identity="wrong",
+        state_representation_identity=model.state_representation_identity,
+        non_decomposable=True,
+        jit_scores=(0.1, 0.4),
+        aiops_scores=(0.2, 0.5),
+        sample_count=2,
+        shared_representation_proof=model.shared_representation_proof,
+        evidence_class="real_labeled",
+        provenance=_provenance(),
+    )
+    assert model.assess(wrong_backend).tier == "Structural"
+
+    decomposable = JEPASemanticEvidence(
+        backend_identity=model.backend_identity,
+        state_representation_identity=model.state_representation_identity,
+        non_decomposable=False,
+        jit_scores=(0.1, 0.4),
+        aiops_scores=(0.2, 0.5),
+        sample_count=2,
+        shared_representation_proof=model.shared_representation_proof,
+        evidence_class="real_labeled",
+        provenance=_provenance(),
+    )
+    assert model.assess(decomposable).tier == "Structural"
 
 
 @pytest.mark.parametrize(
@@ -231,24 +291,16 @@ def test_jepa_semantic_evidence_rejects_invalid_declarations(kwargs, match):
     with pytest.raises(ValueError, match=match):
         JEPASemanticEvidence(**values)
 
-    wrong_backend = JEPASemanticEvidence(
-        backend_identity="wrong",
-        state_representation_identity=model.state_representation_identity,
-        non_decomposable=True,
-        jit_scores=(0.1, 0.4),
-        aiops_scores=(0.2, 0.5),
-        sample_count=2,
-        shared_representation_proof=model.shared_representation_proof,
-    )
-    assert model.assess(wrong_backend).tier == "Structural"
 
-    decomposable = JEPASemanticEvidence(
-        backend_identity=model.backend_identity,
-        state_representation_identity=model.state_representation_identity,
-        non_decomposable=False,
-        jit_scores=(0.1, 0.4),
-        aiops_scores=(0.2, 0.5),
-        sample_count=2,
-        shared_representation_proof=model.shared_representation_proof,
-    )
-    assert model.assess(decomposable).tier == "Structural"
+def test_evidence_provenance_requires_matching_digest_and_identities():
+    with pytest.raises(ValueError, match="corpus, split, and labels"):
+        EvidenceProvenance({"corpus_identity": "only"}, "digest")
+    payload = {
+        "corpus_identity": "real-labeled-fixture-v1",
+        "split_identity": "split-v1",
+        "label_definition_identity": "labels-v1",
+    }
+    with pytest.raises(ValueError, match="digest"):
+        EvidenceProvenance(payload, "wrong")
+    with pytest.raises(ValueError, match="verification"):
+        EvidenceProvenance(payload, content_hash(payload), verified="yes")

@@ -26,6 +26,7 @@ from .jepa import (
     JEPATrainingPair,
     _calibrated_value,
     _ChangeEncoder,
+    _semantic_evidence_gate_reasons,
     state_feature_vector,
 )
 from .signals import AnomalySignal, RiskSignal
@@ -520,6 +521,7 @@ class EBJEPAWorldModel:
                 reasons.append(
                     "semantic evidence marks the representation decomposable"
                 )
+            reasons.extend(_semantic_evidence_gate_reasons(evidence))
             if len(set(evidence.jit_scores)) < 2:
                 reasons.append("JIT evidence is constant")
             if len(set(evidence.aiops_scores)) < 2:
