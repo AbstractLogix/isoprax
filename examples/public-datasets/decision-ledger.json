@@ -1,0 +1,95 @@
+{
+  "decision_policy": "Kaggle is discovery only; canonical source and pinned artifact identity govern admission.",
+  "decisions": [
+    {
+      "dataset_id": "apachejit",
+      "status": "accepted-integration-candidate",
+      "evidence_class": "repository-derived",
+      "canonical_source": "https://zenodo.org/records/5907002",
+      "artifact_identity": {"manifest": "examples/apachejit/manifest.json", "sha256": "5097cbbbab8c4611a709b3cf95ac5c9fe5f62e619bab081911a2a247ddbed4e0"},
+      "outcome_definition": "Published repository-derived buggy commit label; not runtime failure",
+      "limitation": "Per-project adequacy is required; apache/hadoop has no positive rows"
+    },
+    {
+      "dataset_id": "cmapss",
+      "status": "accepted-structural-fixture",
+      "evidence_class": "simulated-run-to-failure",
+      "canonical_source": "https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/",
+      "artifact_identity": {"manifest": "examples/cmapss/manifest.json", "identity": "Per-file SHA-256 values for FD001-FD004"},
+      "outcome_definition": "Simulated engine trajectory terminal failure and held-out remaining useful life",
+      "limitation": "Simulated telemetry and RUL; no real-fleet efficacy"
+    },
+    {
+      "dataset_id": "metropt3",
+      "status": "accepted-anchor-dependent-fixture",
+      "evidence_class": "external-anchor-dependent",
+      "canonical_source": "https://archive.ics.uci.edu/dataset/791/metropt3%2Bdataset",
+      "artifact_identity": {"manifest": "examples/metropt3/manifest.json", "sha256": "db30ccb4ea402e3c8bf2c99db06e288d4f2a772f6928f9dbe26a920d69793e24"},
+      "outcome_definition": "Externally reported air-leak intervals; uncovered observations remain censored",
+      "limitation": "One compressor stream and no in-file labels"
+    },
+    {
+      "dataset_id": "ansible-defect-prediction",
+      "status": "deferred",
+      "evidence_class": "repository-derived-file-label",
+      "canonical_source": "https://zenodo.org/records/4299908",
+      "artifact_identity": {"status": "not-pinned", "reason": "Screened Kaggle copy is not accepted as the canonical artifact"},
+      "outcome_definition": "File-level failure-prone label; prediction horizon requires separate admission",
+      "limitation": "Needs an independent time horizon and label-procedure review"
+    },
+    {
+      "dataset_id": "aiops-log-monitoring",
+      "status": "structural-only",
+      "evidence_class": "insufficiently anchored",
+      "canonical_source": "https://www.kaggle.com/datasets/expertshubham/aiops-log-monitoring-and-failure-detection-dataset",
+      "artifact_identity": {"status": "not-pinned", "reason": "Single-host screening snapshot only"},
+      "outcome_definition": "Published success/failure status; incident horizon not independently established",
+      "limitation": "One host/instance and no independently verified incident horizon"
+    },
+    {
+      "dataset_id": "synthetic-kubernetes-istio",
+      "status": "fixture-only",
+      "evidence_class": "synthetic",
+      "canonical_source": "https://www.kaggle.com/datasets/gymprathap/synthetic-kubernetes-and-istio-logs/data",
+      "artifact_identity": {"status": "not-pinned", "reason": "No checked-in snapshot"},
+      "outcome_definition": "Synthetic anomaly-like log records",
+      "limitation": "Explicitly synthetic"
+    },
+    {
+      "dataset_id": "iot-integrated-predictive-maintenance",
+      "status": "fixture-only",
+      "evidence_class": "synthetic",
+      "canonical_source": "https://www.kaggle.com/datasets/ziya07/iot-integrated-predictive-maintenance-dataset/data",
+      "artifact_identity": {"status": "not-pinned", "reason": "No checked-in snapshot"},
+      "outcome_definition": "Simulated machine-fault labels",
+      "limitation": "Simulated labels and small machine count"
+    },
+    {
+      "dataset_id": "commit-instances",
+      "status": "rejected-primary",
+      "evidence_class": "insufficient-identity",
+      "canonical_source": "https://www.kaggle.com/datasets/stuxjtu/commit-instances",
+      "artifact_identity": {"status": "not-pinned", "reason": "Inspected sample did not carry stable commit/project/time identity"},
+      "outcome_definition": "contains_bug field where present; event identity is incomplete",
+      "limitation": "Inspected artifacts lack stable commit/project/time identity"
+    },
+    {
+      "dataset_id": "bug-prediction-dataset",
+      "status": "deferred-control",
+      "evidence_class": "static-snapshot",
+      "canonical_source": "https://www.kaggle.com/datasets/syedzubair/bug-prediction-dataset",
+      "artifact_identity": {"status": "not-pinned", "reason": "No canonical snapshot admitted"},
+      "outcome_definition": "Static module-level defect class",
+      "limitation": "Not commit-level JIT evidence"
+    },
+    {
+      "dataset_id": "software-defect-analysis",
+      "status": "not-admitted",
+      "evidence_class": "unverified",
+      "canonical_source": "https://www.kaggle.com/datasets/programmer3/software-defect-analysis-dataset",
+      "artifact_identity": {"status": "unavailable", "reason": "Kaggle returned 403 during screening"},
+      "outcome_definition": "Unknown; artifact and label linkage were not inspected",
+      "limitation": "Kaggle access returned 403 during screening"
+    }
+  ]
+}

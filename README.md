@@ -224,6 +224,44 @@ including at least 50 positive and 50 negative outcomes, with maximum ECE
 `0.05`. Smaller values are permitted only when explicitly declared by a
 structural smoke test; they are not evidence-scale defaults.
 
+### Dataset examples and validation
+
+The repository now presents multiple evidence-bounded examples under one
+contract: each has its own provenance, schema, outcome semantics, and local
+verification path. They are complementary validation cases, not a common
+benchmark or a claim that their labels can be pooled. The overview and
+implementation boundaries are in
+[`specs/039-public-dataset-validation/spec.md`](specs/039-public-dataset-validation/spec.md);
+candidate-screening decisions are in
+[`examples/public-datasets/decision-ledger.json`](examples/public-datasets/decision-ledger.json).
+
+| Example | What it exercises | Provenance and details |
+|---|---|---|
+| AI4I 2020 | Synthetic process-cycle snapshot; composite machine-failure and five mode labels, including label-semantics discrepancies | [Manifest](examples/ai4i2020/manifest.json), [example notes](examples/ai4i2020/README.md), [Feature 038 quickstart](specs/038-ai4i-structural-fixture/quickstart.md) |
+| ApacheJIT | Repository-derived bug-inducing commit labels and project distribution; these are not runtime-failure labels | [Manifest](examples/apachejit/manifest.json), [Feature 039 quickstart](specs/039-public-dataset-validation/quickstart.md#apachejit) |
+| NASA C-MAPSS | Simulated run-to-failure trajectories, held-out units, and remaining-useful-life alignment | [Manifest](examples/cmapss/manifest.json), [Feature 039 quickstart](specs/039-public-dataset-validation/quickstart.md#nasa-c-mapss) |
+| MetroPT-3 | Compressor observations with externally reported air-leak intervals; observations outside anchors remain censored | [Manifest](examples/metropt3/manifest.json), [intervals](examples/metropt3/failure_intervals.json), [Feature 039 quickstart](specs/039-public-dataset-validation/quickstart.md#metropt-3) |
+
+The verifiers accept local files only; the repository does not download or
+vendor these datasets. Example commands:
+
+```bash
+uv run python scripts/verify_ai4i2020.py /path/to/ai4i2020.csv
+uv run python scripts/verify_public_dataset.py apachejit /path/to/apachejit_total.csv --json
+uv run python scripts/verify_public_dataset.py cmapss --dataset FD001 \
+  --train /path/to/train_FD001.txt --test /path/to/test_FD001.txt \
+  --rul /path/to/RUL_FD001.txt --json
+uv run python scripts/verify_public_dataset.py metropt3 /path/to/MetroPT3.csv \
+  --intervals examples/metropt3/failure_intervals.json --json
+```
+
+These checks establish only the declared artifact identity, structure, label
+semantics, and anchor coverage. AI4I is synthetic; C-MAPSS is simulated;
+ApacheJIT labels are repository-derived; and MetroPT-3 labels depend on
+external anchors. Their outcome definitions remain distinct and
+non-poolable. None of these examples establishes predictive efficacy,
+production performance, Semantic Conformance, or Full Conformance.
+
 ### Stage 1 independence constraints
 
 - No private third-party production data is required by the admission layer.

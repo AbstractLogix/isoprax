@@ -26,3 +26,6 @@ data/generated/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Generated graphify analysis artifacts
+graphify-out/
