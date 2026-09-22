@@ -11,6 +11,30 @@ from .admission import (
     SplitDefinition,
     evaluate_admission,
 )
+from .ai4i2020 import (
+    AI4I2020_CLAIM_BOUNDARY,
+    AI4I2020_COLUMNS,
+    AI4I2020_EXPECTATIONS,
+    AI4I2020_EXPECTED_CSV_SHA256,
+    AI4I2020_FEATURE_COLUMNS,
+    AI4I2020_IDENTIFIER_COLUMNS,
+    AI4I2020_LABEL_COLUMNS,
+    AI4I2020_MODE_COLUMNS,
+    AI4I2020Expectations,
+    AI4I2020VerificationReport,
+    ai4i2020_outcome_definitions,
+    verify_ai4i2020_csv,
+)
+from .apachejit import (
+    APACHEJIT_CLAIM_BOUNDARY,
+    APACHEJIT_COLUMNS,
+    APACHEJIT_EXPECTATIONS,
+    APACHEJIT_EXPECTED_SHA256,
+    ApacheJITExpectations,
+    ApacheJITVerificationReport,
+    apachejit_outcome_definition,
+    verify_apachejit_csv,
+)
 from .baseline_strategies import (
     DistributionAnomalyStrategy,
     HeuristicRiskStrategy,
@@ -113,6 +137,25 @@ from .jepa import (
     JEPAWorldModel,
 )
 from .kb import KnowledgeBase, Outcome, SQLiteKB
+from .metropt3 import (
+    METROPT3_CLAIM_BOUNDARY,
+    METROPT3_COLUMNS,
+    METROPT3_EXPECTATIONS,
+    METROPT3_EXPECTED_INTERVAL_ROWS,
+    METROPT3_EXPECTED_SHA256,
+    MetroPT3Expectations,
+    MetroPT3FailureInterval,
+    MetroPT3VerificationReport,
+    metropt3_outcome_definition,
+    verify_metropt3_csv,
+)
+from .nasa_cmaps import (
+    CMAPSS_CLAIM_BOUNDARY,
+    CMAPSS_EXPECTATIONS,
+    CMapssVerificationReport,
+    cmapss_outcome_definitions,
+    verify_cmapss,
+)
 from .normative import NormativeCitation, resolve_citations, unresolved_citations
 from .per_family_evaluation import (
     PerFamilyEvaluationProfile,

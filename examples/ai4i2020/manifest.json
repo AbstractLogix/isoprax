@@ -1,0 +1,44 @@
+{
+  "dataset_id": "ai4i2020",
+  "source": {
+    "authoritative_name": "UCI Machine Learning Repository",
+    "dataset_id": "601",
+    "doi": "10.24432/C5HS5C",
+    "license": "CC BY 4.0",
+    "retrieval_reference": "https://archive.ics.uci.edu/dataset/601/ai4i%2B2020%2Bpredictive%2Bmaint",
+    "source_zip_sha256": "f601f14294bcf190f9d720676b7f0aea46a26cde9ab8ebc7b4f8174d9d26b252",
+    "csv_sha256": "dc6630cd9b1f0f853922fad78a1b6436570d3f1ec863f1dd5c4340ac56bc8a8e",
+    "kaggle_mirror": "https://www.kaggle.com/datasets/stephanmatzka/predictive-maintenance-dataset-ai4i-2020"
+  },
+  "snapshot": {
+    "row_count": 10000,
+    "column_count": 14,
+    "machine_failure_count": 339,
+    "machine_failure_rate": 0.0339,
+    "mode_counts": {
+      "TWF": 46,
+      "HDF": 115,
+      "PWF": 95,
+      "OSF": 98,
+      "RNF": 19
+    },
+    "multi_mode_row_count": 24,
+    "failure_without_mode_count": 9,
+    "mode_without_failure_count": 18,
+    "composite_mismatch_count": 27
+  },
+  "columns": {
+    "identifiers": ["UDI", "Product ID"],
+    "features": [
+      "Type",
+      "Air temperature [K]",
+      "Process temperature [K]",
+      "Rotational speed [rpm]",
+      "Torque [Nm]",
+      "Tool wear [min]"
+    ],
+    "outcomes": ["Machine failure", "TWF", "HDF", "PWF", "OSF", "RNF"]
+  },
+  "claim_boundary": "Public synthetic structural and label-semantics evidence only; not replay evidence, predictive efficacy, or Semantic/Full Conformance.",
+  "snapshot_policy": "The full external CSV is not checked in and is never fetched automatically."
+}

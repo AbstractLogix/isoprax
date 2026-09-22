@@ -1,0 +1,21 @@
+{
+  "dataset_id": "cmapss",
+  "discovery_source": "https://www.kaggle.com/datasets/behrad3d/nasa-cmaps",
+  "canonical_source": "https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/",
+  "version": "C-MAPSS FD001-FD004 downloaded snapshot",
+  "license": "Publicly available through NASA PCoE; no item-specific license declaration was located in the cited record",
+  "artifacts": {
+    "FD001": {
+      "train_sha256": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+      "test_sha256": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851",
+      "rul_sha256": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
+      "observed": {"train_rows": 20631, "train_units": 100, "test_rows": 13096, "test_units": 100, "rul_count": 100}
+    },
+    "FD002": {"train_sha256": "dac6c4dbc4e7c1bdeb5747da3d313d05c395bb99801b44a002b26a2ba13d788f", "test_sha256": "de7b5bf7e998a985c378488480528b7c02cff1406a46740def362dda8d9b4e02", "rul_sha256": "c851dd96a6ea6998d3c4a8f834d3c8013aa90e93a6ed950dc826ad0655b2906b", "observed": {"train_rows": 53759, "train_units": 260, "test_rows": 33991, "test_units": 259, "rul_count": 259}},
+    "FD003": {"train_sha256": "2abbe9968cc5e8eb091980f51b20f62bb4127336d3482cb52071d53bf23329e2", "test_sha256": "299babd63c8d987cef079c4a425429f33b3a34797d803bbe2ad48c29dbd0d790", "rul_sha256": "df1e0566306b174a2de41c67a3e7a51877889598b78643fc3e5685259091b7cb", "observed": {"train_rows": 24720, "train_units": 100, "test_rows": 16596, "test_units": 100, "rul_count": 100}},
+    "FD004": {"train_sha256": "27ef6160b6a1dcb2613a88de9c239f763b223f02cdc41dc5cdedc5dc189b6218", "test_sha256": "1dc675fff0624bac10786927c6715b37d1297657137400d2b1a3138d777a3ba5", "rul_sha256": "196b836b85a95ac7fdbbf29c5fdf1657382eafa445644d114ffaaf50dc2975e1", "observed": {"train_rows": 61249, "train_units": 249, "test_rows": 41214, "test_units": 248, "rul_count": 248}}
+  },
+  "evidence_class": "simulated-run-to-failure",
+  "label_procedure": "Simulated training terminal failure and held-out RUL files",
+  "claim_boundary": "Temporal/RUL structural mechanics only; not real-fleet efficacy"
+}

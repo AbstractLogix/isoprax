@@ -1,0 +1,13 @@
+{
+  "dataset_id": "metropt3",
+  "discovery_source": "https://www.kaggle.com/datasets/joebeachcapital/metropt-3-dataset",
+  "canonical_source": "https://archive.ics.uci.edu/dataset/791/metropt3%2Bdataset",
+  "version": "UCI dataset 791 downloaded snapshot",
+  "license": "CC BY 4.0",
+  "artifact_sha256": "db30ccb4ea402e3c8bf2c99db06e288d4f2a772f6928f9dbe26a920d69793e24",
+  "observed": {"rows": 1516948, "columns": 17, "interval_rows": {"F1": 8657, "F2": 2360, "F3": 17315, "F4": 1622}},
+  "evidence_class": "external-anchor-dependent",
+  "failure_interval_source": "https://archive.ics.uci.edu/dataset/791/metropt3%2Bdataset",
+  "label_procedure": "Coverage of four externally reported air-leak intervals",
+  "claim_boundary": "Single-stream anchored observation evidence; uncovered rows are censored"
+}

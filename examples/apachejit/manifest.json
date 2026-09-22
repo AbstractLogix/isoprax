@@ -1,0 +1,12 @@
+{
+  "dataset_id": "apachejit",
+  "discovery_source": "https://www.kaggle.com/datasets/behnamrr/apachejit-total-commits",
+  "canonical_source": "https://zenodo.org/records/5907002",
+  "version": "Zenodo record 5907002; apachejit_total.csv",
+  "license": "CC BY 4.0",
+  "artifact_sha256": "5097cbbbab8c4611a709b3cf95ac5c9fe5f62e619bab081911a2a247ddbed4e0",
+  "observed": {"rows": 106674, "columns": 18, "projects": 15, "buggy": 28239, "clean": 78435},
+  "evidence_class": "repository-derived",
+  "label_procedure": "Published ApacheJIT repository-history buggy label; not re-run here",
+  "claim_boundary": "JIT label and structural evidence only; not runtime failure or efficacy"
+}
