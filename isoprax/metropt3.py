@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import math
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -265,6 +266,38 @@ def metropt3_outcome_definition() -> OutcomeDefinition:
         (Threshold("external_failure_interval", "=", 1),),
         "Positive coverage is limited to explicit externally reported air-leak intervals; other rows are censored.",
     )
+
+
+def read_metropt3_intervals(
+    path: str | Path,
+) -> tuple[MetroPT3FailureInterval, ...]:
+    """Read the explicit, timezone-unqualified external interval manifest."""
+
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(raw, list):
+        raise ValueError("interval manifest must be a JSON list")
+    required_fields = ("anchor_id", "start", "end", "source_reference")
+    intervals: list[MetroPT3FailureInterval] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            raise ValueError("each interval must be a JSON object")
+        missing_fields = tuple(field for field in required_fields if field not in item)
+        if missing_fields:
+            raise ValueError(
+                f"interval is missing required fields: {', '.join(missing_fields)}"
+            )
+        for field in required_fields:
+            if not isinstance(item[field], str):
+                raise ValueError(f"interval field {field} must be a string")
+        intervals.append(
+            MetroPT3FailureInterval(
+                item["anchor_id"],
+                datetime.fromisoformat(item["start"].replace("Z", "+00:00")),
+                datetime.fromisoformat(item["end"].replace("Z", "+00:00")),
+                item["source_reference"],
+            )
+        )
+    return tuple(intervals)
 
 
 def _require_timezone_naive(value: datetime, field: str) -> None:

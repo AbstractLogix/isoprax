@@ -21,6 +21,17 @@ dependencies = [
 gpu = [
   "torch>=2.7,<3",
 ]
+workbench = [
+  "streamlit>=1.64,<2",
+]
+notebooks = [
+  "ipykernel>=6.29,<7",
+  "jupyterlab>=4,<5",
+  "matplotlib>=3.9,<4",
+  "nbclient>=0.10,<1",
+  "nbformat>=5.10,<6",
+  "pandas>=2.2,<4",
+]
 
 [dependency-groups]
 dev = [
@@ -58,6 +69,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 [tool.ruff.lint.per-file-ignores]
 "isoprax/__init__.py" = ["F401"]
 "examples/demo_cross_family.py" = ["E402"]
+"notebooks/*.ipynb" = ["E402"] # Repository-path bootstrap precedes checkout-local imports.
 
 [tool.setuptools]
 packages = ["isoprax"]

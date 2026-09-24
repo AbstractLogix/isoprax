@@ -262,6 +262,28 @@ external anchors. Their outcome definitions remain distinct and
 non-poolable. None of these examples establishes predictive efficacy,
 production performance, Semantic Conformance, or Full Conformance.
 
+For a local visual review of all four examples, run `make workbench`. It opens
+an optional loopback-only UI with verifier-backed, dataset-specific charts and
+a separate Repository Review page for an explicitly triggered coverage gate
+and a bounded Graphify neighborhood. Missing or stale artifacts stay visibly
+unknown; the UI does not fetch or upload dataset files. See the
+[Feature 040 spec and quickstart](specs/040-evidence-workbench/quickstart.md)
+for the workflow and its evidence limits.
+
+### Research notebooks
+
+For portable notebook-based review, run `make notebooks`. It launches JupyterLab
+from the lockfile in an isolated environment, leaving the shared project `.venv`
+unchanged. Alongside outcome commensurability, the four dataset notebooks now
+provide verified label/sensor audits and fixed, dataset-local baselines where
+labels support them: AI4I, ApacheJIT, and each C-MAPSS subset. MetroPT-3 remains
+descriptive because its external failure anchors do not label the rest of the
+stream. They use local dataset files only; set `ISOPRAX_DATA_DIR` to use a data
+folder outside the checkout. Run `make notebook-check` to execute them headlessly
+without saving outputs. Setup, expected filenames, methodology, and evidence
+boundaries are documented in the
+[notebooks guide](notebooks/README.md).
+
 ### Stage 1 independence constraints
 
 - No private third-party production data is required by the admission layer.
