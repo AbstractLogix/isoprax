@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync test coverage diff-coverage mutation audit lint format format-check demo hooks pre-commit check
+.PHONY: help sync test coverage diff-coverage mutation audit lint format format-check demo workbench notebooks notebook-check hooks pre-commit check
 
 help: ## Show available developer actions.
 
@@ -47,6 +47,18 @@ format-check: ## Verify repository formatting without modifying files.
 demo: ## Run the synthetic structural-conformance demonstration.
 
 	uv run python examples/demo_cross_family.py
+
+workbench: ## Launch the optional local evidence review workbench.
+
+	uv run --locked --no-default-groups --extra workbench python -m streamlit run apps/evidence_workbench/app.py --server.address=127.0.0.1 --server.headless=true --browser.gatherUsageStats=false
+
+notebooks: ## Launch the optional local research notebooks in JupyterLab.
+
+	uv run --isolated --locked --no-default-groups --extra notebooks jupyter lab notebooks/ --ip=127.0.0.1
+
+notebook-check: ## Validate and execute repository notebooks without saving outputs.
+
+	uv run --isolated --locked --no-default-groups --extra notebooks python scripts/check_notebooks.py
 
 hooks: ## Install the repository pre-commit hooks.
 

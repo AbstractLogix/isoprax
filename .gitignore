@@ -19,8 +19,8 @@ dist/
 .secrets/
 credentials/
 service-account*.json
-data/raw/
-data/generated/
+/data/
+**/.ipynb_checkpoints/
 *.ndjson.gz
 *.db
 .DS_Store

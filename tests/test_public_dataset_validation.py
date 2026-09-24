@@ -21,6 +21,7 @@ from isoprax.metropt3 import (
     MetroPT3Expectations,
     MetroPT3FailureInterval,
     metropt3_outcome_definition,
+    read_metropt3_intervals,
     verify_metropt3_csv,
 )
 from isoprax.nasa_cmaps import cmapss_outcome_definitions, verify_cmapss
@@ -807,6 +808,84 @@ def test_cli_accepts_published_timezone_unqualified_metropt3_intervals(
     assert payload["verified"] is False
     assert any("source file does not exist" in error for error in payload["errors"])
     assert all("interval manifest error" not in error for error in payload["errors"])
+
+
+def test_read_metropt3_intervals_parses_timezone_unqualified_source_data(
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "intervals.json"
+    manifest.write_text(
+        json.dumps(
+            [
+                {
+                    "anchor_id": "F1",
+                    "start": "2020-04-18T00:00:00",
+                    "end": "2020-04-18T23:59:00",
+                    "source_reference": "uci-record",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    intervals = read_metropt3_intervals(manifest)
+
+    assert len(intervals) == 1
+    assert intervals[0].anchor_id == "F1"
+    assert intervals[0].start == datetime(2020, 4, 18)
+    assert intervals[0].end == datetime(2020, 4, 18, 23, 59)
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    (
+        ({}, "JSON list"),
+        ([1], "each interval must be a JSON object"),
+        ([{"anchor_id": "F1"}], "missing required fields"),
+        (
+            [
+                {
+                    "anchor_id": "F1",
+                    "start": None,
+                    "end": "2020-04-18T00:10:00",
+                    "source_reference": "uci-record",
+                }
+            ],
+            "interval field start must be a string",
+        ),
+        (
+            [
+                {
+                    "anchor_id": "F1",
+                    "start": "2020-04-18T00:00:00Z",
+                    "end": "2020-04-18T00:10:00",
+                    "source_reference": "uci-record",
+                }
+            ],
+            "timezone-naive",
+        ),
+    ),
+)
+def test_read_metropt3_intervals_rejects_malformed_manifest_shapes(
+    tmp_path: Path, payload: object, message: str
+) -> None:
+    manifest = tmp_path / "intervals.json"
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        read_metropt3_intervals(manifest)
+
+
+def test_read_metropt3_intervals_propagates_missing_and_invalid_json(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(FileNotFoundError):
+        read_metropt3_intervals(tmp_path / "missing.json")
+
+    invalid = tmp_path / "invalid.json"
+    invalid.write_text("{", encoding="utf-8")
+    with pytest.raises(json.JSONDecodeError):
+        read_metropt3_intervals(invalid)
 
 
 def test_manifests_and_ledger_are_explicit() -> None:
