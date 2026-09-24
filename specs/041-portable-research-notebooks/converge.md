@@ -36,7 +36,9 @@ reserved for held-out evaluation.
   expected local artifacts, the notebook verifiers must pass before the
   data-dependent cells can run.
 - The configured Ubuntu/Windows and Python 3.10/3.12/3.14 CI matrix was not run
-  from this local session. Hosted CI remains the platform-compatibility gate.
+  from this local session. Hosted CI for PR #45 passed the Python 3.10, 3.12,
+  and 3.14 test jobs and the Ubuntu 3.10/3.12/3.14 plus Windows 3.12 notebook
+  jobs, closing this platform gate for the reviewed commit.
 
 ## Evidence boundary
 

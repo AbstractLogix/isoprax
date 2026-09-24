@@ -76,3 +76,5 @@ the synthetic demo, and `git diff --check` passed. The notebook execution gate
 also passes all five notebooks after the related Feature 041 review fixes.
 All file-oriented pre-commit hooks passed; its contract-test hook was skipped
 because the same full suite had just passed separately.
+Hosted CI for PR #45 passed the Python 3.10, 3.12, and 3.14 test jobs and the
+Ubuntu 3.10/3.12/3.14 plus Windows 3.12 notebook jobs.
