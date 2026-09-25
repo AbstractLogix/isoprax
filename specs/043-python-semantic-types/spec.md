@@ -48,7 +48,7 @@ A contributor receives an automated failure when semantic code introduces an unt
 
 **Acceptance Scenarios**:
 
-1. **Given** a clean semantic change, **when** the type check runs on supported Python versions, **then** it completes without diagnostics or ignored errors in its declared scope.
+1. **Given** a clean semantic change, **when** the type check runs in its configured Python 3.10 target environment, **then** it completes without diagnostics or ignored errors in its declared scope. Runtime tests still run across the supported Python matrix.
 2. **Given** an invalid evidence flow in a compile-time example, **when** the checker runs, **then** the example is rejected for the intended type error.
 3. **Given** an untrusted structured input or non-integer calibration label, **when** it enters the typed model, **then** strict runtime validation occurs before it is represented as validated evidence.
 

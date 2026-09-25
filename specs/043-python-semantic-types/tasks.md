@@ -64,6 +64,7 @@
 - [X] T024 Reject non-integer and non-binary calibration outcomes before normalization and sample hashing.
 - [X] T025 Keep attestations as provenance only; prevent commensurability, pooled evaluation, or shared-label pilot validation from upgrading mismatched definitions.
 - [X] T026 Enforce finite, typed, nonnegative invariants in direct `Threshold` construction so validated mapping instances cannot be bypassed.
+- [X] T027 Run strict mypy in the configured Python 3.10 typing target while retaining runtime test coverage across Python 3.10, 3.12, and 3.14.
 
 ## Dependencies and Execution Order
 

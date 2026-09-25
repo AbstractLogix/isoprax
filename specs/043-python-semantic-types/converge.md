@@ -26,4 +26,4 @@ The maintained Haskell package, CI workflow, differential runner, fixture direct
 
 ## Remaining external gate
 
-Hosted CI has not run for this branch. Its full Python version matrix and standard hosted-runner timing remain unverified. This record does not claim hosted validation or a merge.
+The first hosted run exposed a mypy environment mismatch: Python 3.14 resolves NumPy 2.5.2 stubs containing Python 3.12 `type` syntax, while the semantic checker intentionally targets Python 3.10. The CI workflow now runs strict mypy on the Python 3.10 matrix row, where the lock resolves NumPy 2.2.6 stubs compatible with that target; runtime tests remain on Python 3.10, 3.12, and 3.14. The refreshed hosted matrix is pending. This record does not claim hosted validation or a merge.
