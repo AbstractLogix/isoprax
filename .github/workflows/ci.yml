@@ -75,6 +75,11 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
+      - name: Strict semantic typing
+        # Keep the mypy 3.10 target paired with that runtime's compatible NumPy stubs.
+        if: matrix.python-version == '3.10'
+        run: uv run mypy
+
       - name: Tests
         run: uv run pytest tests -q --cov-report=xml
 

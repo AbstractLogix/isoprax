@@ -547,14 +547,12 @@ def test_require_commensurable_guards_joint_reasoning():
         require_commensurable(DEFECT_LINKED_FIX, JOB_RUN_FAILURE)
 
 
-def test_require_commensurable_accepts_explicit_retained_observations():
+def test_require_commensurable_rejects_retained_observations_without_rederivation():
     left = _defn(id="left")
     right = _defn(id="right", window="different window")
 
-    result = require_commensurable(left, right, retained_observations=True)
-
-    assert result.level == "bridgeable"
-    assert result.pooling_allowed
+    with pytest.raises(IncommensurableError):
+        require_commensurable(left, right, retained_observations=True)
 
 
 def test_baseline_strategies_are_non_commensurable():
@@ -600,7 +598,7 @@ def test_cross_family_report_pools_when_commensurable():
     assert "Semantic/Full" in rep.declarable_class
 
 
-def test_cross_family_report_uses_retained_observation_pooling_policy():
+def test_cross_family_report_withholds_retained_observation_pooling():
     from isoprax.evaluation import cross_family_report
 
     left = _defn(id="left")
@@ -622,7 +620,7 @@ def test_cross_family_report_uses_retained_observation_pooling_policy():
 
     assert rep.commensurable is False
     assert rep.commensurability_level == "bridgeable"
-    assert rep.pooled_ece is not None
+    assert rep.pooled_ece is None
 
 
 def test_cross_family_report_threads_calibration_configuration():

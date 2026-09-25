@@ -4,6 +4,10 @@
 
 Keep the kernel as a small CI-checked semantic reference and typed Haskell library. Do not wire it into Python's latency-sensitive or research execution paths. The experiment demonstrates a meaningful correctness benefit through opaque evidence values, compile-time rejection of invalid API calls, property coverage, and independent cross-runtime checks. The measured subprocess cost makes a default per-call Python boundary inappropriate for fast loops.
 
+## Follow-up decision (2026-09-25)
+
+The decision above records the result at the end of the Haskell experiment. After choosing to strengthen Python's own semantic types, the project now removes the maintained Haskell package, workflow, benchmark, and active usage guide. Python is the sole maintained semantic implementation. The experiment's source-level findings, differential results, and benchmark remain here as historical evidence; this update supersedes the recommendation to keep a Haskell CI reference for the current project.
+
 ## Evidence obtained
 
 - GHC 9.14.1 / Cabal 3.16.1.0: library, CLI, and property suite built successfully from the frozen package plan.

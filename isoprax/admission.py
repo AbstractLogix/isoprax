@@ -11,9 +11,29 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import Literal, TypeAlias
 
-_ALLOWED_SPLITS = ("train", "calibration_fit", "calibration_gate", "test")
+SplitName: TypeAlias = Literal["train", "calibration_fit", "calibration_gate", "test"]
+OutcomeClass: TypeAlias = Literal["observed_positive", "observed_negative", "censored"]
+AdmissionGateId: TypeAlias = Literal[
+    "lineage_linkage",
+    "prediction_time_fields",
+    "outcome_censoring",
+    "split_followup",
+    "horizon_threshold_freeze",
+    "calibration_evidence",
+    "provenance",
+    "single_system_boundary",
+    "cluster_by_change",
+    "adequacy",
+    "manifest_metadata",
+]
+_ALLOWED_SPLITS: tuple[SplitName, ...] = (
+    "train",
+    "calibration_fit",
+    "calibration_gate",
+    "test",
+)
 _FORBIDDEN_LINKAGE_ONLY = {
     "timestamp_proximity",
     "text_similarity",
@@ -26,7 +46,7 @@ _RFC3339_UTC = re.compile(
 
 @dataclass(frozen=True)
 class SplitDefinition:
-    name: str
+    name: SplitName
     start: str
     end: str
 
@@ -103,10 +123,10 @@ class CorpusRow:
     change_id: str
     deployment_id: str
     observation_id: str
-    split: str
+    split: SplitName
     score_time: str
-    outcome_class: str
-    prediction_fields: dict[str, Any]
+    outcome_class: OutcomeClass
+    prediction_fields: dict[str, object]
     linkage_bases: tuple[str, ...]
     outcome_window_complete: bool
     horizon_rule_used: str
@@ -132,7 +152,7 @@ class CorpusRow:
 
 @dataclass(frozen=True)
 class GateResult:
-    gate_id: str
+    gate_id: AdmissionGateId
     passed: bool
     message: str
     failed_row_ids: tuple[str, ...] = ()
@@ -143,8 +163,10 @@ class AdmissionReport:
     admissible: bool
     gate_results: tuple[GateResult, ...]
     counts_by_split: dict[str, dict[str, int]]
-    manifest: dict[str, Any]
-    declarable_class: str = "Admission evidence only; conformance class not assigned"
+    manifest: dict[str, object]
+    declarable_class: Literal[
+        "Admission evidence only; conformance class not assigned"
+    ] = "Admission evidence only; conformance class not assigned"
 
 
 def evaluate_admission(
@@ -437,7 +459,7 @@ def _predeclaration_evidence_dict(
 
 def _corpus_provenance_dict(
     provenance: CorpusProvenance | None,
-) -> dict[str, Any] | None:
+) -> dict[str, object] | None:
     if provenance is None:
         return None
     return {
@@ -537,7 +559,7 @@ def _gate_manifest_metadata(profile: AdmissionProfile) -> GateResult:
 
 
 def _counts_by_split(rows: list[CorpusRow]) -> dict[str, dict[str, int]]:
-    out = {
+    out: dict[str, dict[str, int]] = {
         split: {
             "observed_positive": 0,
             "observed_negative": 0,

@@ -11,15 +11,33 @@ Provides:
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Optional
+from typing import Literal, Optional, TypeVar
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy import stats
 from sklearn.metrics import roc_auc_score
 
+from .commensurability import (
+    Attestation,
+    CommensurabilityLevel,
+    OutcomeDefinition,
+    check_commensurable,
+)
+from .semantic_types import PooledComparisonAuthorization, calibration_sample_digest
 
-def _diagnostic_arrays(scores, outcomes, *, allow_empty: bool = True):
+LeftDefinition = TypeVar("LeftDefinition")
+RightDefinition = TypeVar("RightDefinition")
+
+
+def _diagnostic_arrays(
+    scores: Sequence[float],
+    outcomes: Sequence[int],
+    *,
+    allow_empty: bool = True,
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     try:
         score_count = len(scores)
         outcome_count = len(outcomes)
@@ -47,7 +65,7 @@ def _diagnostic_arrays(scores, outcomes, *, allow_empty: bool = True):
     return score_array, outcome_array
 
 
-def brier_score(scores: list[float], outcomes: list[int]) -> float:
+def brier_score(scores: Sequence[float], outcomes: Sequence[int]) -> float:
     s, y = _diagnostic_arrays(scores, outcomes, allow_empty=False)
     return float(np.mean((s - y) ** 2))
 
@@ -61,7 +79,9 @@ class ReliabilityBin:
     count: int
 
 
-def reliability_curve(scores, outcomes, n_bins: int = 10) -> list[ReliabilityBin]:
+def reliability_curve(
+    scores: Sequence[float], outcomes: Sequence[int], n_bins: int = 10
+) -> list[ReliabilityBin]:
     """Data behind a reliability diagram (spec 5.3): for each score bin, the
     mean predicted probability vs the observed empirical frequency. A well-
     calibrated strategy has mean_predicted ~= empirical_frequency per bin."""
@@ -87,7 +107,9 @@ def reliability_curve(scores, outcomes, n_bins: int = 10) -> list[ReliabilityBin
     return out
 
 
-def expected_calibration_error(scores, outcomes, n_bins: int = 10) -> float:
+def expected_calibration_error(
+    scores: Sequence[float], outcomes: Sequence[int], n_bins: int = 10
+) -> float:
     """ECE: weighted average gap between confidence and accuracy across bins."""
     bins = reliability_curve(scores, outcomes, n_bins)
     total = sum(b.count for b in bins) or 1
@@ -97,7 +119,9 @@ def expected_calibration_error(scores, outcomes, n_bins: int = 10) -> float:
     )
 
 
-def time_sliced_split(events: list[dict], train_frac: float = 0.7):
+def time_sliced_split(
+    events: list[dict[str, object]], train_frac: float = 0.7
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Time-ordered split (spec 8.1). Assumes events already time-sorted or
     sorts them; NEVER shuffles."""
     if (
@@ -107,7 +131,14 @@ def time_sliced_split(events: list[dict], train_frac: float = 0.7):
         or not 0.0 < train_frac < 1.0
     ):
         raise ValueError("train_frac must be strictly between 0 and 1")
-    ordered = sorted(events, key=lambda e: e["timestamp"])
+
+    def timestamp(event: Mapping[str, object]) -> str:
+        value = event.get("timestamp")
+        if not isinstance(value, str):
+            raise ValueError("each event timestamp must be a string")
+        return value
+
+    ordered = sorted(events, key=timestamp)
     k = int(len(ordered) * train_frac)
     return ordered[:k], ordered[k:]
 
@@ -118,12 +149,16 @@ class ComparisonResult:
     candidate_brier: float
     statistic: float
     p_value: float
-    test: str
-    verdict: str
+    test: Literal["wilcoxon_signed_rank"]
+    verdict: Literal[
+        "candidate significantly better (lower Brier)",
+        "candidate significantly worse",
+        "no significant difference",
+    ]
 
 
 def paired_comparison(
-    baseline_errs: list[float], candidate_errs: list[float]
+    baseline_errs: Sequence[float], candidate_errs: Sequence[float]
 ) -> ComparisonResult:
     """Paired significance test between two strategies' per-item squared errors
     (spec 8.2). Uses Wilcoxon signed-rank (non-parametric, no normality
@@ -144,12 +179,15 @@ def paired_comparison(
     else:
         stat, p = stats.wilcoxon(b, c)
     bb, cb = float(b.mean()), float(c.mean())
+    verdict: Literal[
+        "candidate significantly better (lower Brier)",
+        "candidate significantly worse",
+        "no significant difference",
+    ] = "no significant difference"
     if p < 0.05 and cb < bb:
         verdict = "candidate significantly better (lower Brier)"
     elif p < 0.05 and cb > bb:
         verdict = "candidate significantly worse"
-    else:
-        verdict = "no significant difference"
     return ComparisonResult(
         baseline_brier=bb,
         candidate_brier=cb,
@@ -167,7 +205,7 @@ CONFORMANCE_N_BINS = 10
 CONFORMANCE_MAX_ECE = 0.05
 
 
-@dataclass
+@dataclass(frozen=True)
 class CalibrationConformance:
     """Result of the objective calibration test in spec 5.3."""
 
@@ -184,14 +222,14 @@ class CalibrationConformance:
     negative_events: int = 0
     discrimination_passes: bool = False
 
-    def as_declaration(self) -> str:
+    def as_declaration(self) -> Literal["calibrated", "uncalibrated"]:
         """The calibration qualifier an implementation MUST declare (spec 3.3)."""
         return "calibrated" if self.passes else "uncalibrated"
 
 
 def check_calibration_conformance(
-    scores,
-    outcomes,
+    scores: Sequence[float],
+    outcomes: Sequence[int],
     min_events: int = CONFORMANCE_MIN_EVENTS,
     n_bins: int = CONFORMANCE_N_BINS,
     max_ece: float = CONFORMANCE_MAX_ECE,
@@ -330,7 +368,7 @@ class CrossFamilyReport:
     right_n: int
     pooled_ece: Optional[float] = None  # None when non-commensurable
     declarable_class: str = ""
-    commensurability_level: str = "irreducible"
+    commensurability_level: CommensurabilityLevel = "irreducible"
     calibration_min_events: int = CONFORMANCE_MIN_EVENTS
     calibration_n_bins: int = CONFORMANCE_N_BINS
     calibration_max_ece: float = CONFORMANCE_MAX_ECE
@@ -362,16 +400,16 @@ class CrossFamilyReport:
 
 
 def cross_family_report(
-    left_family,
-    left_def,
-    left_scores,
-    left_outcomes,
-    right_family,
-    right_def,
-    right_scores,
-    right_outcomes,
+    left_family: str,
+    left_def: OutcomeDefinition,
+    left_scores: Sequence[float],
+    left_outcomes: Sequence[int],
+    right_family: str,
+    right_def: OutcomeDefinition,
+    right_scores: Sequence[float],
+    right_outcomes: Sequence[int],
     *,
-    attestation=None,
+    attestation: Attestation | None = None,
     retained_observations: bool = False,
     min_events: int = CONFORMANCE_MIN_EVENTS,
     n_bins: int = CONFORMANCE_N_BINS,
@@ -382,8 +420,6 @@ def cross_family_report(
     Refuses to pool scores across non-commensurable Outcome Definitions
     (spec 5.6.3) and derives the declarable conformance class (spec 3.3).
     """
-    from .commensurability import check_commensurable
-
     res = check_commensurable(
         left_def,
         right_def,
@@ -441,4 +477,32 @@ def cross_family_report(
         commensurability_level=res.level,
         pooled_ece=pooled,
         declarable_class=cls,
+    )
+
+
+def authorized_pooled_ece(
+    authorization: PooledComparisonAuthorization[LeftDefinition, RightDefinition],
+    left_scores: Sequence[float],
+    left_outcomes: Sequence[int],
+    right_scores: Sequence[float],
+    right_outcomes: Sequence[int],
+    n_bins: int = CONFORMANCE_N_BINS,
+) -> float:
+    """Compute pooled ECE only after typed and runtime-bound authorization."""
+    if len(left_scores) != len(left_outcomes):
+        raise ValueError("left scores and outcomes must have equal length")
+    if len(right_scores) != len(right_outcomes):
+        raise ValueError("right scores and outcomes must have equal length")
+    if calibration_sample_digest(left_scores, left_outcomes) != (
+        authorization.left_sample_digest
+    ):
+        raise ValueError("left pooled samples do not match calibration evidence")
+    if calibration_sample_digest(right_scores, right_outcomes) != (
+        authorization.right_sample_digest
+    ):
+        raise ValueError("right pooled samples do not match calibration evidence")
+    return expected_calibration_error(
+        [*left_scores, *right_scores],
+        [*left_outcomes, *right_outcomes],
+        n_bins,
     )

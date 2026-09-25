@@ -1,13 +1,59 @@
-"""Outcome Definitions and graded commensurability (spec Section 5.6)."""
+"""Outcome definitions and graded commensurability (Isoprax spec Section 5.6)."""
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
-from typing import Any, Mapping
+import math
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import (
+    Literal,
+    TypeAlias,
+    cast,
+)
+
+ThresholdValue: TypeAlias = int | float | str | None
+DefinitionField: TypeAlias = Literal[
+    "event", "observation_process", "window", "thresholds"
+]
+CommensurabilityLevel: TypeAlias = Literal["direct", "bridgeable", "irreducible"]
 
 
 class IncommensurableError(ValueError):
     """Raised when non-commensurable scores would be jointly reasoned about."""
+
+
+def _as_string_mapping(value: object, field_name: str) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise TypeError(f"{field_name} must be a mapping")
+    entries = cast(Mapping[object, object], value)
+    if any(not isinstance(key, str) for key in entries):
+        raise TypeError(f"{field_name} keys must be strings")
+    return cast(Mapping[str, object], entries)
+
+
+def _reject_unknown_fields(
+    data: Mapping[str, object], field_name: str, allowed: frozenset[str]
+) -> None:
+    unknown = sorted(set(data) - allowed)
+    if unknown:
+        raise ValueError(f"{field_name} contains unsupported fields: {unknown}")
+
+
+def _string_value(value: object, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be a string")
+    return value
+
+
+def _optional_number(value: object, field_name: str) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"{field_name} must be a finite number or null")
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"{field_name} must be finite")
+    return number
 
 
 @dataclass(frozen=True)
@@ -16,27 +62,59 @@ class ObservationProcess:
     parameters: tuple[tuple[str, str], ...] = ()
     raw: str = ""
 
+    def __post_init__(self) -> None:
+        kind = _string_value(self.kind, "observation_process.kind").strip().lower()
+        if not kind:
+            raise ValueError("observation_process.kind must not be empty")
+        raw = _string_value(self.raw, "observation_process.raw")
+        object.__setattr__(self, "kind", kind)
+        object.__setattr__(self, "raw", raw)
+
     @classmethod
-    def from_value(
-        cls, value: "ObservationProcess | str | Mapping[str, Any]"
-    ) -> "ObservationProcess":
+    def from_value(cls, value: ObservationInput) -> ObservationProcess:
         if isinstance(value, cls):
             return value
         if isinstance(value, Mapping):
-            parameters = value.get("parameters", {})
-            if isinstance(parameters, list):
-                params = tuple((str(item[0]), str(item[1])) for item in parameters)
-            else:
-                params = tuple(sorted((str(k), str(v)) for k, v in parameters.items()))
-            return cls(
-                str(value.get("kind", "")).strip().lower(),
-                params,
-                str(value.get("raw", "")),
+            data = _as_string_mapping(value, "observation_process")
+            _reject_unknown_fields(
+                data,
+                "observation_process",
+                frozenset({"kind", "parameters", "raw"}),
             )
-        raw = str(value).strip()
+            parameters = data.get("parameters", {})
+            if isinstance(parameters, Mapping):
+                parameter_map = _as_string_mapping(
+                    parameters, "observation_process.parameters"
+                )
+                params = tuple(
+                    sorted((key, str(item)) for key, item in parameter_map.items())
+                )
+            elif isinstance(parameters, (list, tuple)):
+                pairs: list[tuple[str, str]] = []
+                for item in parameters:
+                    if not isinstance(item, (list, tuple)) or len(item) != 2:
+                        raise TypeError(
+                            "observation_process.parameters entries must be pairs"
+                        )
+                    pairs.append((str(item[0]), str(item[1])))
+                params = tuple(pairs)
+            else:
+                raise TypeError(
+                    "observation_process.parameters must be a mapping or pair list"
+                )
+            return cls(
+                _string_value(data.get("kind", ""), "observation_process.kind")
+                .strip()
+                .lower(),
+                params,
+                _string_value(data.get("raw", ""), "observation_process.raw"),
+            )
+        if not isinstance(value, str):
+            raise TypeError("observation_process must be a string or mapping")
+        raw = value.strip()
         return cls(kind=raw.lower(), raw=raw)
 
-    def canonical(self) -> tuple[Any, ...]:
+    def canonical(self) -> tuple[str, tuple[tuple[str, str], ...], str]:
         return (self.kind.strip().lower(), self.parameters, self.raw.strip().lower())
 
 
@@ -47,22 +125,47 @@ class Window:
     anchor: str
     raw: str = ""
 
+    def __post_init__(self) -> None:
+        duration = _optional_number(self.duration, "window.duration")
+        if duration is not None and duration < 0:
+            raise ValueError("window.duration must not be negative")
+        unit = _string_value(self.unit, "window.unit").strip().lower()
+        anchor = _string_value(self.anchor, "window.anchor").strip().lower()
+        raw = _string_value(self.raw, "window.raw")
+        if not anchor:
+            raise ValueError("window.anchor must not be empty")
+        if duration is not None and not unit:
+            raise ValueError("window.unit is required when duration is set")
+        if not unit and not raw:
+            raise ValueError("window requires a unit or legacy description")
+        object.__setattr__(self, "duration", duration)
+        object.__setattr__(self, "unit", unit)
+        object.__setattr__(self, "anchor", anchor)
+        object.__setattr__(self, "raw", raw)
+
     @classmethod
-    def from_value(cls, value: "Window | str | Mapping[str, Any]") -> "Window":
+    def from_value(cls, value: WindowInput) -> Window:
         if isinstance(value, cls):
             return value
         if isinstance(value, Mapping):
-            duration = value.get("duration")
-            return cls(
-                None if duration is None else float(duration),
-                str(value.get("unit", "")).strip().lower(),
-                str(value.get("anchor", "")).strip().lower(),
-                str(value.get("raw", "")),
+            data = _as_string_mapping(value, "window")
+            _reject_unknown_fields(
+                data,
+                "window",
+                frozenset({"duration", "unit", "anchor", "raw"}),
             )
-        raw = str(value).strip()
+            return cls(
+                _optional_number(data.get("duration"), "window.duration"),
+                _string_value(data.get("unit", ""), "window.unit").strip().lower(),
+                _string_value(data.get("anchor", ""), "window.anchor").strip().lower(),
+                _string_value(data.get("raw", ""), "window.raw"),
+            )
+        if not isinstance(value, str):
+            raise TypeError("window must be a string or mapping")
+        raw = value.strip()
         return cls(None, "", raw.lower(), raw)
 
-    def canonical(self) -> tuple[Any, ...]:
+    def canonical(self) -> tuple[float | None, str, str]:
         return (self.duration, self.unit.strip().lower(), self.anchor.strip().lower())
 
 
@@ -70,28 +173,78 @@ class Window:
 class Threshold:
     metric: str
     operator: str
-    value: float | str | None
+    value: ThresholdValue
     sustain: float | None = None
     sustain_unit: str = ""
     raw: str = ""
 
+    def __post_init__(self) -> None:
+        metric = _string_value(self.metric, "threshold.metric").strip().lower()
+        if not metric:
+            raise ValueError("threshold.metric must not be empty")
+        operator = _string_value(self.operator, "threshold.operator").strip()
+        value = self.value
+        if isinstance(value, bool) or not isinstance(
+            value, (int, float, str, type(None))
+        ):
+            raise TypeError("threshold.value must be a number, string, or null")
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError("threshold.value must be finite")
+        sustain = _optional_number(self.sustain, "threshold.sustain")
+        if sustain is not None and sustain < 0:
+            raise ValueError("threshold.sustain must not be negative")
+        sustain_unit = (
+            _string_value(self.sustain_unit, "threshold.sustain_unit").strip().lower()
+        )
+        raw = _string_value(self.raw, "threshold.raw")
+        object.__setattr__(self, "metric", metric)
+        object.__setattr__(self, "operator", operator)
+        object.__setattr__(self, "sustain", sustain)
+        object.__setattr__(self, "sustain_unit", sustain_unit)
+        object.__setattr__(self, "raw", raw)
+
     @classmethod
-    def from_value(cls, value: "Threshold | str | Mapping[str, Any]") -> "Threshold":
+    def from_value(cls, value: ThresholdInput) -> Threshold:
         if isinstance(value, cls):
             return value
         if isinstance(value, Mapping):
-            return cls(
-                str(value.get("metric", "")).strip().lower(),
-                str(value.get("operator", "")).strip(),
-                value.get("value"),
-                None if value.get("sustain") is None else float(value["sustain"]),
-                str(value.get("sustain_unit", "")).strip().lower(),
-                str(value.get("raw", "")),
+            data = _as_string_mapping(value, "threshold")
+            _reject_unknown_fields(
+                data,
+                "threshold",
+                frozenset(
+                    {"metric", "operator", "value", "sustain", "sustain_unit", "raw"}
+                ),
             )
-        raw = str(value).strip()
+            threshold_value = data.get("value")
+            if isinstance(threshold_value, bool) or not isinstance(
+                threshold_value, (int, float, str, type(None))
+            ):
+                raise TypeError("threshold.value must be a number, string, or null")
+            if isinstance(threshold_value, float) and not math.isfinite(
+                threshold_value
+            ):
+                raise ValueError("threshold.value must be finite")
+            return cls(
+                _string_value(data.get("metric", ""), "threshold.metric")
+                .strip()
+                .lower(),
+                _string_value(data.get("operator", ""), "threshold.operator").strip(),
+                threshold_value,
+                _optional_number(data.get("sustain"), "threshold.sustain"),
+                _string_value(data.get("sustain_unit", ""), "threshold.sustain_unit")
+                .strip()
+                .lower(),
+                _string_value(data.get("raw", ""), "threshold.raw"),
+            )
+        if not isinstance(value, str):
+            raise TypeError("threshold must be a string or mapping")
+        raw = value.strip()
         return cls(metric=raw.lower(), operator="", value=None, raw=raw)
 
-    def canonical(self) -> tuple[Any, ...]:
+    def canonical(
+        self,
+    ) -> tuple[str, str, ThresholdValue, float | None, str]:
         return (
             self.metric.strip().lower(),
             self.operator.strip(),
@@ -101,8 +254,16 @@ class Threshold:
         )
 
 
+ObservationInput: TypeAlias = ObservationProcess | str | Mapping[str, object]
+WindowInput: TypeAlias = Window | str | Mapping[str, object]
+ThresholdInput: TypeAlias = Threshold | str | Mapping[str, object]
+ThresholdsInput: TypeAlias = tuple[ThresholdInput, ...] | list[ThresholdInput] | str
+
+
 @dataclass(frozen=True)
 class Attestation:
+    """Provenance metadata that cannot override fieldwise commensurability."""
+
     attestor: str
     justification: str
     left_definition_id: str
@@ -125,64 +286,152 @@ class Attestation:
             raise ValueError("attestation definitions do not match comparison")
 
 
-def _coerce_thresholds(
-    value: str | list[Any] | tuple[Any, ...],
-) -> tuple[Threshold, ...]:
+def _coerce_thresholds(value: ThresholdsInput) -> tuple[Threshold, ...]:
     if isinstance(value, str):
         return () if not value.strip() else (Threshold.from_value(value),)
+    if not isinstance(value, (list, tuple)):
+        raise TypeError("thresholds must be a string, list, or tuple")
     return tuple(Threshold.from_value(item) for item in value)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class OutcomeDefinition:
-    """Declares the event a probability describes (spec 5.6.1)."""
+    """A normalized declaration of the event a probability describes."""
 
     id: str
     event: str
-    observation_process: ObservationProcess | str | Mapping[str, Any]
-    window: Window | str | Mapping[str, Any]
-    thresholds: tuple[Threshold, ...] | list[Any] | str = ()
-    description: str = ""
+    observation_process: ObservationProcess
+    window: Window
+    thresholds: tuple[Threshold, ...]
+    description: str
 
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "event", self.event.strip().lower())
+    def __init__(
+        self,
+        id: str,
+        event: str,
+        observation_process: ObservationInput,
+        window: WindowInput,
+        thresholds: ThresholdsInput = (),
+        description: str = "",
+    ) -> None:
+        identifier = _string_value(id, "id")
+        if not identifier.strip():
+            raise ValueError("outcome definition id must not be empty")
+        normalized_event = _string_value(event, "event").strip().lower()
+        if not normalized_event:
+            raise ValueError("event must not be empty")
+        object.__setattr__(self, "id", identifier)
+        object.__setattr__(self, "event", normalized_event)
         object.__setattr__(
             self,
             "observation_process",
-            ObservationProcess.from_value(self.observation_process),
+            ObservationProcess.from_value(observation_process),
         )
-        object.__setattr__(self, "window", Window.from_value(self.window))
-        object.__setattr__(self, "thresholds", _coerce_thresholds(self.thresholds))
+        object.__setattr__(self, "window", Window.from_value(window))
+        object.__setattr__(self, "thresholds", _coerce_thresholds(thresholds))
+        object.__setattr__(
+            self, "description", _string_value(description, "description")
+        )
 
-    def comparison_key(self) -> tuple[Any, ...]:
+    def comparison_key(self) -> tuple[object, ...]:
+        canonical_thresholds = tuple(
+            sorted(
+                (threshold.canonical() for threshold in self.thresholds),
+                key=repr,
+            )
+        )
         return (
             self.event,
             self.observation_process.canonical(),
             self.window.canonical(),
-            tuple(sorted(threshold.canonical() for threshold in self.thresholds)),
+            canonical_thresholds,
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "event": self.event,
-            "observation_process": asdict(self.observation_process),
-            "window": asdict(self.window),
-            "thresholds": [asdict(threshold) for threshold in self.thresholds],
+            "observation_process": {
+                "kind": self.observation_process.kind,
+                "parameters": self.observation_process.parameters,
+                "raw": self.observation_process.raw,
+            },
+            "window": {
+                "duration": self.window.duration,
+                "unit": self.window.unit,
+                "anchor": self.window.anchor,
+                "raw": self.window.raw,
+            },
+            "thresholds": [
+                {
+                    "metric": threshold.metric,
+                    "operator": threshold.operator,
+                    "value": threshold.value,
+                    "sustain": threshold.sustain,
+                    "sustain_unit": threshold.sustain_unit,
+                    "raw": threshold.raw,
+                }
+                for threshold in self.thresholds
+            ],
             "description": self.description,
         }
 
 
-@dataclass
-class CommensurabilityResult:
-    commensurable: bool
+@dataclass(frozen=True)
+class DirectCommensurability:
     left_id: str
     right_id: str
-    differing_fields: list[str] = field(default_factory=list)
-    reason: str = ""
-    level: str = "irreducible"
-    pooling_allowed: bool = False
+    differing_fields: list[DefinitionField]
+    reason: str
+    commensurable: Literal[True] = field(default=True, init=False)
+    level: Literal["direct"] = field(default="direct", init=False)
+    pooling_allowed: Literal[True] = field(default=True, init=False)
+    attestation: Attestation | None = field(default=None, init=False)
+
+
+@dataclass(frozen=True)
+class BridgeableCommensurability:
+    left_id: str
+    right_id: str
+    differing_fields: list[DefinitionField]
+    reason: str
     attestation: Attestation | None = None
+    commensurable: Literal[False] = field(default=False, init=False)
+    level: Literal["bridgeable"] = field(default="bridgeable", init=False)
+    pooling_allowed: Literal[False] = field(default=False, init=False)
+
+
+@dataclass(frozen=True)
+class BridgeableWithObservations:
+    left_id: str
+    right_id: str
+    differing_fields: list[DefinitionField]
+    reason: str
+    attestation: Attestation | None = None
+    commensurable: Literal[False] = field(default=False, init=False)
+    level: Literal["bridgeable"] = field(default="bridgeable", init=False)
+    pooling_allowed: Literal[False] = field(default=False, init=False)
+
+
+@dataclass(frozen=True)
+class IrreducibleCommensurability:
+    left_id: str
+    right_id: str
+    differing_fields: list[DefinitionField]
+    reason: str
+    attestation: Attestation | None = None
+    commensurable: Literal[False] = field(default=False, init=False)
+    level: Literal["irreducible"] = field(default="irreducible", init=False)
+    pooling_allowed: Literal[False] = field(default=False, init=False)
+
+
+CommensurabilityResult: TypeAlias = (
+    DirectCommensurability
+    | BridgeableCommensurability
+    | BridgeableWithObservations
+    | IrreducibleCommensurability
+)
+PoolableCommensurabilityResult: TypeAlias = DirectCommensurability
 
 
 def check_commensurable(
@@ -192,51 +441,43 @@ def check_commensurable(
     attestation: Attestation | None = None,
     retained_observations: bool = False,
 ) -> CommensurabilityResult:
-    """Compare definitions and classify the mismatch instead of flattening it."""
+    """Compare definitions; attestations do not override field differences."""
 
-    fields = ("event", "observation_process", "window", "thresholds")
+    fields: tuple[DefinitionField, ...] = (
+        "event",
+        "observation_process",
+        "window",
+        "thresholds",
+    )
     left = a.comparison_key()
     right = b.comparison_key()
-    differing = [name for name, x, y in zip(fields, left, right) if x != y]
+    differing: list[DefinitionField] = [
+        name
+        for name, left_value, right_value in zip(fields, left, right)
+        if left_value != right_value
+    ]
     if not differing:
-        return CommensurabilityResult(
-            True, a.id, b.id, [], "same structured definition", "direct", True
-        )
+        return DirectCommensurability(a.id, b.id, [], "same structured definition")
 
     if attestation is not None:
         attestation.validate(a.id, b.id)
-        if set(differing).issubset({"window", "thresholds"}):
-            return CommensurabilityResult(
-                True,
-                a.id,
-                b.id,
-                differing,
-                "attested equivalent definitions",
-                "attested",
-                True,
-                attestation,
-            )
 
     if set(differing).issubset({"window", "thresholds"}):
-        return CommensurabilityResult(
-            False,
-            a.id,
-            b.id,
-            differing,
-            "window/threshold mismatch may be re-derived from retained observations",
-            "bridgeable",
-            bool(retained_observations),
-            attestation,
+        bridge_reason = (
+            "window/threshold mismatch may be re-derived from retained observations"
         )
+        bridge_type = (
+            BridgeableWithObservations
+            if retained_observations
+            else BridgeableCommensurability
+        )
+        return bridge_type(a.id, b.id, differing, bridge_reason, attestation)
 
-    return CommensurabilityResult(
-        False,
+    return IrreducibleCommensurability(
         a.id,
         b.id,
         differing,
         "event or observation process mismatch is irreducible; calibration does not lift this",
-        "irreducible",
-        False,
         attestation,
     )
 
@@ -247,7 +488,7 @@ def require_commensurable(
     *,
     attestation: Attestation | None = None,
     retained_observations: bool = False,
-) -> CommensurabilityResult:
+) -> PoolableCommensurabilityResult:
     """Require the same pooling policy exposed by ``check_commensurable``."""
     result = check_commensurable(
         a,
