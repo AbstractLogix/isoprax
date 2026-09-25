@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from mypy import api
@@ -14,6 +15,10 @@ def _check(*paths: Path) -> tuple[str, str, int]:
         [
             "--config-file",
             str(CONFIG),
+            # Runtime-matrix fixtures follow that interpreter's typing target;
+            # the configured Python 3.10 project check runs separately in CI.
+            "--python-version",
+            f"{sys.version_info.major}.{sys.version_info.minor}",
             *(str(path) for path in paths),
         ]
     )
