@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "operation": "calibration",
+  "definition_id": "left",
+  "scores": [
+    0.0,
+    0.1,
+    0.2,
+    0.3
+  ],
+  "outcomes": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "min_events": 4,
+  "n_bins": 2,
+  "max_ece": 0.05
+}

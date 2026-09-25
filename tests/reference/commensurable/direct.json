@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "operation": "commensurability",
+  "left": {
+    "id": "left",
+    "event": "defect_detected",
+    "observation_process": {
+      "kind": "build outcome",
+      "parameters": {
+        "source": "test"
+      }
+    },
+    "window": {
+      "duration": 7,
+      "unit": "day",
+      "anchor": "after_change"
+    },
+    "thresholds": [],
+    "description": ""
+  },
+  "right": {
+    "id": "right",
+    "event": "defect_detected",
+    "observation_process": {
+      "kind": "build outcome",
+      "parameters": {
+        "source": "test"
+      }
+    },
+    "window": {
+      "duration": 7,
+      "unit": "day",
+      "anchor": "after_change"
+    },
+    "thresholds": [],
+    "description": ""
+  }
+}

@@ -1,0 +1,67 @@
+cabal-version:      3.0
+name:               isoprax-kernel
+version:            0.1.0.0
+synopsis:           Typed reference semantics for Isoprax
+license:            Apache-2.0
+build-type:         Simple
+tested-with:        GHC ==9.14.1
+extra-source-files: test/CompileFail/*.hs
+
+common warnings
+  default-language: GHC2024
+  ghc-options:
+      -Wall
+      -Wcompat
+      -Wincomplete-uni-patterns
+      -Wincomplete-record-updates
+      -Wpartial-fields
+
+library
+  import: warnings
+  hs-source-dirs: src
+  exposed-modules:
+      Isoprax.Kernel
+      Isoprax.Kernel.Protocol
+  other-modules:
+      Isoprax.Kernel.Admission
+      Isoprax.Kernel.Calibration
+      Isoprax.Kernel.Commensurability
+      Isoprax.Kernel.Conformance
+      Isoprax.Kernel.Decode
+      Isoprax.Kernel.Identity
+      Isoprax.Kernel.Types
+  build-depends:
+      base >=4.22 && <4.23
+    , aeson ==2.2.5.1
+    , attoparsec
+    , attoparsec-aeson ==2.2.2.0
+    , bytestring
+    , containers
+    , cryptohash-sha256 ==0.11.102.1
+    , scientific
+    , text
+    , time
+
+executable isoprax-kernel
+  import: warnings
+  hs-source-dirs: app
+  main-is: Main.hs
+  build-depends:
+      base >=4.22 && <4.23
+    , aeson ==2.2.5.1
+    , bytestring
+    , isoprax-kernel
+
+test-suite properties
+  import: warnings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+  build-depends:
+      base >=4.22 && <4.23
+    , aeson ==2.2.5.1
+    , bytestring
+    , containers
+    , isoprax-kernel
+    , QuickCheck ==2.18.0.0
+    , text

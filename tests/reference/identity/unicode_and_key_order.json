@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "operation": "identity",
+  "value": {
+    "𝄞": "astral",
+    "é": "accent",
+    "a": "plain",
+    "quote": "\"\\n"
+  }
+}
