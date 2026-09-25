@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "operation": "commensurability",
+  "left": {
+    "id": "left",
+    "event": "defect_detected",
+    "observation_process": {
+      "kind": "build outcome",
+      "parameters": {
+        "source": "test"
+      }
+    },
+    "window": {
+      "duration": 7,
+      "unit": "day",
+      "anchor": "after_change"
+    },
+    "thresholds": [],
+    "description": ""
+  },
+  "right": {
+    "id": "right",
+    "event": "defect_detected",
+    "observation_process": {
+      "kind": "build outcome",
+      "parameters": {
+        "source": "test"
+      }
+    },
+    "window": {
+      "duration": 90,
+      "unit": "day",
+      "anchor": "after_change"
+    },
+    "thresholds": [],
+    "description": ""
+  },
+  "bridge": {
+    "left_definition_id": "left",
+    "right_definition_id": "other",
+    "transformation_id": "relabel-v1",
+    "retained_observation_manifest": "sha256:observations",
+    "provenance_reference": "bridge-records/42"
+  }
+}

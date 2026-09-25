@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "operation": "commensurability",
+  "left": {
+    "id": "left",
+    "event": "defect_detected",
+    "observation_process": {
+      "kind": "build outcome",
+      "parameters": {
+        "source": "test"
+      }
+    },
+    "window": {
+      "duration": 7,
+      "unit": "day",
+      "anchor": "after_change"
+    },
+    "thresholds": [
+      {
+        "metric": "severity",
+        "operator": ">=",
+        "value": 2
+      }
+    ],
+    "description": ""
+  },
+  "right": {
+    "id": "right",
+    "event": "defect_detected",
+    "observation_process": {
+      "kind": "build outcome",
+      "parameters": {
+        "source": "test"
+      }
+    },
+    "window": {
+      "duration": 7,
+      "unit": "day",
+      "anchor": "after_change"
+    },
+    "thresholds": [
+      {
+        "metric": "severity",
+        "operator": ">=",
+        "value": 3
+      }
+    ],
+    "description": ""
+  },
+  "attestation": {
+    "attestor": "reviewer",
+    "justification": "reviewed mismatch",
+    "left_definition_id": "left",
+    "right_definition_id": "unrelated",
+    "provenance": "attestations/43"
+  }
+}

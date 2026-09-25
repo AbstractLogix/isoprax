@@ -9,6 +9,7 @@ repos:
         args: [--maxkb=1024]
       - id: check-ast
       - id: check-json
+        exclude: ^tests/reference/malformed/duplicate_key\.json$
       - id: check-merge-conflict
       - id: check-toml
       - id: check-yaml

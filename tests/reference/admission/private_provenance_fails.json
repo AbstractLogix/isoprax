@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "operation": "admission",
+  "provenance": {
+    "source_system": "private-system",
+    "uses_private_production_data": true,
+    "uses_privileged_telemetry": false
+  }
+}

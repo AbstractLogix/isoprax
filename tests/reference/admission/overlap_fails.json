@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "operation": "admission",
+  "rows": [
+    {
+      "row_id": "same",
+      "split": "calibration_fit"
+    }
+  ],
+  "fitted_row_ids": [
+    "same"
+  ],
+  "gated_row_ids": [
+    "same"
+  ],
+  "provenance": {
+    "source_system": "public-fixture",
+    "uses_private_production_data": false,
+    "uses_privileged_telemetry": false
+  },
+  "predeclaration": {
+    "artifact_hash": "sha256:abcd",
+    "external_anchor_reference": "doi:fixture",
+    "predeclared_at": "2024-01-01T00:00:00Z",
+    "corpus_collection_started_at": "2024-02-01T00:00:00Z"
+  }
+}
