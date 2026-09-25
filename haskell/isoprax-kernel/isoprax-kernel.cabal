@@ -2,7 +2,7 @@ cabal-version:      3.0
 name:               isoprax-kernel
 version:            0.1.0.0
 synopsis:           Typed reference semantics for Isoprax
-license:            BSD-3-Clause
+license:            Apache-2.0
 build-type:         Simple
 tested-with:        GHC ==9.14.1
 extra-source-files: test/CompileFail/*.hs

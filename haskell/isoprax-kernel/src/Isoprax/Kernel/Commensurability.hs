@@ -92,6 +92,7 @@ parseThreshold value = do
     >>= nonEmptyText InvalidOutcomeDefinition "metric"
   operator <- requiredText InvalidOutcomeDefinition "operator" object
     >>= nonEmptyText InvalidOutcomeDefinition "operator"
+    >>= pure . Text.strip
   scalar <- case field "value" object of
     Nothing -> Right Nothing
     Just Null -> Right Nothing
