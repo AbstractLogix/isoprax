@@ -294,9 +294,9 @@ class ReplayPilotProfile:
         ):
             raise ValueError("outcome definitions are required")
         result = self.commensurability()
-        if result.level not in {"direct", "attested"}:
+        if result.level != "direct":
             raise ValueError(
-                "pilot requires direct or attested shared outcome semantics: "
+                "pilot requires directly commensurable shared outcome semantics: "
                 f"{result.reason}"
             )
 

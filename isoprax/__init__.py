@@ -222,6 +222,16 @@ from .replay_constraints import (
     validate_replay_constraints,
     validate_replay_constraints_dict,
 )
+from .semantic_types import (
+    CalibrationEvidence as SemanticCalibrationEvidence,
+)
+from .semantic_types import (
+    CommensurabilityEvidence,
+    PooledComparisonAuthorization,
+    authorize_pooled_comparison,
+    establish_calibration,
+    establish_commensurability,
+)
 from .signals import (
     AnomalySignal,
     CalibrationStatus,

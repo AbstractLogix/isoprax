@@ -1,0 +1,4 @@
+from isoprax.semantic_types import authorize_pooled_comparison
+from tests.typecheck.shared import left_relation, other_calibration, right_calibration
+
+authorize_pooled_comparison(left_relation, other_calibration, right_calibration)

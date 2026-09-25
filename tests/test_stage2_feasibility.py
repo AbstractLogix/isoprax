@@ -292,7 +292,7 @@ def test_profile_rejects_non_string_metadata_and_terminal_labels_need_shared_lin
         )
 
 
-def test_attested_equivalence_is_preserved():
+def test_attestation_does_not_make_mismatched_shared_labels_valid():
     left = definition("left")
     right = OutcomeDefinition(
         "right",
@@ -304,8 +304,8 @@ def test_attested_equivalence_is_preserved():
     attestation = Attestation(
         "reviewer", "same event after retained replay", "left", "right", "evidence://1"
     )
-    pilot = profile(change=left, operational=right, attestation=attestation)
-    assert pilot.commensurability().level == "attested"
+    with pytest.raises(ValueError, match="directly commensurable shared outcome"):
+        profile(change=left, operational=right, attestation=attestation)
 
 
 def test_bridgeable_definition_is_not_accepted_for_shared_label_pilot():

@@ -38,6 +38,7 @@ dev = [
   "diff-cover>=9,<10",
   "hypothesis>=6,<7",
   "mutmut>=3,<4",
+  "mypy>=2.3,<3",
   "pip-audit>=2,<3",
   "pre-commit>=4,<5",
   "pytest>=9,<10",
@@ -62,6 +63,23 @@ mutate_only_covered_lines = true
 
 [tool.ruff]
 target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = [
+  "isoprax/commensurability.py",
+  "isoprax/semantic_types.py",
+  "isoprax/evaluation.py",
+  "isoprax/admission.py",
+]
+follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+# These runtime dependencies do not ship PEP 561 typing metadata; keep the
+# exception local to evaluation.py and continue checking its own annotations.
+module = ["isoprax.evaluation"]
+disable_error_code = ["import-untyped"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I"]
