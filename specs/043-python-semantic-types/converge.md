@@ -53,4 +53,5 @@ Local verification for this slice:
 - Strict mypy, focused Ruff lint/format, `uv lock --check`, YAML parsing, fixture projections, and `git diff --check` passed.
 - The synthetic cross-family demo passed and continued to withhold pooling for non-commensurable definitions.
 - The repository suite passed 587 tests with 4 skipped; pytest exited at the aggregate 95% coverage gate with 94.06%. The local environment lacks CI's `gpu` extra, leaving `isoprax/eb_jepa.py` at 30%; the changed `isoprax/semantic_types.py` reached 100% coverage.
-- GHC and Cabal are unavailable in the local environment. Haskell compilation, QuickCheck, compile-fail checks, and cross-runtime differential execution must be confirmed by the hosted PR workflow before merging.
+- The shell environment exposes GHC 9.10.3, but this oracle is pinned to GHC 9.14.1/base 4.22; local Cabal cannot resolve that package set. The hosted runner supplies the pinned toolchain.
+- Hosted validation on implementation commit `ff0b279` passed: the Python matrix (3.10, 3.12, 3.14), all notebook jobs, Haskell build, six QuickCheck properties at 2,000 cases each, three compile-fail API checks, and all five Python/Haskell fixtures. The fixture-only pytest command disables coverage collection; repository-wide coverage remains enforced by the CI matrix.

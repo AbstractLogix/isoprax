@@ -107,7 +107,7 @@
 **Purpose**: Keep an independent, CI-only check for the typed evidence proof boundary without adding a runtime dependency.
 
 - [X] T037 [US2] Add shared fixtures for direct commensurability, changed semantics under a reused ID, calibration policy mismatch, sample substitution, and valid pooled authorization in `tests/reference/semantic-oracle/`.
-- [ ] T038 [US2] Implement the compact Haskell semantic model, opaque evidence values, normalized definition and sample identities, calibration policy, and authorization in `haskell/semantic-oracle/` (awaiting hosted compile and property checks).
-- [ ] T039 [US3] Add QuickCheck invariants, compile-fail evidence API examples, and a Python/Haskell differential fixture runner in `haskell/semantic-oracle/test/` and `tests/test_haskell_semantic_oracle.py` (awaiting hosted execution).
-- [ ] T040 [US3] Add a hosted workflow that always reports success but runs GHC, Cabal, QuickCheck, compile-fail, and differential checks only for semantic contract changes in `.github/workflows/semantic-oracle.yml` (awaiting hosted workflow result).
+- [X] T038 [US2] Implement the compact Haskell semantic model, opaque evidence values, normalized definition and sample identities, calibration policy, and authorization in `haskell/semantic-oracle/`.
+- [X] T039 [US3] Add QuickCheck invariants, compile-fail evidence API examples, and a Python/Haskell differential fixture runner in `haskell/semantic-oracle/test/` and `tests/test_haskell_semantic_oracle.py`.
+- [X] T040 [US3] Add a hosted workflow that always reports success but runs GHC, Cabal, QuickCheck, compile-fail, and differential checks only for semantic contract changes in `.github/workflows/semantic-oracle.yml`.
 - [X] T041 [US3] Update the ownership boundary, oracle rationale, quickstart, and convergence record in `docs/python-semantic-types.md` and `specs/043-python-semantic-types/`.
