@@ -15,7 +15,7 @@ main = do
     Left message -> failWith message
     Right fixture -> case runFixture fixture of
       Left message -> failWith (Text.unpack message)
-      Right output -> LazyByteString.putStrLn (encode output)
+      Right output -> LazyByteString.putStr (encode output <> "\n")
   where
     failWith message = do
       putStrLn message

@@ -9,7 +9,6 @@ import Data.Text qualified as Text
 import Isoprax.Oracle
 import System.Exit (exitFailure)
 import Test.QuickCheck
-import Test.QuickCheck.Test (isSuccess)
 
 main :: IO ()
 main = do
@@ -20,8 +19,8 @@ main = do
   run "pooled evaluation rejects substituted samples" propSampleSubstitutionFails
   run "authorized pooling uses the evidence-bound policy" propAuthorizedPoolingSucceeds
   where
-    run label propertyValue = do
-      putStrLn label
+    run propertyName propertyValue = do
+      putStrLn propertyName
       result <- quickCheckWithResult (stdArgs {maxSuccess = 2000}) propertyValue
       unless (isSuccess result) exitFailure
 
