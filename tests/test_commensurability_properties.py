@@ -29,6 +29,21 @@ def test_observation_normalization_is_stable(kind: str, key: str, value: str) ->
 
 @settings(max_examples=1000, deadline=None)
 @given(
+    parameters=st.dictionaries(st.text(max_size=12), st.text(max_size=12), max_size=8)
+)
+def test_direct_observation_parameters_match_mapping_normalization(
+    parameters: dict[str, str],
+) -> None:
+    direct = ObservationProcess("telemetry", tuple(parameters.items()))
+    mapped = ObservationProcess.from_value(
+        {"kind": "telemetry", "parameters": parameters}
+    )
+
+    assert direct.canonical() == mapped.canonical()
+
+
+@settings(max_examples=1000, deadline=None)
+@given(
     left=st.one_of(st.integers(), st.text(max_size=20)),
     right=st.one_of(st.integers(), st.text(max_size=20)),
 )

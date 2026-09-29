@@ -226,6 +226,7 @@ from .semantic_types import (
     CalibrationEvidence as SemanticCalibrationEvidence,
 )
 from .semantic_types import (
+    CalibrationPolicy,
     CommensurabilityEvidence,
     PooledComparisonAuthorization,
     authorize_pooled_comparison,

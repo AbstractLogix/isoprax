@@ -1,0 +1,48 @@
+cabal-version:      3.0
+name:               isoprax-semantic-oracle
+version:            0.1.0.0
+synopsis:           CI-only Isoprax semantic proof oracle
+license:            Apache-2.0
+build-type:         Simple
+tested-with:        GHC ==9.14.1
+
+common warnings
+  default-language: GHC2024
+  ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates
+
+library
+  import: warnings
+  hs-source-dirs: src
+  exposed-modules: Isoprax.Oracle
+  build-depends:
+      base >=4.22 && <4.23
+    , aeson ==2.2.5.1
+    , bytestring
+    , containers
+    , cryptohash-sha256 ==0.11.102.1
+    , scientific
+    , text
+    , vector
+
+executable semantic-oracle
+  import: warnings
+  hs-source-dirs: app
+  main-is: Main.hs
+  build-depends:
+      base >=4.22 && <4.23
+    , aeson ==2.2.5.1
+    , bytestring
+    , isoprax-semantic-oracle
+    , text
+
+test-suite properties
+  import: warnings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+  build-depends:
+      base >=4.22 && <4.23
+    , aeson ==2.2.5.1
+    , isoprax-semantic-oracle
+    , QuickCheck ==2.18.0.0
+    , text

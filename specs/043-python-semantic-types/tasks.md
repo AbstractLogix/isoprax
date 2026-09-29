@@ -88,3 +88,26 @@
 3. Add the typed evidence path with compile-time examples and runtime ID checks.
 4. Integrate the checker into CI and retire Haskell's maintained source surface while retaining its research record.
 5. Run focused and repository checks, measure checker duration, and converge the spec.
+
+## Phase 8: Typed Evidence Integrity Review Follow-Up
+
+**Purpose**: Complete the accepted runtime proof binding requirements and preserve report diagnostic behavior.
+
+- [X] T029 [US1] Add direct `ObservationProcess` constructor tests for malformed pairs, duplicate keys, sorting, and mapping-equivalent canonical values in `tests/test_commensurability.py`.
+- [X] T030 [US2] Add regressions proving reused definition IDs with changed semantic content cannot reuse calibration or commensurability evidence in `tests/test_semantic_types.py`.
+- [X] T031 [US2] Add regressions for unequal calibration policies and policy-bound pooled binning in `tests/test_semantic_types.py`.
+- [X] T032 [US1] Validate and sort `ObservationProcess.parameters` and reject duplicates in `isoprax/commensurability.py`.
+- [X] T033 [US2] Add normalized definition-content digests and `CalibrationPolicy` to calibration evidence, commensurability evidence, and pooled authorization in `isoprax/semantic_types.py`; make authorized pooled ECE use the bound policy in `isoprax/evaluation.py`.
+- [X] T034 [US2] Document `cross_family_report.pooled_ece` as a diagnostic, remove its unreachable retained-observation pooling branch, and update the typed-evidence usage docs in `isoprax/evaluation.py` and `docs/python-semantic-types.md`.
+- [X] T035 [US2] Export the public calibration policy and update the positive type example for the policy-bound API in `isoprax/__init__.py` and `tests/typecheck/valid.py`.
+- [X] T036 [US3] Run focused tests and strict mypy, record exact results and remaining risk in `specs/043-python-semantic-types/converge.md`, and complete the feature convergence review.
+
+## Phase 9: Independent Semantic Oracle
+
+**Purpose**: Keep an independent, CI-only check for the typed evidence proof boundary without adding a runtime dependency.
+
+- [X] T037 [US2] Add shared fixtures for direct commensurability, changed semantics under a reused ID, calibration policy mismatch, sample substitution, and valid pooled authorization in `tests/reference/semantic-oracle/`.
+- [X] T038 [US2] Implement the compact Haskell semantic model, opaque evidence values, normalized definition and sample identities, calibration policy, and authorization in `haskell/semantic-oracle/`.
+- [X] T039 [US3] Add QuickCheck invariants, compile-fail evidence API examples, and a Python/Haskell differential fixture runner in `haskell/semantic-oracle/test/` and `tests/test_haskell_semantic_oracle.py`.
+- [X] T040 [US3] Add a hosted workflow that always reports success but runs GHC, Cabal, QuickCheck, compile-fail, and differential checks only for semantic contract changes in `.github/workflows/semantic-oracle.yml`.
+- [X] T041 [US3] Update the ownership boundary, oracle rationale, quickstart, and convergence record in `docs/python-semantic-types.md` and `specs/043-python-semantic-types/`.

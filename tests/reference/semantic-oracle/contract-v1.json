@@ -1,0 +1,66 @@
+[
+  {
+    "name": "normalized-equivalent-definitions-authorize-pooling",
+    "left": {
+      "id": "left-definition",
+      "event": " Pump Failure ",
+      "observation_process": {"kind": " TELEMETRY ", "parameters": {"sensor": "s-1", "source": "line-1"}, "raw": " Raw Process "},
+      "window": {"duration": 1.0, "unit": " HOUR ", "anchor": " EVENT ", "raw": "display only"},
+      "thresholds": [{"metric": " RISK ", "operator": " > ", "value": 0.7, "sustain": null, "sustain_unit": "", "raw": "display only"}],
+      "description": "left display text"
+    },
+    "right": {
+      "id": "right-definition",
+      "event": "pump failure",
+      "observation_process": {"kind": "telemetry", "parameters": {"source": "line-1", "sensor": "s-1"}, "raw": " raw process "},
+      "window": {"duration": 1.0, "unit": "hour", "anchor": "event", "raw": "different display"},
+      "thresholds": [{"metric": "risk", "operator": ">", "value": 0.7, "sustain": null, "sustain_unit": "", "raw": "different display"}],
+      "description": "right display text"
+    },
+    "left_calibration": {
+      "definition": {"id": "left-definition", "event": "pump failure", "observation_process": {"kind": "telemetry", "parameters": {"sensor": "s-1", "source": "line-1"}, "raw": "raw process"}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event", "raw": ""}, "thresholds": [{"metric": "risk", "operator": ">", "value": 0.7, "sustain": null, "sustain_unit": "", "raw": ""}]},
+      "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2},
+      "scores": [0.1, 0.9, 0.2, 0.8],
+      "outcomes": [0, 1, 0, 1]
+    },
+    "right_calibration": {
+      "definition": {"id": "right-definition", "event": "pump failure", "observation_process": {"kind": "telemetry", "parameters": {"source": "line-1", "sensor": "s-1"}, "raw": "raw process"}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event", "raw": ""}, "thresholds": [{"metric": "risk", "operator": ">", "value": 0.7, "sustain": null, "sustain_unit": "", "raw": ""}]},
+      "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2},
+      "scores": [0.15, 0.85, 0.25, 0.75],
+      "outcomes": [0, 1, 0, 1]
+    },
+    "pooled": {"left_scores": [0.1, 0.9, 0.2, 0.8], "left_outcomes": [0, 1, 0, 1], "right_scores": [0.15, 0.85, 0.25, 0.75], "right_outcomes": [0, 1, 0, 1]}
+  },
+  {
+    "name": "same-id-changed-semantics-cannot-reuse-calibration",
+    "left": {"id": "shared", "event": "old event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "right": {"id": "shared", "event": "old event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "left_calibration": {"definition": {"id": "shared", "event": "new event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.1, 0.9, 0.2, 0.8], "outcomes": [0, 1, 0, 1]},
+    "right_calibration": {"definition": {"id": "shared", "event": "old event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.15, 0.85, 0.25, 0.75], "outcomes": [0, 1, 0, 1]},
+    "pooled": {"left_scores": [0.1, 0.9, 0.2, 0.8], "left_outcomes": [0, 1, 0, 1], "right_scores": [0.15, 0.85, 0.25, 0.75], "right_outcomes": [0, 1, 0, 1]}
+  },
+  {
+    "name": "different-calibration-policies-cannot-authorize-pooling",
+    "left": {"id": "left", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "right": {"id": "right", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "left_calibration": {"definition": {"id": "left", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.1, 0.9, 0.2, 0.8], "outcomes": [0, 1, 0, 1]},
+    "right_calibration": {"definition": {"id": "right", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 3, "max_ece": 0.2}, "scores": [0.15, 0.85, 0.25, 0.75], "outcomes": [0, 1, 0, 1]},
+    "pooled": {"left_scores": [0.1, 0.9, 0.2, 0.8], "left_outcomes": [0, 1, 0, 1], "right_scores": [0.15, 0.85, 0.25, 0.75], "right_outcomes": [0, 1, 0, 1]}
+  },
+  {
+    "name": "pooled-evaluation-rejects-a-substituted-sample",
+    "left": {"id": "left", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "right": {"id": "right", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "left_calibration": {"definition": {"id": "left", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.1, 0.9, 0.2, 0.8], "outcomes": [0, 1, 0, 1]},
+    "right_calibration": {"definition": {"id": "right", "event": "same event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.15, 0.85, 0.25, 0.75], "outcomes": [0, 1, 0, 1]},
+    "pooled": {"left_scores": [0.11, 0.9, 0.2, 0.8], "left_outcomes": [0, 1, 0, 1], "right_scores": [0.15, 0.85, 0.25, 0.75], "right_outcomes": [0, 1, 0, 1]}
+  },
+  {
+    "name": "event-mismatch-withholds-authorization",
+    "left": {"id": "left", "event": "old event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "right": {"id": "right", "event": "new event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []},
+    "left_calibration": {"definition": {"id": "left", "event": "old event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.1, 0.9, 0.2, 0.8], "outcomes": [0, 1, 0, 1]},
+    "right_calibration": {"definition": {"id": "right", "event": "new event", "observation_process": {"kind": "telemetry", "parameters": {}, "raw": ""}, "window": {"duration": 1.0, "unit": "hour", "anchor": "event"}, "thresholds": []}, "policy": {"min_events": 4, "n_bins": 2, "max_ece": 0.2}, "scores": [0.15, 0.85, 0.25, 0.75], "outcomes": [0, 1, 0, 1]},
+    "pooled": {"left_scores": [0.1, 0.9, 0.2, 0.8], "left_outcomes": [0, 1, 0, 1], "right_scores": [0.15, 0.85, 0.25, 0.75], "right_outcomes": [0, 1, 0, 1]}
+  }
+]
