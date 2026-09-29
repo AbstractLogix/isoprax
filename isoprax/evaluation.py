@@ -119,6 +119,21 @@ def expected_calibration_error(
     )
 
 
+def _diagnostic_pooled_ece(
+    left_scores: Sequence[float],
+    left_outcomes: Sequence[int],
+    right_scores: Sequence[float],
+    right_outcomes: Sequence[int],
+    n_bins: int,
+) -> float:
+    """Low-level report diagnostic; caller must establish direct commensurability."""
+    return expected_calibration_error(
+        [*left_scores, *right_scores],
+        [*left_outcomes, *right_outcomes],
+        n_bins,
+    )
+
+
 def time_sliced_split(
     events: list[dict[str, object]], train_frac: float = 0.7
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
@@ -415,10 +430,11 @@ def cross_family_report(
     n_bins: int = CONFORMANCE_N_BINS,
     max_ece: float = CONFORMANCE_MAX_ECE,
 ) -> CrossFamilyReport:
-    """Build a conformant cross-family result.
+    """Build a Structural cross-family diagnostic report.
 
-    Refuses to pool scores across non-commensurable Outcome Definitions
-    (spec 5.6.3) and derives the declarable conformance class (spec 3.3).
+    ``pooled_ece`` is a same-call diagnostic for directly commensurable
+    definitions, even when calibration fails. It is not a typed pooling
+    authorization; non-commensurable definitions never receive this diagnostic.
     """
     res = check_commensurable(
         left_def,
@@ -446,17 +462,17 @@ def cross_family_report(
 
     pooled = None
     if res.pooling_allowed:
-        pooled = expected_calibration_error(
-            list(left_scores) + list(right_scores),
-            list(left_outcomes) + list(right_outcomes),
+        pooled = _diagnostic_pooled_ece(
+            left_scores,
+            left_outcomes,
+            right_scores,
+            right_outcomes,
             n_bins,
         )
 
     cls = "Cross-Family Conformance (Structural)"
     if res.commensurable:
         cls += ", commensurability established but Semantic/Full claims are outside Stage 0"
-    elif res.pooling_allowed:
-        cls += ", pooling permitted by retained-observation evidence"
     if not calibrated:
         cls += ", uncalibrated"
 
@@ -486,9 +502,8 @@ def authorized_pooled_ece(
     left_outcomes: Sequence[int],
     right_scores: Sequence[float],
     right_outcomes: Sequence[int],
-    n_bins: int = CONFORMANCE_N_BINS,
 ) -> float:
-    """Compute pooled ECE only after typed and runtime-bound authorization."""
+    """Compute pooled ECE using the policy bound by typed authorization."""
     if len(left_scores) != len(left_outcomes):
         raise ValueError("left scores and outcomes must have equal length")
     if len(right_scores) != len(right_outcomes):
@@ -504,5 +519,5 @@ def authorized_pooled_ece(
     return expected_calibration_error(
         [*left_scores, *right_scores],
         [*left_outcomes, *right_outcomes],
-        n_bins,
+        authorization.calibration_policy.n_bins,
     )

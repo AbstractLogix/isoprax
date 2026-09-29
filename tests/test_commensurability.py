@@ -263,6 +263,23 @@ def test_outcome_definition_stores_normalized_domain_values_and_round_trips():
     assert definition.to_dict() == OutcomeDefinition(**definition.to_dict()).to_dict()
 
 
+def test_direct_observation_parameters_validate_normalize_and_reject_duplicates():
+    direct = ObservationProcess(" TELEMETRY ", (("zone", "west"), ("source", "ci")))
+    mapped = ObservationProcess.from_value(
+        {"kind": "telemetry", "parameters": {"source": "ci", "zone": "west"}}
+    )
+
+    assert direct == mapped
+    assert direct.parameters == (("source", "ci"), ("zone", "west"))
+
+    with pytest.raises(TypeError, match="parameters.*strings"):
+        ObservationProcess("telemetry", (("source", 123),))  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="parameters.*pairs"):
+        ObservationProcess("telemetry", [("source", "ci")])  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="duplicate parameter key"):
+        ObservationProcess("telemetry", (("source", "ci"), ("source", "api")))
+
+
 def test_malformed_nested_semantic_input_fails_explicitly():
     with pytest.raises(TypeError, match="sample must be a mapping"):
         _as_string_mapping(42, "sample")

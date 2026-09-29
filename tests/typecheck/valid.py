@@ -1,6 +1,6 @@
 from isoprax.commensurability import ObservationProcess, Threshold, Window
 from isoprax.evaluation import authorized_pooled_ece
-from isoprax.semantic_types import authorize_pooled_comparison
+from isoprax.semantic_types import CalibrationPolicy, authorize_pooled_comparison
 from tests.typecheck.shared import (
     calibration_outcomes,
     calibration_scores,
@@ -19,6 +19,7 @@ authorization = authorize_pooled_comparison(
     left_calibration,
     right_calibration,
 )
+calibration_policy: CalibrationPolicy = authorization.calibration_policy
 pooled_ece: float = authorized_pooled_ece(
     authorization,
     calibration_scores,

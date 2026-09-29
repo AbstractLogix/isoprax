@@ -594,6 +594,7 @@ def test_cross_family_report_pools_when_commensurable():
     )
     assert rep.commensurable is True
     assert rep.pooled_ece is not None
+    assert ", uncalibrated" in rep.declarable_class
     assert "Structural" in rep.declarable_class
     assert "Semantic/Full" in rep.declarable_class
 

@@ -28,3 +28,29 @@ The maintained Haskell package, CI workflow, differential runner, fixture direct
 ## Remaining external gate
 
 The first hosted run exposed a mypy environment mismatch: Python 3.14 resolves NumPy 2.5.2 stubs containing Python 3.12 `type` syntax, while the semantic checker intentionally targets Python 3.10. Strict project mypy now runs on the Python 3.10 matrix row, where the lock resolves compatible NumPy 2.2.6 stubs. A later matrix run also showed the positive/negative fixture harness was inheriting that Python 3.10 target on Python 3.12 and 3.14. The harness now uses the matrix interpreter's target for those fixtures; the configured strict project check remains at Python 3.10. The refreshed hosted full matrix, including GPU-backed coverage, is pending. This record does not claim hosted validation or a merge.
+
+## Typed evidence integrity review follow-up (2026-09-29)
+
+The typed evidence path now binds definition IDs, normalized definition-content digests, exact calibration sample digests, and a shared `CalibrationPolicy` (`min_events`, `n_bins`, `max_ece`). Authorization rejects same-ID semantic changes and policy mismatches. Authorized pooled ECE takes its bin count from the token. Direct `ObservationProcess` construction validates tuple-pair shape and string values, sorts the pairs, and rejects duplicates. `cross_family_report.pooled_ece` remains a documented same-call diagnostic for directly commensurable inputs, including uncalibrated inputs; its calculation is isolated in a low-level helper, and the unreachable retained-observation report branch is removed.
+
+Verification obtained for this follow-up:
+
+- `uv run pytest -q --no-cov tests/test_commensurability.py tests/test_semantic_types.py tests/test_commensurability_properties.py tests/test_semantic_typecheck.py tests/test_conformance.py`: 110 passed.
+- `uv run mypy`: passed with zero diagnostics across the four declared semantic files.
+- Focused Ruff lint and format checks for the eight changed Python source/test modules and the positive type fixture: passed.
+- `git diff --check`: passed.
+- `uv run python examples/demo_cross_family.py`: passed; it continued to withhold pooled output for non-commensurable synthetic definitions and remained Structural.
+
+The full repository suite and hosted CI were not rerun for this focused follow-up. They remain external verification gates; this record makes no new full-suite or hosted-validation claim.
+
+## CI-only semantic oracle follow-up (2026-09-29)
+
+The earlier removal of the maintained Haskell package is superseded by this narrower decision: retain a small independent Haskell oracle only in CI, with no Python runtime dependency. The oracle covers normalized definition identity, calibration sample and policy binding, opaque evidence construction, pooled authorization, generated semantic invariants, compile-fail API checks, and differential evaluation of five shared contract fixtures. The workflow runs these checks when the semantic contract, its tests, fixtures, oracle, or workflow changes.
+
+Local verification for this slice:
+
+- The Python evidence, commensurability, type-boundary, and conformance tests passed: 122 tests.
+- Strict mypy, focused Ruff lint/format, `uv lock --check`, YAML parsing, fixture projections, and `git diff --check` passed.
+- The synthetic cross-family demo passed and continued to withhold pooling for non-commensurable definitions.
+- The repository suite passed 587 tests with 4 skipped; pytest exited at the aggregate 95% coverage gate with 94.06%. The local environment lacks CI's `gpu` extra, leaving `isoprax/eb_jepa.py` at 30%; the changed `isoprax/semantic_types.py` reached 100% coverage.
+- GHC and Cabal are unavailable in the local environment. Haskell compilation, QuickCheck, compile-fail checks, and cross-runtime differential execution must be confirmed by the hosted PR workflow before merging.

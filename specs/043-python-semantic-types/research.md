@@ -24,6 +24,26 @@
 
 **Compatibility boundary**: `cross_family_report` remains a high-level facade that computes its commensurability and calibration diagnostics from the same score/outcome vectors it reports. It labels failed calibration as uncalibrated. Direct typed pooled calls require explicit evidence and exact sample identity.
 
+## Decision: Bind evidence to normalized definition semantics and ID
+
+**Rationale**: Definition IDs are caller/persistence identities and can be reused outside `OutcomeDefinitionRegistry`. Evidence therefore records a canonical digest of `OutcomeDefinition.comparison_key()` as well as its ID. Calibration evidence and commensurability evidence must agree on both, and pooled authorization carries both definition digests. The comparison key excludes ID and descriptive text while including normalized event, observation process, window, and thresholds; this binds the semantics that commensurability actually compares.
+
+**Alternatives considered**: Requiring every caller to use `OutcomeDefinitionRegistry` would leave direct typed-evidence callers unprotected. Hashing the full serialized definition would include the ID and description redundantly and could reject definitions that differ only in non-semantic display text.
+
+## Decision: Bind pooled ECE to one calibration policy
+
+**Rationale**: `CalibrationPolicy` records and hashes `min_events`, `n_bins`, and `max_ece`. Each calibration evidence value carries the policy used to qualify it. Authorization requires the same policy on both sides and carries that policy; `authorized_pooled_ece` uses its `n_bins` and does not accept a caller-supplied replacement.
+
+**Alternatives considered**: Keeping an arbitrary `n_bins` argument makes the output metric differ from the metric used to qualify the calibration evidence. Requiring policy equality avoids a pooled claim with two incompatible qualification rules.
+
+## Decision: Keep report pooling explicitly diagnostic
+
+**Rationale**: The report preserves pooled ECE when definitions are directly commensurable even if calibration fails, which supports diagnosis and existing output behavior. This result is not a `PooledComparisonAuthorization`; documentation labels it diagnostic, it uses the same-call input vectors and calibration parameters, and it withholds ECE when definitions are not commensurable. Remove the stale secondary poolability branch because the current result types only permit pooling for direct commensurability.
+
+## Decision: Enforce direct observation parameter invariants
+
+**Rationale**: `ObservationProcess.__post_init__` is the shared invariant boundary for mapping and direct constructors. It validates tuple shape and string members, sorts pairs, and rejects duplicate keys, so a directly constructed value cannot bypass the normalization used by comparison.
+
 ## Decision: Fail closed on bridgeable but unre-derived outcomes
 
 **Rationale**: The previous `retained_observations=True` switch let a non-commensurable result set `pooling_allowed=True` without applying any transformation. The authoritative Isoprax v0.3 specification defines commensurability by matching event, observation process, window, and thresholds (§5.6.2) and forbids aggregation of non-commensurable scores (§5.6.3). Retained observations show that a bridge may be possible; they do not establish that both outcome sets have been re-derived under the same definition. Such results remain `bridgeable` and are non-poolable until a future bridge operation validates transformed outcomes against a shared definition.
@@ -48,8 +68,8 @@
 
 **Rationale**: Validating mapping inputs alone leaves a bypass when callers construct a `Threshold` directly; a non-finite value could then enter an `OutcomeDefinition` and be serialized. The threshold value now enforces its invariants at construction, so direct and mapping inputs share one checked representation.
 
-## Decision: Remove maintained Haskell code but retain the experiment record
+## Decision: Keep a small Haskell oracle in CI only
 
-**Rationale**: The user chose a Python-only maintained semantic implementation. The Haskell experiment already demonstrated compile-time evidence enforcement and independent checks; its assessment and convergence artifacts remain useful research history. The package, CI, benchmark and active how-to document would otherwise keep a second maintained implementation alive.
+**Rationale**: Python remains the only runtime implementation, while an independent Haskell oracle gives a separate implementation against which the semantic contract can be checked. The earlier experiment's opaque proof types, QuickCheck properties, compile-fail examples, and differential fixtures exposed real discrepancies. Retain only the small commensurability/calibration authorization seam, its shared fixtures, and generated properties; trigger the Haskell compiler job only for semantic source, contract, oracle, or fixture changes.
 
-**Alternatives considered**: Continuing the Haskell CI oracle would preserve an independent implementation but impose a second compiler/toolchain workflow after the user selected full Python ownership. Python property and type-contract tests will be the maintained verification path.
+**Alternatives considered**: Python-only CI is simpler, while a production Haskell runtime or subprocess would add operational coupling and latency without improving runtime behavior. The selected boundary keeps the independent verification value and avoids runtime coupling, corpus/admission behavior, benchmarks, and unrelated proof types. The semantic workflow runs a lightweight path check on every main PR and performs compiler work only when the relevant paths change, so its check remains successful when skipped.

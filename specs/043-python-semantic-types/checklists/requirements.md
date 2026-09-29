@@ -6,7 +6,7 @@
 
 ## Content Quality
 
-- [x] No implementation details beyond the requested Python typing scope
+- [x] Implementation details remain limited to the requested Python typing and CI-oracle scope
 - [x] Focused on safer semantic decisions and contributor feedback
 - [x] User scenarios describe maintainer outcomes
 - [x] All mandatory sections completed
@@ -19,7 +19,7 @@
 - [x] Success criteria describe verifiable outcomes
 - [x] Acceptance scenarios are defined for each user story
 - [x] Edge cases are identified
-- [x] Scope is bounded to the deterministic semantic core
+- [x] Scope is bounded to the deterministic semantic core and CI-only oracle
 - [x] Dependencies and assumptions are identified
 
 ## Feature Readiness
@@ -32,4 +32,4 @@
 ## Notes
 
 - Python is explicit because the user requested a Python-first, strongly typed implementation.
-- The user chose a Python-only maintained semantic implementation; the Haskell experiment report remains historical evidence.
+- Python owns runtime semantic decisions; the user chose to retain a compact, CI-only Haskell oracle as independent evidence.

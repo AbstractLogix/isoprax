@@ -4,9 +4,9 @@
 
 Keep the kernel as a small CI-checked semantic reference and typed Haskell library. Do not wire it into Python's latency-sensitive or research execution paths. The experiment demonstrates a meaningful correctness benefit through opaque evidence values, compile-time rejection of invalid API calls, property coverage, and independent cross-runtime checks. The measured subprocess cost makes a default per-call Python boundary inappropriate for fast loops.
 
-## Follow-up decision (2026-09-25)
+## Follow-up decision (2026-09-29)
 
-The decision above records the result at the end of the Haskell experiment. After choosing to strengthen Python's own semantic types, the project now removes the maintained Haskell package, workflow, benchmark, and active usage guide. Python is the sole maintained semantic implementation. The experiment's source-level findings, differential results, and benchmark remain here as historical evidence; this update supersedes the recommendation to keep a Haskell CI reference for the current project.
+The decision above records the result at the end of the broader Haskell experiment. Python remains the sole runtime implementation. The project retains a much smaller Haskell oracle in CI for direct commensurability, definition-content identity, calibration policy/sample binding, and pooled authorization. It uses opaque evidence types, generated properties, compile-fail examples, and shared Python/Haskell fixtures, and runs only when semantic contract paths change. No runtime subprocess, corpus/admission implementation, or benchmark is retained. The implementation and verification from the broader experiment remain historical evidence; the current compact oracle is specified under `specs/043-python-semantic-types/`.
 
 ## Evidence obtained
 

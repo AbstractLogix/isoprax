@@ -66,8 +66,27 @@ class ObservationProcess:
         kind = _string_value(self.kind, "observation_process.kind").strip().lower()
         if not kind:
             raise ValueError("observation_process.kind must not be empty")
+        if not isinstance(self.parameters, tuple):
+            raise TypeError("observation_process.parameters must be a tuple of pairs")
+        normalized_parameters: list[tuple[str, str]] = []
+        seen_keys: set[str] = set()
+        for pair in self.parameters:
+            if not isinstance(pair, tuple) or len(pair) != 2:
+                raise TypeError("observation_process.parameters entries must be pairs")
+            key, value = pair
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise TypeError(
+                    "observation_process.parameters keys and values must be strings"
+                )
+            if key in seen_keys:
+                raise ValueError(
+                    f"observation_process.parameters has duplicate parameter key {key!r}"
+                )
+            seen_keys.add(key)
+            normalized_parameters.append((key, value))
         raw = _string_value(self.raw, "observation_process.raw")
         object.__setattr__(self, "kind", kind)
+        object.__setattr__(self, "parameters", tuple(sorted(normalized_parameters)))
         object.__setattr__(self, "raw", raw)
 
     @classmethod
