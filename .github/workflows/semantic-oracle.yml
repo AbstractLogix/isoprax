@@ -99,4 +99,4 @@ jobs:
 
       - name: Compare Python and Haskell semantic fixtures
         if: steps.semantic-paths.outputs.semantic == 'true'
-        run: uv run pytest -q tests/test_haskell_semantic_oracle.py
+        run: uv run pytest -q --no-cov tests/test_haskell_semantic_oracle.py
