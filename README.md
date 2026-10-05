@@ -1,10 +1,25 @@
-# Isoprax Reference Implementation
+# IsoPrax Reference Implementation
 
 Licensed under [Apache-2.0](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md)
 and [AGENTS.md](AGENTS.md) before contributing.
 
+## Research mission
+
+IsoPrax is an open research and reference framework for measurement validity,
+calibration, outcome semantics, and valid operations on predictions and other
+evidence. Its central question is: **What does each result measure, and which
+operations on those results does the evidence support?**
+
+Calibration for each predictor does not prove that the predictors refer to the
+same event or support the same operation. IsoPrax studies these limits with
+explicit outcome definitions, reproducible evidence, and bounded claims. It
+does not choose beliefs, plans, or actions. See the
+[research map](docs/research/README.md) for the current scope and research path.
+
+## Current reference implementation
+
 This repository contains the runnable Stage 0 reference implementation of the
-authoritative Isoprax v0.3 POC, plus Stage 1 public-data evidence and a bounded
+authoritative IsoPrax v0.3 POC, plus Stage 1 public-data evidence and a bounded
 Stage 2 deterministic-replay feasibility reducer. It demonstrates shared
 event, signal, knowledge-base, feedback, calibration, and commensurability
 mechanics for the Change and Operational families.
@@ -39,7 +54,7 @@ withholds pooled scores and makes no Semantic or Full Conformance claim.
   `specs/001-cross-family-kernel/spec.md`
 - **Stage 1 admission extension spec (in this repo):**
   `specs/002-stage1-corpus-admission/spec.md`
-- **Authoritative Isoprax v0.3 POC reference:**
+- **Authoritative IsoPrax v0.3 POC reference:**
   Vendored at [`docs/isoprax-v0.3-poc.md`](docs/isoprax-v0.3-poc.md), with
   source provenance recorded in
   [`docs/isoprax-v0.3-poc-provenance.md`](docs/isoprax-v0.3-poc-provenance.md).
@@ -51,10 +66,8 @@ In this repository, the runnable POC-aligned implementation is the code under
 
 ## Why Stage 1 matters
 
-The repository's most defensible near-term contribution is its Stage 1
-admission-before-acquisition discipline. The implementation does not claim a
-new model or broader conformance class; it enforces the evidence-gate checks
-that make real corpus work credible:
+Stage 1 is one evidence-quality lane in the wider research program. It enforces
+admission-before-acquisition checks that make public corpus work inspectable:
 
 - lineage completeness from change → deployment → observation,
 - prediction-time leakage rejection,
@@ -62,8 +75,8 @@ that make real corpus work credible:
 - no private third-party production data or privileged telemetry requirements,
 - deterministic reporting that keeps admission as evidence infrastructure only.
 
-This remains materially more mature and immediately useful than unsupported profile
-efficacy claims, and it is the right evidence boundary for the project.
+These checks support measurement and reproducibility research. They do not make
+separate outcome definitions equivalent or establish model efficacy.
 
 ## What this proves
 
@@ -115,7 +128,11 @@ format verification, the coverage-enforced test suite, and the demo.
   Conformance claims; Stage 2 feasibility does not substitute for corpus and
   evaluation evidence.
 
-## Next steps
+## Existing evaluation roadmap
+
+The existing Stage 1 and Stage 2 work remains part of the research program.
+See the [research map](docs/research/README.md) for the broader questions and
+their evidence status.
 
 1. Repeat one frozen lane before selecting a scalar outcome threshold.
 2. Run a predeclared 30-50 revision pilot with repeated lanes and both outcome
@@ -124,7 +141,8 @@ format verification, the coverage-enforced test suite, and the demo.
 4. Build the 800-row-per-family predeclared corpus with 50 outcomes of each
    class.
 5. Run Stage 2 corpus evaluation with non-degenerate per-family scores.
-6. Add adapters for real VCS/CI and operational telemetry backends.
+6. Evaluate public VCS/CI and operational telemetry adapters when they support
+   a predeclared measurement question and retain source-specific outcomes.
 
 These gates remain evidence work: passing them does not by itself establish
 Semantic or Full Conformance.
