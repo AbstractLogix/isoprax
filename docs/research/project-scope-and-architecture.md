@@ -1,7 +1,7 @@
 # IsoPrax Scope and Architecture Audit
 
 **Review date**: 2026-10-05
-**Scope**: Current tracked files and the visible Feature 044 working-tree additions.
+**Scope**: Files tracked at base commit `38cfc27` on `main`.
 **Code movement**: None. This document gives recommendations only.
 
 ## Public mission
@@ -19,11 +19,11 @@ The research question is: **What does each output measure, and which operations 
 | Calibration and evaluation | `isoprax/evaluation.py` and `isoprax/per_family_evaluation.py` provide calibration and per-family evaluation measures. | Calibration is relative to the declared target. An aggregate measure does not establish target equivalence. |
 | Synthetic counterexample | `isoprax/evidence.py` and `examples/demo_cross_family.py` show that locally low ECE can coexist with a pooled ranking that changes family-local selection. | This is synthetic evidence. The seven-day and ninety-day windows must stay explicit; the fixture must not be read as proof about real systems. |
 | Admission and lineage | `isoprax/admission.py`, `isoprax/corpus_assembly.py`, `isoprax/predeclaration.py`, `isoprax/replay_capture.py`, and Stage 1/2 reducers check declared prerequisites such as linkage, time boundaries, provenance, and usable labels. | These gates support evidence quality and replay feasibility. They do not upgrade a result to Semantic conformance or efficacy by themselves. |
-| Public data | Dataset-specific verifiers and manifests cover AI4I, ApacheJIT, C-MAPSS, MetroPT-3, and the current Feature 044 GADFPD/RCAEval additions. | These are different source and outcome lanes. Their public availability does not make their labels commensurable. Feature 044 files are uncommitted in the inspected working tree; their checks were not rerun for this audit. |
+| Public data | Dataset-specific verifiers and manifests cover AI4I, ApacheJIT, C-MAPSS, and MetroPT-3. | These are different source and outcome lanes. Their public availability does not make their labels commensurable. |
 | Shared predictor | `isoprax/jepa.py`, `isoprax/eb_jepa.py`, and `isoprax/efficacy.py` provide a bounded shared-predictor reference and gated evaluation path. | One model identity does not prove one outcome meaning. Existing synthetic or device checks do not prove predictive efficacy. |
 | Provenance and reporting | `isoprax/normative.py`, `isoprax/evidence_reporting.py`, and the identity/anchor modules make citations and evidence scope inspectable. | Preserve the declared provenance boundary. Do not turn an unavailable or partial input into a pass. |
 
-The current branch has uncommitted Feature 044 work. This audit read its GADFPD and RCAEval code, manifests, and feature artifacts. It did not rerun its tests or public-data verifiers. The report does not claim that those checks passed in this turn.
+Feature 044 candidate additions were outside this audit baseline and are not assessed here. Their validation and evidence need a separate review.
 
 ## Module recommendations
 
@@ -32,7 +32,7 @@ The current branch has uncommitted Feature 044 work. This audit read its GADFPD 
 | `events.py`, `signals.py`, `strategies.py`, `kb.py`, `commensurability.py` | **KEEP** | These implement the public, deterministic reference vocabulary and the current outcome-definition gate. Keep the normative v0.3 boundary. |
 | `evaluation.py`, `per_family_evaluation.py`, `evidence.py` | **REFINE** | Keep the calibration and synthetic pooling examples. State the target and operation beside each aggregate. In particular, describe the 7-day/90-day fixture as two window-defined targets; qualify the “same-event” shorthand in the code description before using it to justify a broader claim. |
 | `admission.py`, `corpus_assembly.py`, `public_corpus.py`, `predeclaration.py`, `replay_capture.py`, `replay_selection.py`, `replay_constraints.py`, Stage 1/2 evaluation and reporting | **KEEP** | These form reproducible research infrastructure for lineage, data leakage, admission, and replay. Keep their reports bounded to their stated evidence class. |
-| Dataset verifiers in `ai4i2020.py`, `apachejit.py`, `nasa_cmaps.py`, `metropt3.py`, `gadfpd.py`, and `rcaeval.py` | **REFINE** | Keep as public, dataset-specific examples. Do not let their source-specific labels become a single benchmark by default. Revisit packaging only if the adapter set makes the normative package hard to use. No move is justified now. |
+| Dataset verifiers in `ai4i2020.py`, `apachejit.py`, `nasa_cmaps.py`, and `metropt3.py` | **REFINE** | Keep as public, dataset-specific examples. Do not let their source-specific labels become a single benchmark by default. Revisit packaging only if the adapter set makes the normative package hard to use. No move is justified now. |
 | `jepa.py`, `eb_jepa.py`, `efficacy.py` and Feature 036/037 | **KEEP** | Preserve the shared-model research slice. Present each target, horizon, calibration, and provenance separately. Use it to test the model-identity hypothesis, not as product orchestration. |
 | `hermetic_runner.py`, public validation scripts, and evidence workbench | **KEEP** | These are bounded public research and reproduction tools. Keep external effects explicit and avoid claims that synthetic runner evidence is a real deployment result. |
 | Existing specifications, dataset manifests, notebooks, research paper, and Stage 1/2 records | **KEEP** | These preserve research history and evidence boundaries. Link them from a research map instead of rewriting their original purpose. |

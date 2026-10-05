@@ -1,4 +1,4 @@
-# Isoprax Reference Implementation
+# IsoPrax Reference Implementation
 
 Licensed under [Apache-2.0](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md)
 and [AGENTS.md](AGENTS.md) before contributing.
@@ -19,7 +19,7 @@ does not choose beliefs, plans, or actions. See the
 ## Current reference implementation
 
 This repository contains the runnable Stage 0 reference implementation of the
-authoritative Isoprax v0.3 POC, plus Stage 1 public-data evidence and a bounded
+authoritative IsoPrax v0.3 POC, plus Stage 1 public-data evidence and a bounded
 Stage 2 deterministic-replay feasibility reducer. It demonstrates shared
 event, signal, knowledge-base, feedback, calibration, and commensurability
 mechanics for the Change and Operational families.
@@ -54,7 +54,7 @@ withholds pooled scores and makes no Semantic or Full Conformance claim.
   `specs/001-cross-family-kernel/spec.md`
 - **Stage 1 admission extension spec (in this repo):**
   `specs/002-stage1-corpus-admission/spec.md`
-- **Authoritative Isoprax v0.3 POC reference:**
+- **Authoritative IsoPrax v0.3 POC reference:**
   Vendored at [`docs/isoprax-v0.3-poc.md`](docs/isoprax-v0.3-poc.md), with
   source provenance recorded in
   [`docs/isoprax-v0.3-poc-provenance.md`](docs/isoprax-v0.3-poc-provenance.md).

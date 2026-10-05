@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-05
 
-**Status**: Draft
+**Status**: Converged
 
 **Input**: User description: Refine IsoPrax as a public research and reference framework for measurement validity, calibration, outcome semantics, and evidence commensurability. Audit the current repository, state boundaries with Semadmit and Bouleusis, propose operation-specific commensurability, define an invalid-aggregation benchmark and a shared-model experiment, update falsification criteria and the README/research map, and recommend code dispositions. Preserve existing work. Produce a report before any code moves.
 
@@ -99,7 +99,7 @@ A new reader can learn IsoPrax's mission and central thesis before reading the S
 
 ## Assumptions
 
-- The published Isoprax v0.3 POC and the project constitution remain authoritative for existing conformance claims.
+- The published IsoPrax v0.3 POC and the project constitution remain authoritative for existing conformance claims.
 - This phase delivers public analysis, research specifications, and navigation documents; it does not implement a new general-purpose evidence-combination runtime or run a new efficacy experiment.
 - Existing repository evidence may be summarized only at its demonstrated strength. Public and synthetic evidence remains scoped to its declared dataset, source, and method.
 - The new feature record documents this refinement while the existing Feature 044 work remains preserved.

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Read the project constitution and the vendored Isoprax v0.3 POC for normative claims.
+- Read the project constitution and the vendored IsoPrax v0.3 POC for normative claims.
 - Use the research map at [`docs/research/README.md`](../../docs/research/README.md).
 
 ## Review sequence

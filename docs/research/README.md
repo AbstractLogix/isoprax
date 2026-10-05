@@ -37,17 +37,17 @@ hypotheses, plans, experiments, or actions.
 - [Authoritative v0.3 POC](../isoprax-v0.3-poc.md) and
   [source provenance](../isoprax-v0.3-poc-provenance.md) define the reference
   baseline.
-- [Calibration Is Not Enough](<Calibration Is Not Enough_ Outcome Commensurability as a Precondition for Cross-Family Failure Prediction.md>)
+- [Calibration Is Not Enough](Calibration%20Is%20Not%20Enough_%20Outcome%20Commensurability%20as%20a%20Precondition%20for%20Cross-Family%20Failure%20Prediction.md)
   states the current cross-family outcome thesis and its limits.
 - [Feature 014](../../specs/014-normative-commensurability-evidence/spec.md)
   records normative commensurability evidence.
 - [Feature 036](../../specs/036-jepa-unified-predictor/spec.md) and
   [Feature 037](../../specs/037-eb-jepa-gpu-efficacy/spec.md) record the shared
   predictor reference and its separate efficacy gate.
-- [Public dataset decisions](../../examples/public-datasets/decision-ledger.json),
-  [Stage 1 validation](../stage1/stage1-public-validation.json), and
-  [Feature 044](../../specs/044-public-dataset-lane-qualification/spec.md)
-  track distinct source-specific evidence lanes.
+- [Public dataset decisions](../../examples/public-datasets/decision-ledger.json)
+  and [Stage 1 validation](../stage1/stage1-public-validation.json) track
+  distinct source-specific evidence lanes. New lanes need their own
+  qualification before inclusion.
 
 These records are complementary. A common format, calibration method, public
 availability, or model identity does not establish a common outcome or valid
