@@ -12,22 +12,24 @@ operations on those results does the evidence support?**
 2. [Evidence commensurability](evidence-commensurability.md): evidence types,
    hypotheses, literature, and open questions.
 3. [Operation-specific commensurability](operation-specific-commensurability.md):
-   provisional conditions for comparison, ranking, pooling, transfer, and
-   fusion.
-4. [Invalid aggregation benchmark](invalid-aggregation-benchmark.md): a
-   reproducible synthetic counterexample and valid control.
-5. [Shared-model experiment](shared-model-commensurability-experiment.md): a
-   protocol to test whether one model identity supports cross-target
-   operations.
-6. [Falsification and stop conditions](falsification.md): measurable results
-   that would narrow or reject the research claims.
+   proposed conditions and results against simpler rules.
+4. [Invalid aggregation benchmark](invalid-aggregation-benchmark.md): executed
+   deterministic Benchmark A and its valid same-target control.
+5. [Shared-model experiment](shared-model-commensurability-experiment.md):
+   executed synthetic JEPA tests across event families and horizons.
+6. [Experimental evidence report](experimental-evidence.md): results, evidence
+   classes, answers, and next research questions.
+7. [Machine-readable results](experimental-results.json): exact output from the
+   deterministic runner.
+8. [Falsification and stop conditions](falsification.md): findings that can
+   narrow or reject the research claims.
 
 ## Program boundaries
 
-- [IsoPrax and Semadmit](isoprax-semadmit-boundary.md) defines the public
-  research to private enforcement boundary.
-- [IsoPrax and Bouleusis](isoprax-bouleusis-boundary.md) defines the public
-  validity assessment to private deliberation boundary.
+- [IsoPrax and Semadmit](isoprax-semadmit-boundary.md) defines the research to
+  runtime admission and verification enforcement boundary.
+- [IsoPrax and Bouleusis](isoprax-bouleusis-boundary.md) defines the validity
+  assessment to deliberation and epistemic-state boundary.
 
 IsoPrax specifies and tests evidence conditions. It does not choose beliefs,
 hypotheses, plans, experiments, or actions.
@@ -63,13 +65,11 @@ cross-source operation.
 
 ## Research path
 
-1. Reproduce the current synthetic counterexample and retain the declared
-   outcome and window for each lane.
-2. Compare it with the same-target control in the benchmark protocol.
-3. Test one shared predictor across multiple named outcomes, with a same-target
-   control and separate target-level reports.
-4. Compare operation-specific assessments with simple and naive alternatives.
-5. Extend only to public data with explicit provenance and a valid observation
+1. Reproduce the same-number, different-event benchmark and same-target control.
+2. Inspect separate JEPA family and horizon results and the same-target pool.
+3. Compare operation-specific gating with naive, global-label, and
+   metadata-only alternatives.
+4. Extend only to public data with explicit provenance and a valid observation
    process. Keep source-specific outcomes separate where their meanings differ.
-6. Publish negative as well as positive results. Apply the stated stop
+5. Publish negative as well as positive results. Apply the stated stop
    conditions before making broader claims.

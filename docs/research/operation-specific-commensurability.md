@@ -36,6 +36,19 @@ Two forecasts may support a within-family calibration report but not a cross-fam
 
 Compare this table with (1) a single global label, (2) a metadata-only rule, and (3) naive aggregation. Test each operation on aligned and misaligned targets, different windows, different observation processes, shifted populations, changed model versions, and shared-source evidence. Measure false permissions, unnecessary refusals, calibration per target, changes in ranking, and decision loss. State the intended mixture and weights before any pooled analysis.
 
+## Executed synthetic challenge set
+
+The 23-case challenge set covers comparison, ranking, pooling, calibration transfer, forecast averaging, and evidence combination. It includes 12 declared-invalid and 11 declared-valid operations. The decision rule reviews the top 20% globally when cross-target ranking is permitted; otherwise it reviews the top 20% within each target.
+
+| Rule | False permissions | Unnecessary refusals | Interpretation errors | Ranking cases changed | Selected-record decisions changed |
+|---|---:|---:|---:|---:|---:|
+| Naive aggregation | 12/12 | 0/11 | 8/23 | 2/4 | 8 |
+| One global label | 7/12 | 3/11 | 3/23 | 1/4 | 4 |
+| Metadata-only | 5/12 | 0/11 | 0/23 | 1/4 | 4 |
+| Operation-specific | 0/12 | 0/11 | 0/23 | 0/4 | 0 |
+
+The operation-specific rule adds measurable value on this authored challenge set by refusing five operations that the metadata-only rule permits without the required evidence or alignment. The set was built from the candidate conditions, so this is a structural test result, not an independent estimate of real-world error rates. It does not show that a more complex rule will improve deployed decisions. The complete cases and denominators are in [the experimental JSON](experimental-results.json); the limits and conclusions are in [the evidence report](experimental-evidence.md).
+
 ## Literature boundary
 
 Forecast verification makes calibration target-relative; subgroup calibration addresses groups of a prediction population; measurement invariance concerns comparison of particular latent constructs; and conditional-independence rules apply to their stated evidence calculus. These provide foundations and analogies, not proof that the proposed table is complete. See the sources in [the research specification](evidence-commensurability.md#supported-by-adjacent-literature).

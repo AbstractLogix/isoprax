@@ -151,7 +151,20 @@ def test_predeclaration_hash_detects_tampering_and_rejects_window_derived_soak_r
         validate_predeclaration_artifact(window_derived)
 
 
-def test_predeclaration_provenance_requires_anchor_and_ancestry(tmp_path) -> None:
+def test_predeclaration_provenance_requires_anchor_and_ancestry(
+    tmp_path, monkeypatch
+) -> None:
+    for key in (
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_INDEX_FILE",
+        "GIT_PREFIX",
+        "GIT_COMMON_DIR",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    ):
+        monkeypatch.delenv(key, raising=False)
+
     artifact = PredeclarationArtifact(
         artifact_id="plan-001",
         content="frozen",

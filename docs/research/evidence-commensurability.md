@@ -97,7 +97,7 @@ See [the v0.3 reference](../isoprax-v0.3-poc.md), [the current scope audit](proj
 
 - Forecast calibration is assessed relative to forecasts and observed outcomes. Proper scoring rules evaluate declared probabilistic targets; they do not prove that different targets are the same. See [Gneiting, Balabdaoui, and Raftery (2007)](https://doi.org/10.1111/j.1467-9868.2007.00587.x) and [Gneiting and Raftery (2007)](https://doi.org/10.1198/016214506000001437).
 - Multicalibration studies calibration across identifiable subpopulations. It supports subgroup diagnostics but does not establish equivalence between different outcome definitions. See [Hébert-Johnson et al. (2018)](https://proceedings.mlr.press/v80/hebert-johnson18a.html).
-- Measurement comparability for latent variables offers a useful analogy for checking whether measures support group comparisons. Its assumptions do not transfer automatically to arbitrary machine evidence. See [Van Bork et al. (2024)](https://doi.org/10.1080/10705511.2024.2339396).
+- Measurement comparability for latent variables offers a useful analogy for checking whether measures support group comparisons. Its assumptions do not transfer automatically to arbitrary machine evidence. See [Sterner et al. (2024)](https://doi.org/10.1080/10705511.2024.2339396).
 - Dempster-Shafer combination has explicit independence conditions; dependent evidence may require reframing. This does not define a universal rule for all evidence. See [Shafer (2016)](https://doi.org/10.1016/j.ijar.2016.05.003).
 - Calibration under dataset shift is a separate evaluation concern. See [Ovadia et al. (2019)](https://proceedings.neurips.cc/paper_files/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html).
 
