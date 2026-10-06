@@ -26,6 +26,12 @@ IsoPrax must record findings that weaken its research claims. A negative result 
 - Compare operation-specific gates against simple metadata rules and naive aggregation.
 - Report all planned outcomes, including results that favor a simpler approach.
 
+## Current synthetic results
+
+The first 23-case authored challenge set gives the operation-specific rule fewer false permissions than the metadata-only rule (0/12 versus 5/12) and the same unnecessary-refusal count (0/11). This supports only the candidate cases encoded in this fixture. It does not establish field performance. Independent case authorship, reviewer agreement, and provenance-backed external tests remain open.
+
+The JEPA experiment uses one backend identity across Change and Operational readouts and across 1-hour and 24-hour windows. Target-local metrics remain separate. Shared identity alone supplies no common event definition. The result is synthetic and does not measure model efficacy.
+
 ## Stop or narrow the program when
 
 - repeated, adequately powered public benchmarks show no practical difference between gated and naive operations;

@@ -6,9 +6,9 @@ IsoPrax can study whether a comparison, ranking, pooling, calibration transfer, 
 
 This result describes evidence validity. It does not choose a hypothesis or decide what action to take.
 
-## Bouleusis performs deliberation
+## Bouleusis owns deliberation and epistemic-state behavior
 
-Bouleusis owns epistemic state, hypothesis management, search, planning, experiment selection, belief revision, and orchestration. It decides how a validity result affects a live reasoning process and how that process acts.
+Bouleusis owns deliberation and epistemic-state behavior, including hypothesis management, search, planning, experiment selection, belief revision, and orchestration. It decides how a validity result affects its reasoning process and subsequent actions.
 
 ## Handoff rule
 
@@ -16,4 +16,4 @@ Bouleusis owns epistemic state, hypothesis management, search, planning, experim
 - Bouleusis supplies its target and context, consumes the result, and owns subsequent reasoning.
 - An unknown or conditional result stays explicit. It does not mutate beliefs by itself.
 
-IsoPrax must not grow private agent state, tool selection, planning, action, or orchestration in order to support this interface. A shared concept may be documented; product-specific runtime behavior stays in Bouleusis.
+IsoPrax must not grow agent state, tool selection, planning, action, or orchestration in order to support this interface. A shared concept may be documented; runtime deliberation behavior stays in Bouleusis.

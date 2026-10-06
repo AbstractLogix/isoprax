@@ -1,6 +1,6 @@
 # Invalid-Aggregation Benchmark
 
-**Status**: Public synthetic benchmark specification. It is not an efficacy benchmark.
+**Status**: Executed deterministic synthetic benchmark. It is not an efficacy benchmark.
 
 ## Benchmark A: Same probability, different event
 
@@ -19,7 +19,7 @@ Create two independent 100-record lanes:
 
 Each lane has zero empirical calibration error at this single forecast value. The equal-weight numeric pool also reports `0.80`. The lane definitions use different source and observation processes, events, and windows.
 
-The invalid inference is: “0.80 is the probability of one common failure event across both lanes.” The numbers are calibrated against separate targets. The pooled number only has an interpretation if a new mixture target and its lane weights are declared. Calibration cannot create that target after the results are seen.
+The invalid inference is: “0.80 is the probability of one common failure event across both lanes.” The numbers are calibrated against separate targets. The runner also reports `0.80` for a predeclared 50:50 mean of the two lane-specific risks. That numeric mixture has an interpretation only under its exact stated estimand and weights. It is not one common event probability. Calibration cannot create a shared target after the results are seen.
 
 ### Valid control
 
@@ -53,6 +53,14 @@ The benchmark does not support the operation-specific thesis if simple metadata 
 
 This is structural and synthetic evidence only. It is not Semantic/Full Conformance, real-world predictive efficacy, or evidence that every cross-family aggregate is invalid.
 
+## Executed result
+
+Each lane has `n=100`, 80 positives, mean forecast `0.80`, event rate `0.80`, ten-bin ECE `0.00` to displayed precision, and Brier score `0.16`. The constant forecasts do not support an ROC AUC. The different-target 50:50 numeric mixture has `n=200`, mean forecast `0.80`, event rate `0.80`, ECE `0.00`, and Brier score `0.16`; its estimand is the equal-weight mean of the 30-day fix-link risk and the 30-minute telemetry-breach risk. It does not denote one common event.
+
+The same-target control uses one shared threshold event, process, window, and threshold across two 100-record lanes. Its predeclared 50:50 cohort mixture also reports mean forecast `0.80`, event rate `0.80`, ECE `0.00`, and Brier score `0.16`.
+
+The output lists per-lane calibration and named-mixture reporting as permitted. It prohibits interpreting equal numbers as one event or treating calibration as cross-target equivalence. See [the full report](experimental-evidence.md) and [the exact JSON](experimental-results.json).
+
 ## Reproduction
 
-From the repository root, run `uv run python examples/demo_cross_family.py` to view the existing window-based fixture output. Benchmark A is a separately specified minimal case for a future research runner; this document does not claim it has been executed in code.
+From the repository root, run `uv run python -m isoprax.research_experiments --output docs/research/experimental-results.json`. The same runner executes the shared-model experiment and rule challenge set. Existing window-based evidence remains available from `uv run python examples/demo_cross_family.py`.
