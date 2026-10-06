@@ -19,8 +19,8 @@
 - Final runner output was reproduced byte for byte twice. Both outputs had SHA-256 `02d3642044768c47957221a1e615dc221baf248b97eb4a61c8d75fa8eca80fcd`.
 - Focused research, JEPA, and Haskell-oracle tests: 42 passed, 1 skipped. The oracle differential test also passed when run with the built binary.
 - Haskell oracle: offline build passed; six QuickCheck properties passed with 2,000 cases each; compile-fail check passed.
-- Full Python suite: 594 passed, 4 skipped. The local run measured 94.33% repository coverage, below the 95% threshold, because this environment lacks the optional GPU extra and skips EB-JEPA module tests. CI installs that extra. Hosted checks must confirm the CI result before merge.
-- New experiment modules measured 99% and 100% branch-aware coverage; changed-line coverage measured 99%. Repository-wide Ruff lint and format checks passed. Pre-commit's contract-test hook reported the local aggregate coverage shortfall; its other hooks passed. `git diff --check` and all relative links in research and Feature 046 Markdown passed.
+- Full Python suite: 623 passed, 4 skipped. With the CI-matched locked GPU extra installed, repository-wide branch-aware coverage was 98.09%, above the 95% threshold.
+- New experiment modules measured 99% and 100% branch-aware coverage; changed-line coverage measured 99%. Repository-wide Ruff lint and format checks and all pre-commit hooks passed. `git diff --check` and all relative links in research and Feature 046 Markdown passed.
 - The baseline ancestry check passed. The separate Feature 044 qualification working tree and the Haskell oracle source remain unchanged.
 
 ## Remaining release checks

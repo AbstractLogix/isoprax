@@ -123,8 +123,8 @@ Negative or equivalent results on independent cases should narrow the proposal. 
 - Focused research, JEPA, and Haskell-oracle tests passed: 42 passed and one skipped in the combined run. The Haskell test passed separately when pointed at the locally built oracle binary.
 - The bounded Haskell oracle passed its offline Cabal build, six QuickCheck properties with 2,000 cases each, compile-fail check, and Python differential test. No Haskell source changed in this phase.
 - Repository-wide Ruff lint and format checks passed. All test assertions in the full Python suite passed: 594 passed and 4 skipped. The experiment runner measured 99% branch-aware coverage and the operation-gate module measured 100% in that run.
-- The pre-commit syntax, JSON, whitespace, and Ruff hooks passed. Its contract-test hook reported the repository-wide coverage shortfall listed below.
-- Local repository-wide coverage was 94.33%, below the configured 95% threshold. This environment does not include the optional GPU extra, so the EB-JEPA module tests were skipped. The CI workflow installs that extra; hosted coverage remains to be confirmed by the PR checks.
+- The full Python suite passed: 623 passed and 4 skipped. Repository-wide branch-aware coverage was 98.09%, above the configured 95% threshold. The new experiment runner measured 99% coverage and the operation-gate module measured 100%.
+- Repository-wide Ruff lint and format checks passed. All pre-commit hooks passed during commit, including the contract-test hook. Changed-line coverage was 99%.
 - `git diff --check` passed. The separate Feature 044 qualification worktree remains unchanged by this phase.
 
-The local aggregate coverage result is an environment limitation, not evidence that the hosted gate passed. Do not treat the phase as merge-ready until the required PR checks report their results.
+The local environment used the same locked GPU extra as CI to run the complete coverage gate. Hosted PR checks must still pass before merge.
