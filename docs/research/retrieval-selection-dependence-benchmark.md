@@ -29,11 +29,13 @@ An oracle-evidence control may give an interpreter only the gold decisive items.
 
 ## Cross-selector corroboration probe
 
-Test whether outputs from different selectors provide independent corroboration. For selector pairs A+B, A+C, and B+C, combine the unique selected items under one fixed Model X interpreter. At combined budgets 2, 4, 8, and 16, give each selector half of the budget. Compare each combined set with each selector's own top-k set at the same total budget. The one-item budget does not apply to this pair probe.
+Test whether outputs from different selectors provide independent corroboration. For selector pairs A+B, A+C, and B+C, combine the selected items under one fixed Model X interpreter. At nominal combined budgets 2, 4, 8, and 16, take the top half from each selector. The one-item budget does not apply to this pair probe.
 
-Keep selector identity and source lineage separate. If both selectors return the same item, deduplicate it in the combined context and do not count it as two sources. Measure item overlap, shared upstream source coverage, paired false-positive selection, and false corroboration: two or more selected items support the same incorrect root cause or are presented as independent when their gold source lineage overlaps or their source status is not verified. Keep the gold source and claim labels outside model inputs.
+Make every evidence item in this probe the same token length under Model X's pinned tokenizer. If both selectors return the same item, deduplicate it in the combined context and do not count it as two sources. Record the nominal budget, realized unique-item count, exact input token count, and item overlap. Compare the combined set with each selector's top-m set, where m is the combined set's realized unique-item count. This gives each comparison the same actual item and token budget even when the selector lists overlap. Do not compare a shorter, deduplicated pair set with a full nominal-k single-selector set.
 
-Report whether using two selectors reduces or increases false corroboration and interpretation errors against the equal-budget single-selector controls. Different selector IDs alone do not make evidence independent.
+Measure shared upstream source coverage, paired false-positive selection, and false corroboration: two or more selected items support the same incorrect root cause or are presented as independent when their gold source lineage overlaps or their source status is not verified. Keep the gold source and claim labels outside model inputs.
+
+Report whether using two selectors reduces or increases false corroboration and interpretation errors against the realized-budget-matched single-selector controls. Report overlap and realized-budget strata as results. Different selector IDs alone do not make evidence independent.
 
 ## Synthetic case set
 

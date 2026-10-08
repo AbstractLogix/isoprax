@@ -30,6 +30,7 @@ This is a proposed record shape for the next benchmark slice. It is not a runtim
 
 - **case_id**, **condition_id**, and **budget_k**.
 - **selector_pair_id** and combined-budget allocation when selectors are paired.
+- Nominal budget, realized unique-item count, and exact interpreter-token count.
 - **selection_round** and query digest.
 - Exact model, selector, and revision identifiers.
 - Shared base-model lineage where known.

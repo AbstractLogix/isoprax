@@ -19,7 +19,7 @@ description: "Research note and benchmark protocol tasks"
 
 **Goal**: Make the future benchmark executable without inventing its question or measures.
 
-- [x] T003 Write **docs/research/retrieval-selection-dependence-benchmark.md** with conditions A-D, evidence types, provenance, budgets, metrics, selector-pair corroboration, held-out score calibration, simple-rule baselines, analysis, falsification, and handoff criteria.
+- [x] T003 Write **docs/research/retrieval-selection-dependence-benchmark.md** with conditions A-D, evidence types, provenance, budgets, realized-budget-matched selector-pair corroboration, held-out score calibration, simple-rule baselines, analysis, falsification, and handoff criteria.
 - [x] T004 Define the proposed case, evidence, selection, interpretation, and policy records in **specs/047-retrieval-selection-dependence/data-model.md**.
 - [x] T005 Write the scope, plan, checklist, and quickstart for this documentation slice and its next implementation slice.
 

@@ -17,7 +17,7 @@ This convergence check covers the literature note, benchmark protocol, Spec Kit 
 | FR-007 | Satisfied | The protocol compares naive aggregation, one global shared-lineage label, a metadata-only rule, and an operation-specific rule on held-out cases. |
 | FR-008-FR-009 | Satisfied | The note says the experiment has not run. The protocol, plan, tasks, and quickstart define the next slice and its required result. |
 | FR-010-FR-011 | Satisfied | The documents keep selection out of Bouleusis, runtime enforcement with Semadmit, and require a reproducible result before a handoff. |
-| FR-012-FR-013 | Satisfied | The protocol defines equal-budget selector-pair corroboration and a held-out calibration test against audited source status. |
+| FR-012-FR-013 | Satisfied | The protocol defines selector-pair corroboration with controls matched to realized item and token budgets, plus a held-out calibration test against audited source status. |
 | SC-001-SC-006 | Satisfied | The paper claims, metric boundaries, comparison rules, next-slice steps, and research-only recommendation are stated. |
 | Constitution I-V | Satisfied | The slice changes no normative runtime behavior, labels evidence limits, and adds no retrieval or trust implementation. |
 

@@ -31,7 +31,7 @@ The next slice will implement and run the benchmark from [the protocol](../../do
 5. Preserve source and derivation lineage separately from selector and model lineage.
 6. Keep relevance, source status, and permission for a named operation as separate fields.
 7. Compare three simple alternatives with an operation-specific rule on cases held out from policy authors.
-8. Compare selector pairs against equal-budget single selectors for independent corroboration.
+8. Compare selector pairs against single-selector controls matched to the realized item and token budget for independent corroboration.
 9. Test score calibration against held-out source-status labels, not relevance alone.
 10. Require a reproducible held-out effect before proposing any Semadmit review.
 11. State the next slice as benchmark implementation and execution; do not report results in advance.
