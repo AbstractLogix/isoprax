@@ -16,7 +16,7 @@
       "ollama_manifest_sha256": "7fbdbf8f5e45a75bb122155ed546e765b4d9c53a1285f62fd9f506baa1c5a47e",
       "role": "condition B selector and condition D interpreter"
     },
-    "service": "Ollama 0.20.4 local API",
+    "service": "Ollama 0.40.1 local API",
     "generation": {
       "temperature": 0,
       "top_p": 1,
@@ -113,6 +113,12 @@
       "timing": "before scored rerun",
       "reason": "The first scored attempt stopped at RD-028 after Model X returned an incomplete interpretation ranking on both attempts. The runner did not write a result file or retain scored condition metrics.",
       "change": "Keep the complete-ranking and boolean-abstention requirements. Strengthen the retry with the exact allowed labels. If both attempts remain invalid, record an invalid interpreter output as an interpretation error and task failure, without inferring missing ranks or treating it as abstention. Exclude invalid outputs from root-cause rank summaries and report their count and rate. Increment prompt version to v3."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The pinned 0.20.4 service was not installed. Preflight found the active local Ollama service at 0.40.1, while both model manifest digests still matched the preregistered values. The run stopped before any scored prompt.",
+      "change": "Pin Ollama 0.40.1 for both full replays. Keep the exact Model X and Model Y manifest digest checks. Record the service version in each result. No outputs from the failed preflight are part of the analysis."
     }
   ]
 }
