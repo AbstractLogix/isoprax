@@ -21,8 +21,9 @@
       "temperature": 0,
       "top_p": 1,
       "seed_base": 47048,
-      "num_predict": 256,
-      "prompt_version": "retrieval-dependence-prompt-v1"
+      "num_predict": 512,
+      "think": false,
+      "prompt_version": "retrieval-dependence-prompt-v2"
     }
   },
   "conditions": {
@@ -99,5 +100,13 @@
     "full_runs": 2,
     "comparison": "Canonical case-set, selection-trace, and complete-result SHA-256 digests must match. If model output differs, preserve both runs and report the nondeterminism; do not overwrite the first run."
   },
-  "claim_limit": "The fixed local model pair, prompted selectors, small heldout set, authored synthetic evidence, and two replays do not establish real-world error rates, general model-family effects, UNREAL behavior, cross-target semantic equivalence, or a Semadmit enforcement rule."
+  "claim_limit": "The fixed local model pair, prompted selectors, small heldout set, authored synthetic evidence, and two replays do not establish real-world error rates, general model-family effects, UNREAL behavior, cross-target semantic equivalence, or a Semadmit enforcement rule.",
+  "protocol_amendments": [
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The first attempted run stopped at RD-001 because Model Y exhausted the 256-token output limit without final content. A non-scored output smoke returned a fenced JSON list with one repeated ID. JSON-schema response-format probes did not return a usable ranking.",
+      "change": "Set think=false and num_predict=512. Strip one outer JSON code fence before parsing. For selector rankings, keep the first occurrence of each valid candidate ID, drop unknown and repeated IDs, then append omitted candidate IDs in original input order. Record each repair and aggregate repair counts. Stop if no valid candidate ID is returned. No result file or scored condition metrics were written by the failed run or smoke checks."
+    }
+  ]
 }

@@ -25,6 +25,8 @@ The local pilot uses prompted ranking for B and C. The available local model ser
 
 Pin Model X and Model Y by full model and revision identifiers, not display names. Record selector revision, index and corpus digest, tokenizer, prompt, decoding parameters, software version, and run seed. Record shared base-model lineage separately from exact model identity. If a required model or immutable revision cannot be identified, do not report that condition as a completed comparison.
 
+The runner uses non-thinking JSON mode with a 512-token output cap. It removes one surrounding JSON code fence when present. For a selector ranking, it keeps the first occurrence of each valid candidate ID, drops repeated or unknown IDs, and appends omitted IDs in the fixed candidate input order. It records raw compliance and every repair. A response with no valid candidate ID stops the run. This output handling was added before the scored rerun after the pinned Model Y reached the earlier output cap and returned a duplicate ID; the preregistration records the amendment and excludes the failed attempt and smoke checks from analysis.
+
 An oracle-evidence control may give an interpreter only the gold decisive items. Use it to estimate interpretation performance when retrieval succeeds. Do not include it as one of the four primary selector conditions.
 
 ## Cross-selector corroboration probe

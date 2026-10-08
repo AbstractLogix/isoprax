@@ -133,6 +133,44 @@ def test_prompted_selector_records_model_output_and_exact_rank_order() -> None:
     assert result["prompt_sha256"]
     assert result["prompt_eval_count"] == 100
     assert result["attempts"][0]["content"]
+    assert result["ranking_repair"]["raw_exact_permutation"] is True
+
+
+def test_selector_ranking_repair_is_frozen_and_reportable() -> None:
+    case = generate_cases()[0]
+    ids = [item["item_id"] for item in case["items"]]
+    repeated = [ids[0], ids[0], "UNKNOWN-ID"]
+
+    class FencedResponseClient(FakeClient):
+        def chat(
+            self,
+            model: str,
+            system: str,
+            user: str,
+            seed: int,
+            num_predict: int = 256,
+        ) -> dict[str, object]:
+            del model, system, user, seed, num_predict
+            return {
+                "content": chr(96) * 3
+                + "json\n"
+                + json.dumps({"ranking": repeated})
+                + "\n"
+                + chr(96) * 3,
+                "prompt_eval_count": 100,
+                "eval_count": 20,
+            }
+
+    result = _model_ranking(FencedResponseClient(), MODEL_Y, case)
+
+    assert result["ranking"] == [ids[0], *ids[1:]]
+    assert result["ranking_repair"] == {
+        "applied": True,
+        "raw_exact_permutation": False,
+        "repeated_ids": [ids[0]],
+        "unknown_ids": ["UNKNOWN-ID"],
+        "missing_ids_appended_in_input_order": ids[1:],
+    }
 
 
 def test_interpreter_metrics_separate_wrong_answers_and_acceptable_abstention() -> None:

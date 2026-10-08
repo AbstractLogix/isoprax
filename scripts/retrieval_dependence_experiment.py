@@ -35,7 +35,8 @@ SEED = 47047
 MODEL_SEED = 47048
 BOOTSTRAP_SEED = 47049
 BOOTSTRAP_REPLICATES = 2_000
-PROMPT_VERSION = "retrieval-dependence-prompt-v1"
+NUM_PREDICT = 512
+PROMPT_VERSION = "retrieval-dependence-prompt-v2"
 MODEL_SERVER_VERSION = "0.20.4"
 BUDGETS = (1, 2, 4, 8, 16)
 PAIR_BUDGETS = (2, 4, 8, 16)
@@ -178,7 +179,7 @@ class OllamaClient:
         system: str,
         user: str,
         seed: int,
-        num_predict: int = 256,
+        num_predict: int = NUM_PREDICT,
     ) -> dict[str, Any]:
         response = self._post(
             "/api/chat",
@@ -189,6 +190,7 @@ class OllamaClient:
                     {"role": "user", "content": user},
                 ],
                 "format": "json",
+                "think": False,
                 "stream": False,
                 "keep_alive": "10m",
                 "options": {
@@ -207,6 +209,7 @@ class OllamaClient:
             "content": message["content"],
             "prompt_eval_count": response.get("prompt_eval_count"),
             "eval_count": response.get("eval_count"),
+            "done_reason": response.get("done_reason"),
         }
 
 
@@ -630,8 +633,13 @@ def _seed_for(*parts: str) -> int:
 
 
 def _parse_json_object(content: str) -> dict[str, Any]:
+    normalized = content.strip()
+    if normalized.startswith(chr(96) * 3) and normalized.endswith(chr(96) * 3):
+        lines = normalized.splitlines()
+        if len(lines) >= 3 and lines[0].startswith(chr(96) * 3):
+            normalized = "\n".join(lines[1:-1]).strip()
     try:
-        value = json.loads(content)
+        value = json.loads(normalized)
     except json.JSONDecodeError as exc:
         raise ExperimentError(f"model output is not JSON: {exc}") from exc
     if not isinstance(value, dict):
@@ -653,7 +661,11 @@ def _model_ranking(
     for attempt in range(2):
         adjusted_user = user
         if attempt:
-            adjusted_user += "\nYour previous output was invalid. Return the complete permutation of IDs only."
+            adjusted_user += (
+                "\nThe previous output contained duplicate or missing IDs. Return one JSON object "
+                "with a ranking array. Include every supplied item ID once. Do not use code fences "
+                "or add explanations."
+            )
         response = client.chat(
             model,
             system,
@@ -664,29 +676,54 @@ def _model_ranking(
             {
                 "prompt_sha256": hashlib.sha256(adjusted_user.encode()).hexdigest(),
                 "content": response["content"],
+                "done_reason": response.get("done_reason"),
+                "eval_count": response.get("eval_count"),
             }
         )
         try:
             output = _parse_json_object(response["content"])
             ranking = output.get("ranking")
-            if (
-                not isinstance(ranking, list)
-                or len(ranking) != len(ids)
-                or len(set(ranking)) != len(ids)
-                or set(ranking) != set(ids)
-            ):
-                raise ExperimentError(
-                    "selector ranking must be a permutation of all 16 item IDs"
-                )
+            if not isinstance(ranking, list):
+                raise ExperimentError("selector ranking must be a list of item IDs")
+            unique_ids: list[str] = []
+            seen_ids: set[str] = set()
+            unknown_ids: list[str] = []
+            repeated_ids: list[str] = []
+            for item_id in ranking:
+                if not isinstance(item_id, str) or item_id not in ids:
+                    unknown_ids.append(str(item_id))
+                elif item_id in seen_ids:
+                    repeated_ids.append(item_id)
+                else:
+                    unique_ids.append(item_id)
+                    seen_ids.add(item_id)
+            if not unique_ids:
+                raise ExperimentError("selector returned no recognized item IDs")
+            missing_ids = [item_id for item_id in ids if item_id not in seen_ids]
+            normalized_ranking = [*unique_ids, *missing_ids]
+            ranking_repair = {
+                "applied": bool(unknown_ids or repeated_ids or missing_ids),
+                "raw_exact_permutation": (
+                    len(ranking) == len(ids)
+                    and not unknown_ids
+                    and not repeated_ids
+                    and not missing_ids
+                ),
+                "repeated_ids": repeated_ids,
+                "unknown_ids": unknown_ids,
+                "missing_ids_appended_in_input_order": missing_ids,
+            }
             return {
-                "ranking": ranking,
+                "ranking": normalized_ranking,
                 "scores": [
-                    1.0 / math.log2(rank + 1) for rank in range(1, len(ranking) + 1)
+                    1.0 / math.log2(rank + 1)
+                    for rank in range(1, len(normalized_ranking) + 1)
                 ],
                 "score_basis": "rank-derived 1/log2(rank+1); not model confidence",
                 "model": model,
                 "second_round": second_round,
                 "attempts": attempts,
+                "ranking_repair": ranking_repair,
                 "prompt_sha256": attempts[-1]["prompt_sha256"],
                 "prompt_eval_count": response["prompt_eval_count"],
                 "eval_count": response["eval_count"],
@@ -756,7 +793,9 @@ def _model_interpretation(
         adjusted_user = user
         if attempt:
             adjusted_user += (
-                "\nReturn valid JSON with the required keys and allowed labels only."
+                "\nReturn exactly one JSON object with ranking and abstain keys. "
+                "Rank each allowed cause once and set abstain to true or false. "
+                "Do not use code fences or add explanations."
             )
         response = client.chat(
             model,
@@ -768,12 +807,14 @@ def _model_interpretation(
                 ",".join(item["item_id"] for item in selected_items),
                 str(attempt),
             ),
-            num_predict=1 if token_count_only else 256,
+            num_predict=1 if token_count_only else NUM_PREDICT,
         )
         attempts.append(
             {
                 "prompt_sha256": hashlib.sha256(adjusted_user.encode()).hexdigest(),
                 "content": response["content"],
+                "done_reason": response.get("done_reason"),
+                "eval_count": response.get("eval_count"),
             }
         )
         if token_count_only:
@@ -2414,6 +2455,24 @@ def run_benchmark(client: OllamaClient | None = None) -> dict[str, Any]:
     selection_pair_probe = _pair_probe(client, cases, selection_traces)
     repeated_summary = analyze_repeated_selection(cases, selection_traces, repeated)
     pair_probe_summary = summarize_pair_probe(selection_pair_probe)
+    selector_output_format: dict[str, Any] = {}
+    for selector in ("B", "C"):
+        traces = list(selection_traces[selector].values()) + [
+            record["trace"] for record in repeated if record["selector_id"] == selector
+        ]
+        repairs = [trace["ranking_repair"] for trace in traces]
+        selector_output_format[selector] = {
+            "call_count": len(traces),
+            "raw_exact_permutation_count": sum(
+                repair["raw_exact_permutation"] for repair in repairs
+            ),
+            "repaired_call_count": sum(repair["applied"] for repair in repairs),
+            "repeated_id_count": sum(len(repair["repeated_ids"]) for repair in repairs),
+            "unknown_id_count": sum(len(repair["unknown_ids"]) for repair in repairs),
+            "missing_id_count_appended": sum(
+                len(repair["missing_ids_appended_in_input_order"]) for repair in repairs
+            ),
+        }
     interpretation_outputs: dict[tuple[str, str, int], dict[str, Any]] = {}
     raw_interpretation_traces: list[dict[str, Any]] = []
     for case in cases:
@@ -2522,6 +2581,8 @@ def run_benchmark(client: OllamaClient | None = None) -> dict[str, Any]:
                 "temperature": 0,
                 "top_p": 1,
                 "seed_base": MODEL_SEED,
+                "num_predict": NUM_PREDICT,
+                "think": False,
                 "prompt_version": PROMPT_VERSION,
             },
         },
@@ -2530,6 +2591,7 @@ def run_benchmark(client: OllamaClient | None = None) -> dict[str, Any]:
         "case_set_sha256": digest_json(item_payloads),
         "selection_traces": selection_traces,
         "selection_trace_sha256": digest_json(selection_traces),
+        "selector_output_format": selector_output_format,
         "repeated_selection_probe": repeated,
         "repeated_selection_summary": repeated_summary,
         "primary_interpretation_traces": raw_interpretation_traces,
@@ -2593,11 +2655,28 @@ def render_report(result: dict[str, Any]) -> str:
         f"- Model Y: `{MODEL_Y}` (`{MODEL_DIGESTS[MODEL_Y]}`).",
         "- Selector limitation: prompted ranking only; neither selector exposes hidden representations, and Model Y is not retrieval-specialized.",
         "",
-        "## Results by condition and budget",
+        "## Selector output handling",
         "",
-        "| Condition | k | n | Retrieval error | Interpretation error | Root-cause accuracy | Recall@k | Complete-evidence recall | Recovery with misleading evidence selected | Conditional error-risk difference (95% CI) | Binary error correlation (95% CI) |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
+        "One surrounding JSON code fence is removed when present. The runner keeps the first occurrence of each valid item ID, drops repeated or unknown IDs, and appends missing IDs in candidate input order. The report counts these repairs. A response with no valid candidate ID stops the run.",
+        "",
+        "| Selector | Model calls | Raw exact permutations | Repaired calls | Repeated IDs | Unknown IDs dropped | Missing IDs appended |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
+    for selector, summary in result["selector_output_format"].items():
+        lines.append(
+            f"| {selector} | {summary['call_count']} | {summary['raw_exact_permutation_count']} | "
+            f"{summary['repaired_call_count']} | {summary['repeated_id_count']} | "
+            f"{summary['unknown_id_count']} | {summary['missing_id_count_appended']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Results by condition and budget",
+            "",
+            "| Condition | k | n | Retrieval error | Interpretation error | Root-cause accuracy | Recall@k | Complete-evidence recall | Recovery with misleading evidence selected | Conditional error-risk difference (95% CI) | Binary error correlation (95% CI) |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
+        ]
+    )
     for condition in CONDITIONS:
         for budget in BUDGETS:
             overall = result["condition_metrics"][condition][str(budget)]["overall"]
