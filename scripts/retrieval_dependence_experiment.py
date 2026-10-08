@@ -2475,37 +2475,42 @@ def run_benchmark(client: OllamaClient | None = None) -> dict[str, Any]:
         }
     interpretation_outputs: dict[tuple[str, str, int], dict[str, Any]] = {}
     raw_interpretation_traces: list[dict[str, Any]] = []
-    for case in cases:
-        if case["split"] not in {"development", "heldout"}:
-            continue
-        item_by_id = _item_map(case)
+    for interpreter in (MODEL_X, MODEL_Y):
         for condition, design in CONDITIONS.items():
+            if design["interpreter"] != interpreter:
+                continue
             selector_id = (
                 "A" if condition == "A" else ("B" if condition == "B" else "C")
             )
-            selection = selection_traces[selector_id][case["case_id"]]
-            budgets = (4,) if case["split"] == "development" else BUDGETS
-            for budget in budgets:
-                selected = [
-                    item_by_id[item_id] for item_id in selection["ranking"][:budget]
-                ]
-                output = _model_interpretation(
-                    client,
-                    design["interpreter"],
-                    case,
-                    selected,
-                    phase=f"interpret-{condition}-k{budget}",
-                )
-                interpretation_outputs[(condition, case["case_id"], budget)] = output
-                raw_interpretation_traces.append(
-                    {
-                        "case_id": case["case_id"],
-                        "condition": condition,
-                        "budget": budget,
-                        "selected_ids": [item["item_id"] for item in selected],
-                        **output,
-                    }
-                )
+            for case in cases:
+                if case["split"] not in {"development", "heldout"}:
+                    continue
+                item_by_id = _item_map(case)
+                selection = selection_traces[selector_id][case["case_id"]]
+                budgets = (4,) if case["split"] == "development" else BUDGETS
+                for budget in budgets:
+                    selected = [
+                        item_by_id[item_id] for item_id in selection["ranking"][:budget]
+                    ]
+                    output = _model_interpretation(
+                        client,
+                        design["interpreter"],
+                        case,
+                        selected,
+                        phase=f"interpret-{condition}-k{budget}",
+                    )
+                    interpretation_outputs[(condition, case["case_id"], budget)] = (
+                        output
+                    )
+                    raw_interpretation_traces.append(
+                        {
+                            "case_id": case["case_id"],
+                            "condition": condition,
+                            "budget": budget,
+                            "selected_ids": [item["item_id"] for item in selected],
+                            **output,
+                        }
+                    )
 
     all_rows, heldout_rows = _case_error_prediction_rows(
         cases, selection_traces, interpretation_outputs
