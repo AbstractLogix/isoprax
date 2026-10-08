@@ -27,6 +27,14 @@ Pin Model X and Model Y by full model and revision identifiers, not display name
 
 An oracle-evidence control may give an interpreter only the gold decisive items. Use it to estimate interpretation performance when retrieval succeeds. Do not include it as one of the four primary selector conditions.
 
+## Cross-selector corroboration probe
+
+Test whether outputs from different selectors provide independent corroboration. For selector pairs A+B, A+C, and B+C, combine the unique selected items under one fixed Model X interpreter. At combined budgets 2, 4, 8, and 16, give each selector half of the budget. Compare each combined set with each selector's own top-k set at the same total budget. The one-item budget does not apply to this pair probe.
+
+Keep selector identity and source lineage separate. If both selectors return the same item, deduplicate it in the combined context and do not count it as two sources. Measure item overlap, shared upstream source coverage, paired false-positive selection, and false corroboration: two or more selected items support the same incorrect root cause or are presented as independent when their gold source lineage overlaps or their source status is not verified. Keep the gold source and claim labels outside model inputs.
+
+Report whether using two selectors reduces or increases false corroboration and interpretation errors against the equal-budget single-selector controls. Different selector IDs alone do not make evidence independent.
+
 ## Synthetic case set
 
 Each case has 16 candidate evidence items. Include cases with:
@@ -111,6 +119,12 @@ For H2, compare paired changes in retrieval measures with paired changes in inte
 
 For H4, compare held-out error prediction using source and derivation metadata alone with the same simple analysis after adding selector/interpreter lineage fields. Report the paired change in held-out log loss with uncertainty. Do not use this diagnostic as a causal claim.
 
+### Retrieval score as evidence confidence
+
+Test score calibration against independently adjudicated source status, not relevance. For each selector, fit one predeclared calibration mapping on development cases from raw score to the probability that an item is source-verified. Evaluate it only on held-out cases. For the primary binary calibration target, use verified versus audited invalid/conflicting items. Exclude unknown-status items from that fit and report them separately; do not silently treat unknown as invalid. Report held-out Brier score, reliability bins, calibration error, discrimination where the labels support it, and the training-prevalence baseline. Split by case and source lineage to prevent items from one source appearing in both calibration and held-out sets.
+
+A calibrated score for source verification in this fixture still does not prove operation admissibility or independence. If calibration does not improve held-out results over the base-rate prediction, retain the score as a ranking signal only.
+
 ### Simple-rule comparison
 
 Evaluate the same locked cases using four policies:
@@ -132,7 +146,16 @@ Use paired comparisons on the same cases. Report effect estimates and uncertaint
 
 The study supports H1 only if the predeclared same-model contrast shows a repeatable increase in the retrieval/interpretation error association in at least one named misleading-evidence condition, with uncertainty and a downstream effect reported. The contrast must compare C with A on the same cases, and must exceed the predeclared minimum effect. A difference in retrieval recall alone does not support H1.
 
-The study weakens H1 if C does not increase error dependence over A, or if C and D do not show a reproducible interpreter-lineage difference. It weakens H4 if model lineage adds no predictive value after source and derivation metadata. It weakens H5 if the operation-specific rule does not improve held-out operation decisions over the metadata-only rule. It weakens the budget hypothesis if no tested stratum shows a reproducible decline as k grows. Report null and adverse results.
+The study weakens or rejects the proposed need for added complexity if any of these results holds:
+
+- C does not increase selection/interpretation error dependence over A in the predeclared misleading-evidence cases.
+- Selector/interpreter lineage adds no predictive value after source and derivation metadata.
+- The one global shared-lineage label predicts the useful outcomes as well as the operation-specific rule.
+- Error dependence changes but does not change interpretation quality or any predeclared operation decision.
+- No tested case stratum shows a reproducible decline as k grows.
+- The operation-specific rule does not improve held-out results over the simpler metadata-only rule.
+
+Report null and adverse results. Do not infer operational value from a statistical dependence result without a measured downstream effect.
 
 Do not send a Semadmit handoff from a synthetic result alone. A later handoff requires a reproducible effect on held-out cases, a declared operational condition, scope and limitations, a falsifier, and the metadata needed to identify the condition. Semadmit decides whether to operationalize it.
 

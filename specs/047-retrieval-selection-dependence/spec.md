@@ -33,6 +33,8 @@ A researcher needs a protocol that can compare lexical, external learned, and mo
 1. **Given** the four primary conditions, **when** they are compared, **then** A and C hold Model X as interpreter and C and D hold the selector and selected items fixed.
 2. **Given** evidence items, **when** they are scored, **then** relevance, source status, and permission for an operation remain separate.
 3. **Given** a numeric selector score, **when** a report discusses it, **then** it does not call the score source validity or confidence without a separate validation.
+4. **Given** two selectors return evidence for one claim, **when** the benchmark tests corroboration, **then** it reports source overlap, lineage, and false-corroboration results at a fixed total evidence budget.
+5. **Given** selector scores and audited source-status labels, **when** the benchmark tests score-as-confidence, **then** it fits calibration on development cases and reports calibration only on held-out cases.
 
 ### User Story 3 - Prepare the next experiment slice (Priority: P1)
 
@@ -73,14 +75,17 @@ A research engineer needs a concrete plan to run the benchmark and compare simpl
 - **FR-009**: The next-slice plan MUST state reproducibility metadata, controls, falsification conditions, and report outputs.
 - **FR-010**: The IsoPrax boundary MUST NOT add a retrieval library, evidence selection for Bouleusis, a general trust engine, deliberation, or runtime enforcement.
 - **FR-011**: A Semadmit handoff MUST require a reproducible held-out result with scope, limits, a falsifier, and required runtime metadata.
+- **FR-012**: The benchmark MUST test combined evidence from different selectors at equal total budgets and MUST NOT treat selector IDs alone as independent source evidence.
+- **FR-013**: The benchmark MUST test whether a held-out calibration of selector scores predicts audited source status, separately from relevance and operation admissibility.
 
 ### Success Criteria
 
 - **SC-001**: A reader can state which retrieval and answer-quality results the cited paper reports and which dependence measures it does not report.
 - **SC-002**: The protocol contains four primary conditions, paired controls, five evidence budgets, provenance fields, separate evidence properties, and all requested metric classes.
 - **SC-003**: The rule comparison includes naive, global-label, metadata-only, and operation-specific alternatives with held-out case evaluation.
-- **SC-004**: The next implementation slice can start without inventing the research question, primary conditions, metrics, or handoff threshold.
+- **SC-004**: The next implementation slice has the question, primary conditions, metrics, and preregistration requirements needed to freeze its analysis before a run.
 - **SC-005**: The recommendation distinguishes further study from product or runtime implementation.
+- **SC-006**: The protocol defines selector-pair corroboration and a held-out score-calibration test against source status.
 
 ## Assumptions
 

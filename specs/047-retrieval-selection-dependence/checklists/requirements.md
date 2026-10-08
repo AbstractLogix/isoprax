@@ -21,6 +21,8 @@
 - [x] Edge cases are identified
 - [x] Scope is bounded
 - [x] Dependencies and assumptions are identified
+- [x] The benchmark tests held-out score calibration against source status
+- [x] The benchmark tests paired-selector corroboration at equal total budgets
 
 ## Feature Readiness
 

@@ -31,14 +31,16 @@ The next slice will implement and run the benchmark from [the protocol](../../do
 5. Preserve source and derivation lineage separately from selector and model lineage.
 6. Keep relevance, source status, and permission for a named operation as separate fields.
 7. Compare three simple alternatives with an operation-specific rule on cases held out from policy authors.
-8. Require a reproducible held-out effect before proposing any Semadmit review.
-9. State the next slice as benchmark implementation and execution; do not report results in advance.
+8. Compare selector pairs against equal-budget single selectors for independent corroboration.
+9. Test score calibration against held-out source-status labels, not relevance alone.
+10. Require a reproducible held-out effect before proposing any Semadmit review.
+11. State the next slice as benchmark implementation and execution; do not report results in advance.
 
 ## Project Structure
 
 - **docs/research/retrieval-selection-dependence.md**: literature context, repository results, hypotheses, boundaries, and recommendation.
 - **docs/research/retrieval-selection-dependence-benchmark.md**: conditions, case protocol, measures, rules, analysis, falsification, and next-slice plan.
-- **specs/047-retrieval-selection-dependence/**: scope, plan, task record, research source, data model, quickstart, and checklist.
+- **specs/047-retrieval-selection-dependence/**: scope, plan, task record, research source, data model, quickstart, checklist, and convergence record.
 - **docs/research/README.md**: entry points to the new research thread.
 
 ## Validation

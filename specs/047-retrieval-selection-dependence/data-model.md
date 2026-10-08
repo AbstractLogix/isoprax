@@ -29,11 +29,13 @@ This is a proposed record shape for the next benchmark slice. It is not a runtim
 ## Selection event
 
 - **case_id**, **condition_id**, and **budget_k**.
+- **selector_pair_id** and combined-budget allocation when selectors are paired.
 - **selection_round** and query digest.
 - Exact model, selector, and revision identifiers.
 - Shared base-model lineage where known.
 - Corpus/index digest, tokenizer, prompt, software revision, decoding settings, and seed.
 - Ordered selected item IDs, raw selector scores, and ranks.
+- Deduplicated combined item IDs retain links to each selector event that returned them.
 - Unknown lineage stays unknown.
 
 ## Interpretation event
@@ -43,6 +45,13 @@ This is a proposed record shape for the next benchmark slice. It is not a runtim
 - Answer, root-cause ranking, confidence output if available, and abstention.
 - Gold task and root-cause correctness.
 - Retrieval-error and interpretation-error labels computed after the run.
+
+## Score calibration
+
+- Selector ID and score-calibration mapping revision.
+- Development case/source split and held-out case/source split.
+- Audited source-status target and explicit handling of unknown labels.
+- Held-out Brier score, reliability-bin counts, calibration error, discrimination where defined, and prevalence baseline.
 
 ## Policy evaluation
 
