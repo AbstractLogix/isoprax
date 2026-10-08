@@ -203,6 +203,40 @@ def test_interpreter_client_returns_a_complete_locked_ranking() -> None:
     assert result["prompt_eval_count"] == 100
 
 
+def test_interpreter_invalid_output_is_recorded_without_invented_ranks() -> None:
+    class IncompleteResponseClient(FakeClient):
+        def chat(
+            self,
+            model: str,
+            system: str,
+            user: str,
+            seed: int,
+            num_predict: int = 256,
+        ) -> dict[str, object]:
+            del model, system, user, seed, num_predict
+            return {
+                "content": json.dumps({"ranking": [CAUSES[0]], "abstain": False}),
+                "prompt_eval_count": 100,
+                "eval_count": 5,
+            }
+
+    case = next(case for case in generate_cases() if case["split"] == "heldout")
+    selected = [
+        item for item in case["items"] if item["item_id"] in case["gold_required_items"]
+    ]
+    output = _model_interpretation(IncompleteResponseClient(), MODEL_X, case, selected)
+    metrics = _interpretation_metrics(case, selected, output)
+
+    assert output["output_valid"] is False
+    assert output["ranking"] == []
+    assert output["abstain"] is False
+    assert len(output["attempts"]) == 2
+    assert metrics["invalid_output"] is True
+    assert metrics["correct_root_rank"] is None
+    assert metrics["interpretation_error"] is True
+    assert metrics["task_success"] is False
+
+
 def test_retrieval_metrics_use_required_items_and_misleading_rank() -> None:
     case = next(
         case

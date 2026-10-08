@@ -23,7 +23,7 @@
       "seed_base": 47048,
       "num_predict": 512,
       "think": false,
-      "prompt_version": "retrieval-dependence-prompt-v2"
+      "prompt_version": "retrieval-dependence-prompt-v3"
     }
   },
   "conditions": {
@@ -107,6 +107,12 @@
       "timing": "before scored rerun",
       "reason": "The first attempted run stopped at RD-001 because Model Y exhausted the 256-token output limit without final content. A non-scored output smoke returned a fenced JSON list with one repeated ID. JSON-schema response-format probes did not return a usable ranking.",
       "change": "Set think=false and num_predict=512. Strip one outer JSON code fence before parsing. For selector rankings, keep the first occurrence of each valid candidate ID, drop unknown and repeated IDs, then append omitted candidate IDs in original input order. Record each repair and aggregate repair counts. Stop if no valid candidate ID is returned. No result file or scored condition metrics were written by the failed run or smoke checks."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The first scored attempt stopped at RD-028 after Model X returned an incomplete interpretation ranking on both attempts. The runner did not write a result file or retain scored condition metrics.",
+      "change": "Keep the complete-ranking and boolean-abstention requirements. Strengthen the retry with the exact allowed labels. If both attempts remain invalid, record an invalid interpreter output as an interpretation error and task failure, without inferring missing ranks or treating it as abstention. Exclude invalid outputs from root-cause rank summaries and report their count and rate. Increment prompt version to v3."
     }
   ]
 }

@@ -36,7 +36,7 @@ MODEL_SEED = 47048
 BOOTSTRAP_SEED = 47049
 BOOTSTRAP_REPLICATES = 2_000
 NUM_PREDICT = 512
-PROMPT_VERSION = "retrieval-dependence-prompt-v2"
+PROMPT_VERSION = "retrieval-dependence-prompt-v3"
 MODEL_SERVER_VERSION = "0.20.4"
 BUDGETS = (1, 2, 4, 8, 16)
 PAIR_BUDGETS = (2, 4, 8, 16)
@@ -794,7 +794,8 @@ def _model_interpretation(
         if attempt:
             adjusted_user += (
                 "\nReturn exactly one JSON object with ranking and abstain keys. "
-                "Rank each allowed cause once and set abstain to true or false. "
+                f"The ranking must contain these four exact labels once each: {', '.join(CAUSES)}. "
+                "Set abstain to the JSON boolean true or false. "
                 "Do not use code fences or add explanations."
             )
         response = client.chat(
@@ -831,6 +832,7 @@ def _model_interpretation(
             if (
                 not isinstance(ranking, list)
                 or len(ranking) != len(CAUSES)
+                or not all(isinstance(cause, str) for cause in ranking)
                 or len(set(ranking)) != len(CAUSES)
                 or set(ranking) != set(CAUSES)
                 or not isinstance(abstain, bool)
@@ -843,6 +845,8 @@ def _model_interpretation(
                 "abstain": abstain,
                 "answer": None if abstain else ranking[0],
                 "model": model,
+                "output_valid": True,
+                "output_validation_error": None,
                 "attempts": attempts,
                 "prompt_sha256": attempts[-1]["prompt_sha256"],
                 "prompt_eval_count": response["prompt_eval_count"],
@@ -850,9 +854,18 @@ def _model_interpretation(
             }
         except ExperimentError as exc:
             if attempt:
-                raise ExperimentError(
-                    f"{model} interpreter failed twice for {case['case_id']}: {exc}"
-                ) from exc
+                return {
+                    "ranking": [],
+                    "abstain": False,
+                    "answer": None,
+                    "model": model,
+                    "output_valid": False,
+                    "output_validation_error": str(exc),
+                    "attempts": attempts,
+                    "prompt_sha256": attempts[-1]["prompt_sha256"],
+                    "prompt_eval_count": response["prompt_eval_count"],
+                    "eval_count": response["eval_count"],
+                }
     raise ExperimentError("unreachable interpretation parse state")
 
 
@@ -988,22 +1001,31 @@ def _acceptable_abstention(
 def _interpretation_metrics(
     case: dict[str, Any], selected: Sequence[dict[str, Any]], output: dict[str, Any]
 ) -> dict[str, Any]:
-    correct = output["answer"] == case["gold_root_cause"]
+    output_valid = output.get("output_valid", True)
+    correct = output_valid and output["answer"] == case["gold_root_cause"]
     acceptable_abstention = _acceptable_abstention(case, selected)
-    wrong_non_abstention = not output["abstain"] and not correct
-    unnecessary_abstention = output["abstain"] and not acceptable_abstention
-    error = wrong_non_abstention or unnecessary_abstention
+    wrong_non_abstention = output_valid and not output["abstain"] and not correct
+    unnecessary_abstention = (
+        output_valid and output["abstain"] and not acceptable_abstention
+    )
+    error = not output_valid or wrong_non_abstention or unnecessary_abstention
     return {
         "answer": output["answer"],
         "ranking": output["ranking"],
+        "invalid_output": not output_valid,
         "correct_root_cause": correct,
-        "correct_root_rank": output["ranking"].index(case["gold_root_cause"]) + 1,
+        "correct_root_rank": (
+            output["ranking"].index(case["gold_root_cause"]) + 1
+            if output_valid
+            else None
+        ),
         "abstain": output["abstain"],
         "acceptable_abstention": acceptable_abstention,
         "false_belief": wrong_non_abstention,
         "unnecessary_abstention": unnecessary_abstention,
         "interpretation_error": error,
-        "task_success": correct or (output["abstain"] and acceptable_abstention),
+        "task_success": output_valid
+        and (correct or (output["abstain"] and acceptable_abstention)),
     }
 
 
@@ -1101,8 +1123,20 @@ def summarize_condition_rows(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
     misleading_rows = [
         row for row in rows if row["retrieval"]["misleading_selected"] > 0
     ]
+    valid_ranks = [
+        row["interpretation"]["correct_root_rank"]
+        for row in rows
+        if row["interpretation"]["correct_root_rank"] is not None
+    ]
     metrics = {
         "sample_count": len(rows),
+        "invalid_interpretation_output_count": sum(
+            row["interpretation"].get("invalid_output", False) for row in rows
+        ),
+        "event_rate_invalid_interpretation_output": sum(
+            row["interpretation"].get("invalid_output", False) for row in rows
+        )
+        / len(rows),
         "event_stratum_counts": dict(
             sorted(Counter(row["stratum"] for row in rows).items())
         ),
@@ -1153,9 +1187,7 @@ def summarize_condition_rows(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
             row["retrieval"]["complete_evidence_recall"] for row in rows
         )
         / len(rows),
-        "mean_correct_root_rank": float(
-            np.mean([row["interpretation"]["correct_root_rank"] for row in rows])
-        ),
+        "mean_correct_root_rank": float(np.mean(valid_ranks)) if valid_ranks else None,
         "error_association": association,
     }
     metrics["uncertainty"] = {
@@ -2676,10 +2708,14 @@ def render_report(result: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## Interpreter output handling",
+            "",
+            "The interpreter gets one retry when its JSON output is invalid or its ranking is incomplete. If both attempts fail, the runner records an invalid-output interpretation error. It does not invent missing ranks or count the response as an abstention. Invalid outputs have no root-cause rank and appear in the invalid-output rate.",
+            "",
             "## Results by condition and budget",
             "",
-            "| Condition | k | n | Retrieval error | Interpretation error | Root-cause accuracy | Recall@k | Complete-evidence recall | Recovery with misleading evidence selected | Conditional error-risk difference (95% CI) | Binary error correlation (95% CI) |",
-            "|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
+            "| Condition | k | n | Invalid interpreter output | Retrieval error | Interpretation error | Root-cause accuracy | Recall@k | Complete-evidence recall | Recovery with misleading evidence selected | Conditional error-risk difference (95% CI) | Binary error correlation (95% CI) |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
         ]
     )
     for condition in CONDITIONS:
@@ -2712,7 +2748,8 @@ def render_report(result: dict[str, Any]) -> str:
                 else f"{recovery:.3f} (n={overall['misleading_evidence_selected_case_count']})"
             )
             lines.append(
-                f"| {condition} | {budget} | {overall['sample_count']} | {overall['event_rate_retrieval_error']:.3f} | "
+                f"| {condition} | {budget} | {overall['sample_count']} | {overall['event_rate_invalid_interpretation_output']:.3f} ({overall['invalid_interpretation_output_count']}) | "
+                f"{overall['event_rate_retrieval_error']:.3f} | "
                 f"{overall['event_rate_interpretation_error']:.3f} | {overall['event_rate_correct_root_cause']:.3f} | "
                 f"{overall['mean_recall_at_k']:.3f} | {overall['complete_evidence_recall_rate']:.3f} | "
                 f"{recovery_text} | {ci_text} | {correlation_text} |"
