@@ -23,6 +23,12 @@ operations on those results does the evidence support?**
    deterministic runner.
 8. [Falsification and stop conditions](falsification.md): findings that can
    narrow or reject the research claims.
+9. [Retrieval and interpretation dependence](retrieval-selection-dependence.md):
+   UNREAL's reported scope, IsoPrax hypotheses, and the evidence-based case for
+   a bounded study.
+10. [Retrieval-dependence benchmark protocol](retrieval-selection-dependence-benchmark.md):
+    four selector/interpreter conditions, evidence budgets, metrics, and
+    falsification rules.
 
 ## Program boundaries
 
