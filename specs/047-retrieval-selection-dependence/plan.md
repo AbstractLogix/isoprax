@@ -1,24 +1,24 @@
-# Implementation Plan: Retrieval and Interpretation Dependence Research Design
+# Implementation Plan: Retrieval and Interpretation Dependence Benchmark
 
-**Branch**: codex/047-retrieval-selection-dependence
+**Branch**: codex/047-retrieval-selection-benchmark
 **Date**: 2026-10-08
 **Spec**: [spec.md](spec.md)
 
 ## Summary
 
-Publish a literature and repository evidence note, a pre-execution benchmark protocol, and a concrete next-slice plan. Keep the work research-only. Do not implement a retriever or runtime policy in this slice.
+Implement and execute the frozen synthetic benchmark in the research protocol. Use pinned local language models through the Ollama API, a BM25 baseline, and a prompted-selector proxy. Keep the work research-only. Do not implement a retrieval product or runtime policy.
 
 ## Scope
 
-This slice delivers documents that define the question and prepare a controlled synthetic study. It does not execute a benchmark or claim a new experimental result.
+This slice generates a seeded synthetic case set, runs the predeclared selector/interpreter conditions and budgets, compares operation rules, and writes replayable results and an evidence report. It does not reproduce UNREAL or establish general model behavior.
 
-The next slice will implement and run the benchmark from [the protocol](../../docs/research/retrieval-selection-dependence-benchmark.md). That implementation must use a pinned model-native proxy if it does not use UNREAL itself.
+The local Ollama interface does not expose hidden representations. Condition C therefore uses a prompted Model X selector proxy. Condition B uses a distinct prompted Model Y selector; it is not retrieval-specialized. These deviations are frozen in the preregistration and limit the claim.
 
 ## Constitution Check
 
 - **Specification Authority**: PASS. The research does not change the normative IsoPrax contract.
 - **Honest Conformance**: PASS. Prior results and paper claims stay within their tested settings. The next benchmark is synthetic.
-- **Contract-First Testing**: PASS for this documentation slice. The protocol states the checks and result fields for the future runner.
+- **Contract-First Testing**: PASS. Focused tests cover case generation, prompt isolation, deterministic selectors, metric calculations, and result replay.
 - **Deterministic Core, Explicit Effects**: PASS. The future study must pin seeds, inputs, model revisions, and software metadata.
 - **Minimal Reference Scope**: PASS. No retrieval product, admission engine, orchestration, or deliberation behavior is added.
 
@@ -40,13 +40,16 @@ The next slice will implement and run the benchmark from [the protocol](../../do
 
 - **docs/research/retrieval-selection-dependence.md**: literature context, repository results, hypotheses, boundaries, and recommendation.
 - **docs/research/retrieval-selection-dependence-benchmark.md**: conditions, case protocol, measures, rules, analysis, falsification, and next-slice plan.
+- **specs/047-retrieval-selection-dependence/preregistration.json**: frozen pilot configuration, models, splits, thresholds, and analysis choices.
+- **scripts/retrieval_dependence_experiment.py**: local deterministic case generation, model calls, metrics, policies, and report rendering.
+- **tests/test_retrieval_dependence_experiment.py**: focused checks for evidence boundaries and calculations.
 - **specs/047-retrieval-selection-dependence/**: scope, plan, task record, research source, data model, quickstart, checklist, and convergence record.
 - **docs/research/README.md**: entry points to the new research thread.
 
 ## Validation
 
-Review every paper claim against the primary source. Check the listed local paths and links, verify the four conditions and metric definitions against the user request, search for prohibited scope expansion, and run git diff --check. No software test is needed for this document-only slice.
+Run the focused unit tests. Run the full benchmark twice using the frozen local model digests and seeds. Compare the canonical case, selection, and result digests. Check the report against machine-readable metrics and run git diff --check.
 
 ## Complexity Tracking
 
-No exception. The protocol is intentionally a design for a future bounded study. It adds no runtime dependency or implementation.
+No exception. The runner uses the existing standard library, NumPy, and scikit-learn dependencies. Ollama is an explicit local research effect, not a project runtime dependency. The model proxy limitation remains visible in the report.

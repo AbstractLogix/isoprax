@@ -2,11 +2,11 @@
 description: "Research note and benchmark protocol tasks"
 ---
 
-# Tasks: Retrieval and Interpretation Dependence Research Design
+# Tasks: Retrieval and Interpretation Dependence
 
 **Input**: Design documents in this directory and the user's research request.
 
-**Organization**: This feature completes the public research design. Benchmark implementation and execution are the next slice.
+**Organization**: The research-design slice is complete. The implementation and execution slice is now active.
 
 ## Phase 1: Establish evidence boundaries
 
@@ -30,13 +30,20 @@ description: "Research note and benchmark protocol tasks"
 - [x] T006 Add the research note and benchmark protocol to **docs/research/README.md**; review source links, local links, required measures, and scope boundaries.
 - [x] T007 Record the completed requirements and remaining benchmark-execution boundary in **specs/047-retrieval-selection-dependence/converge.md**.
 
-## Next slice: Implement and execute the benchmark
+## Phase 4: Freeze and implement the pilot
 
-These steps are prepared by the protocol and are not completed by this research-design slice:
+**Goal**: Make the synthetic run reproducible and keep labels out of selector and interpreter inputs.
 
-1. Freeze and digest the case set, labels, seeds, model revisions, splits, and analysis choices.
-2. Implement the four conditions and record exact selected items and both source and model lineage.
-3. Run all five evidence budgets.
-4. Compute retrieval, interpretation, dependence, held-out score-calibration, selector-pair corroboration, and rule-comparison measures.
-5. Save canonical machine-readable results and a synthetic-only evidence report.
-6. Assess H1-H5 and determine whether a bounded Semadmit review is warranted.
+- [X] T008 Freeze model digests, seeds, case count, strata, splits, metrics, and decision thresholds in **preregistration.json** before model execution.
+- [X] T009 Implement the case generator, BM25 and prompted selectors, local model client, and exact selection trace in **scripts/retrieval_dependence_experiment.py**.
+- [X] T010 Implement held-out interpretation, paired error metrics, score calibration, selector-pair controls, and the four policy baselines.
+- [X] T011 Add focused tests for deterministic generation, prompt-label separation, parsing, budgets, metrics, policy outcomes, and canonical serialization.
+
+## Phase 5: Execute and report
+
+**Goal**: Run the frozen synthetic study, check replay, and state the evidence limits.
+
+- [ ] T012 Execute all primary conditions, evidence budgets, repeated-selection probes, and selector-pair probes with the pinned local model digests.
+- [ ] T013 Repeat the run and verify the case, selection, and result digests; save canonical results to **docs/research/retrieval-selection-dependence-results.json**.
+- [ ] T014 Write **docs/research/retrieval-selection-dependence-results.md** with per-condition results, uncertainty, H1-H5 assessment, evidence classes, limits, and next tests.
+- [ ] T015 Update the research index, quickstart, and convergence record; assess whether any bounded Semadmit review is warranted.

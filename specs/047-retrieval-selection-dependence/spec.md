@@ -1,8 +1,8 @@
 # Feature Specification: Retrieval and Interpretation Dependence
 
-**Feature Branch**: codex/047-retrieval-selection-dependence
+**Feature Branch**: codex/047-retrieval-selection-benchmark
 **Created**: 2026-10-08
-**Status**: Research design complete; benchmark execution is the next slice
+**Status**: Synthetic benchmark implementation and execution in progress
 **Input**: User request to study evidence-selection and interpretation dependence, inspired by UNREAL arXiv:2610.08463v1.
 
 ## User Scenarios & Testing
@@ -83,7 +83,7 @@ A research engineer needs a concrete plan to run the benchmark and compare simpl
 - **SC-001**: A reader can state which retrieval and answer-quality results the cited paper reports and which dependence measures it does not report.
 - **SC-002**: The protocol contains four primary conditions, paired controls, five evidence budgets, provenance fields, separate evidence properties, and all requested metric classes.
 - **SC-003**: The rule comparison includes naive, global-label, metadata-only, and operation-specific alternatives with held-out case evaluation.
-- **SC-004**: The next implementation slice has the question, primary conditions, metrics, and preregistration requirements needed to freeze its analysis before a run.
+- **SC-004**: The benchmark run is tied to a committed preregistration that freezes its question, primary conditions, model revisions, sample, metrics, and analysis before execution.
 - **SC-005**: The recommendation distinguishes further study from product or runtime implementation.
 - **SC-006**: The protocol defines selector-pair corroboration and a held-out score-calibration test against source status.
 
