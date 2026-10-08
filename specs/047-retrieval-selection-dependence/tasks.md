@@ -6,7 +6,7 @@ description: "Research note and benchmark protocol tasks"
 
 **Input**: Design documents in this directory and the user's research request.
 
-**Organization**: The research-design slice is complete. The implementation and execution slice is now active.
+**Organization**: The research-design slice is complete. The implementation, model-compatibility, and execution slices are now active.
 
 ## Phase 1: Establish evidence boundaries
 
@@ -43,7 +43,33 @@ description: "Research note and benchmark protocol tasks"
 
 **Goal**: Run the frozen synthetic study, check replay, and state the evidence limits.
 
-- [ ] T012 Execute all primary conditions, evidence budgets, repeated-selection probes, and selector-pair probes with the pinned local model digests.
-- [ ] T013 Repeat the run and verify the case, selection, and result digests; save canonical results to **docs/research/retrieval-selection-dependence-results.json**.
-- [ ] T014 Write **docs/research/retrieval-selection-dependence-results.md** with per-condition results, uncertainty, H1-H5 assessment, evidence classes, limits, and next tests.
-- [ ] T015 Update the research index, quickstart, and convergence record; assess whether any bounded Semadmit review is warranted.
+- [x] T012 Execute all primary conditions, evidence budgets, repeated-selection probes, and selector-pair probes with the pinned local model digests.
+- [x] T013 Repeat the run and compare case, selection, and result digests; preserve both raw runs and report the complete-result mismatch in **docs/research/retrieval-selection-dependence-results.json.gz**.
+- [x] T014 Write **docs/research/retrieval-selection-dependence-results.md** with per-condition results, uncertainty, H1-H5 assessment, evidence classes, limits, and next tests.
+- [x] T015 Update the research index, quickstart, and convergence record; assess whether any bounded Semadmit review is warranted.
+
+## Phase 6: Implement the model-role experiment
+
+**Goal**: Compare each requested model role on named synthetic targets without treating its output scale or model identity as semantic evidence.
+
+- [ ] T016 Freeze exact available model tags, selected manifest digests, Ollama version, fixture hashes, prompts, split, weights, and bootstrap seeds in **model-role-preregistration.json**. Do not begin scored calls while any requested role has an unresolved identity.
+- [ ] T017 Implement deterministic Tev1 binary, categorical, and ordinal fixture generation with native `/v1/systemone` output parsing and per-family metrics.
+- [ ] T018 Implement the shared evidence-relevance fixtures, EmbeddingGemma, Tev1, Qwen, Gemma, Coder, and Guardian adapters. Preserve each role's native output form and record invalid output without imputing it.
+- [ ] T019 Implement development-only calibration, per-domain held-out metrics, ranking and threshold-change analysis, Qwen/Gemma/Guardian error dependence, predeclared pools, and Coder-by-family comparisons.
+- [ ] T020 Add focused deterministic tests for fixture stability, split and label isolation, output parsers, calibration, bootstrap units, pooling, and result digests.
+
+## Phase 7: Execute model-role comparisons and report
+
+**Goal**: Run the frozen synthetic model-role suite twice and publish bounded findings.
+
+- [ ] T021 Execute and replay the complete model-role suite; retain both raw result files and compare fixture and configuration digests.
+- [ ] T022 Write **docs/research/model-role-commensurability-results.json** and **docs/research/model-role-commensurability-results.md** with per-target calibration, discrimination, sample counts, event rates, uncertainty, dependence, pooling, ranking, and role-by-family results.
+- [ ] T023 Update the quickstart, research index, and convergence record. State which IsoPrax rules may be proposed for Semadmit review, which hypotheses were weakened or falsified, and the next experiment.
+
+## Phase 8: Assess Bouleusis retrieval outcomes
+
+**Goal**: Assess the supplied retrieval sweep as a measurement-validity problem and define the next multi-bug study without implementing Bouleusis behavior.
+
+- [x] T024 Write **docs/research/bouleusis-retrieval-measurement-validity.md**. Recompute the Bouleusis JSONL aggregates, preserve per-run outcomes and source hash, separate non-reproducible summary claims, assess recall versus downstream success and epistemic outcomes, and state the pseudo-replication limit.
+- [x] T025 Write **docs/research/iterative-retrieval-preregistration.md** with a prospective multi-bug design, equal-budget and repeated-reasoning controls, metric/estimand definitions, cost accounting, and falsification criteria.
+- [x] T026 Link the report and protocol from the research map and current retrieval-dependence note; preserve Bouleusis and Semadmit ownership boundaries.

@@ -6,6 +6,7 @@ import pytest
 
 from scripts.retrieval_dependence_experiment import (
     CAUSES,
+    MODEL_API_TAGS,
     MODEL_DIGESTS,
     MODEL_X,
     MODEL_Y,
@@ -27,8 +28,10 @@ from scripts.retrieval_dependence_experiment import (
     finalize_replay,
     generate_cases,
     load_preregistration,
+    read_json_artifact,
     selector_prompt,
     validate_case_set,
+    write_text_artifact,
 )
 
 
@@ -87,9 +90,16 @@ def test_preregistration_pins_current_models_and_analysis() -> None:
     preregistration = load_preregistration()
 
     assert preregistration["models"]["X"]["tag"] == MODEL_X
+    assert preregistration["models"]["X"]["api_model"] == MODEL_API_TAGS[MODEL_X]
     assert (
         preregistration["models"]["X"]["ollama_manifest_sha256"]
         == MODEL_DIGESTS[MODEL_X]
+    )
+    assert preregistration["models"]["Y"]["tag"] == MODEL_Y
+    assert preregistration["models"]["Y"]["api_model"] == MODEL_API_TAGS[MODEL_Y]
+    assert (
+        preregistration["models"]["Y"]["ollama_manifest_sha256"]
+        == MODEL_DIGESTS[MODEL_Y]
     )
     assert preregistration["case_design"]["case_count"] == 36
     assert preregistration["case_design"]["budgets"] == [1, 2, 4, 8, 16]
@@ -381,6 +391,19 @@ def test_canonical_json_and_case_digest_are_stable() -> None:
     assert canonical_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
     with pytest.raises(ValueError):
         canonical_json({"not_finite": float("nan")})
+
+
+def test_gzip_artifacts_roundtrip_deterministically(tmp_path) -> None:
+    path = tmp_path / "result.json.gz"
+    value = {"b": 2, "a": 1}
+    content = canonical_json(value) + "\n"
+
+    write_text_artifact(path, content)
+    first_bytes = path.read_bytes()
+    write_text_artifact(path, content)
+
+    assert path.read_bytes() == first_bytes
+    assert read_json_artifact(path) == value
 
 
 def test_replay_finalizer_requires_identical_complete_results() -> None:

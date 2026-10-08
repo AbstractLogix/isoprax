@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "study_id": "synthetic-model-role-commensurability-pilot-v1",
+  "status": "draft; exact model identities incomplete; no scored calls permitted",
+  "frozen_date": null,
+  "evidence_class": "synthetic pilot; not field evidence",
+  "question": "Do model role and score source predict held-out performance on explicitly named synthetic targets, and do Qwen, Gemma, and Guardian judgments have independent errors on a shared relevance target?",
+  "service_version": "0.40.1",
+  "models": {
+    "qwen": {
+      "tag": "qwen3.5:9b",
+      "manifest_sha256": "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "selected_runner": "llamacpp",
+      "role": "general reasoning and common-target judge",
+      "lineage": "Qwen3.5 model family; independent fine-tuning source not inferred"
+    },
+    "gemma": {
+      "tag": "gemma4:e4b",
+      "manifest_sha256": "c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb",
+      "role": "independent general-model comparison and common-target judge",
+      "lineage": "Gemma 4 model family"
+    },
+    "coder": {
+      "tag": "qwen2.5-coder:7b",
+      "manifest_sha256": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+      "role": "coding/debugging-specialized comparison",
+      "lineage": "Qwen2.5 model family; fine-tuning details not inferred"
+    },
+    "embedding": {
+      "requested_tag": "embeddinggemma-2:740m",
+      "candidate_tag": "embeddinggemma-2:740m-bf16",
+      "tag": "embeddinggemma-2:740m-bf16",
+      "manifest_sha256": null,
+      "status": "pending Linux runtime-compatible manifest verification",
+      "role": "query/evidence retrieval similarity",
+      "lineage": "EmbeddingGemma 2; architecture relation recorded from the model card only"
+    },
+    "tev1": {
+      "tag": "tev1:4b",
+      "manifest_sha256": "9b5bb969e46c4b776826d6f2d401e22893205693f172653af6254897255025b8",
+      "role": "native decision probability for binary, categorical, ordinal, and relevance targets",
+      "lineage": "Fine-tuned from Qwen3.5-4B; shared training lineage is not an independence judgment"
+    },
+    "guardian": {
+      "tag": "granite4.1-guardian:8b",
+      "manifest_sha256": null,
+      "status": "download and selected manifest verification pending",
+      "role": "binary relevance critic",
+      "lineage": "Fine-tuned from Granite 4.1 8B; yes/no output has no native probability"
+    }
+  },
+  "generation": {
+    "temperature": 0,
+    "top_p": 1,
+    "think": false,
+    "seed_base": 47069,
+    "chat_prompt_version": "model-role-relevance-v1",
+    "invalid_output_retry_limit": 1,
+    "max_invalid_output_policy": "record invalid output and exclude it from metrics and pools; never infer a label or probability"
+  },
+  "tev1_calibration": {
+    "families": {
+      "equipment_binary": {"type": "noul", "outcome_classes": ["false", "true"], "cases": 64, "development": 32, "heldout": 32},
+      "software_category": {"type": "choice", "outcome_classes": ["null_dereference", "race_condition", "bad_serialization", "stale_cache"], "cases": 64, "development": 32, "heldout": 32},
+      "incident_ordinal": {"type": "score", "outcome_classes": ["routine", "limited", "major", "critical"], "cases": 64, "development": 32, "heldout": 32}
+    },
+    "split": "stratify each family by outcome class; within each class, first half development and second half heldout",
+    "metrics": ["Brier score", "log loss", "reliability bins", "expected calibration error", "discrimination when defined", "ordinal ranked probability score and threshold calibration", "95% case-bootstrap intervals"],
+    "only_pooled_metric": {
+      "name": "equal_weight_expected_log_loss",
+      "estimand": "Expected Tev1 log loss when one authored question family is sampled uniformly",
+      "weights": {"equipment_binary": 0.3333333333333333, "software_category": 0.3333333333333333, "incident_ordinal": 0.3333333333333333}
+    }
+  },
+  "common_relevance_target": {
+    "definition": "Does this evidence item provide information relevant to answering this query?",
+    "domains": ["equipment", "software", "policy", "safety"],
+    "queries_per_domain": 32,
+    "items_per_query": 8,
+    "development_queries_per_domain": 16,
+    "heldout_queries_per_domain": 16,
+    "gold_properties_kept_separate": ["relevance", "source_status", "operation_use"],
+    "holdout_metrics": ["Brier score", "log loss", "reliability bins", "expected calibration error", "ROC AUC when defined", "recall@k", "mean reciprocal rank", "top-item changes", "binary decision changes at 0.5", "95% query-bootstrap intervals"],
+    "calibration": "One logistic map per score source fit on development queries only; per-domain maps are diagnostics. Guardian's mapped probability is not native.",
+    "only_pooled_metric": {
+      "name": "equal_weight_four_domain_mixture",
+      "estimand": "Expected relevance metric over the four authored domains sampled uniformly",
+      "weights": {"equipment": 0.25, "software": 0.25, "policy": 0.25, "safety": 0.25}
+    }
+  },
+  "judgment_dependence": {
+    "models": ["qwen", "gemma", "guardian"],
+    "pairing": "same heldout query and evidence item; report development marginal error product and heldout joint error",
+    "pooling": [
+      {"name": "majority_label", "weights": {"qwen": 0.3333333333333333, "gemma": 0.3333333333333333, "guardian": 0.3333333333333333}},
+      {"name": "equal_weight_calibrated_probability", "weights": {"qwen": 0.3333333333333333, "gemma": 0.3333333333333333, "guardian": 0.3333333333333333}}
+    ],
+    "pool_requires": "valid output from all three judges; no imputation",
+    "interpretation_limit": "Error dependence on these fixtures and this common target only. Shared model identity or architecture does not establish independence or semantic equivalence."
+  },
+  "specialization": {
+    "contrast": "qwen2.5-coder versus qwen3.5 and gemma4 by domain on the same evidence-relevance target",
+    "primary_interaction": "software debugging versus the three non-code domains",
+    "measures": ["paired per-query accuracy difference", "rank agreement", "top-item disagreement", "95% query-bootstrap interval"],
+    "leaderboard": false
+  },
+  "relevance_threshold": 0.5,
+  "seeds": {"tev1_cases": 47060, "relevance_cases": 47061, "metrics": 47062, "calibration": 47063, "bootstrap": 47064, "dependence": 47066, "specialization": 47067, "mixture": 47068, "calls": 47069},
+  "repeatability": {"full_runs": 2, "requirement": "same exact model digests, preregistration digest, case-set digest, and prompt-template digest; preserve and compare raw parsed outputs"},
+  "claim_limit": "Synthetic local model-role pilot only. It does not establish field calibration, broad family performance, error independence, score interchangeability, cross-target pooling permission, or a runtime enforcement rule.",
+  "protocol_amendments": []
+}

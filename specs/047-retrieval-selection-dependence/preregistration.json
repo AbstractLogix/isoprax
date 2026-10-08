@@ -8,12 +8,14 @@
   "models": {
     "X": {
       "tag": "qwen3.5:9b",
-      "ollama_manifest_sha256": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+      "api_model": "llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "ollama_manifest_sha256": "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
       "role": "condition A/B/C interpreter and condition C selector"
     },
     "Y": {
-      "tag": "gemma4:e2b",
-      "ollama_manifest_sha256": "7fbdbf8f5e45a75bb122155ed546e765b4d9c53a1285f62fd9f506baa1c5a47e",
+      "tag": "gemma4:e4b",
+      "api_model": "llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "ollama_manifest_sha256": "a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
       "role": "condition B selector and condition D interpreter"
     },
     "service": "Ollama 0.40.1 local API",
@@ -119,6 +121,24 @@
       "timing": "before scored rerun",
       "reason": "The pinned 0.20.4 service was not installed. Preflight found the active local Ollama service at 0.40.1, while both model manifest digests still matched the preregistered values. The run stopped before any scored prompt.",
       "change": "Pin Ollama 0.40.1 for both full replays. Keep the exact Model X and Model Y manifest digest checks. Record the service version in each result. No outputs from the failed preflight are part of the analysis."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The user expanded the initial model set to role-specific models and requested gemma4:e4b. A partial rerun using gemma4:e2b stopped during the first Qwen selector pass; no result file was written, and no partial output is analyzed.",
+      "change": "Replace Model Y with gemma4:e4b and pin its exact manifest digest. Keep the original four-condition study as a distinct general-model selection/interpreter comparison. Add the separate six-role experiment in model-role-preregistration.json."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before any scored rerun",
+      "reason": "The active local Ollama API no longer reports the previously pinned Qwen manifest 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7. Its tag now exposes ggml and llamacpp manifests; /api/show marks c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a as selected.",
+      "change": "Pin the currently selected qwen3.5:9b manifest c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a. The runner must fail if the active tag resolves to another manifest. No scored prompt has been run under the old or new pin."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "after one complete replay; before inspecting its outcomes or starting the amended replay pair",
+      "reason": "The first replay started with the preregistered gemma4:e4b manifest c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb, but the local tag changed during the run. The runner did not log a manifest per request, so the run may mix revisions and cannot be certified. The next replay stopped at preflight before a scored prompt. No outcome table or metric was inspected.",
+      "change": "Preserve the first raw output separately and exclude it from scored analysis. For a new replay pair, use immutable digest-qualified llama.cpp API names for Qwen and Gemma, with their requested model tags and exact manifest digests recorded separately. Keep all fixtures, prompts, metrics, hypotheses, and thresholds unchanged. Do not combine the first run with the amended pair."
     }
   ]
 }

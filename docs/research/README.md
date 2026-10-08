@@ -29,6 +29,15 @@ operations on those results does the evidence support?**
 10. [Retrieval-dependence benchmark protocol](retrieval-selection-dependence-benchmark.md):
     four selector/interpreter conditions, evidence budgets, metrics, and
     falsification rules.
+11. [Model-role commensurability benchmark](model-role-commensurability-benchmark.md):
+    calibration across question families, retrieval scores, critic judgments,
+    shared-model error dependence, and specialization.
+12. [Bouleusis retrieval measurement validity](bouleusis-retrieval-measurement-validity.md):
+    supplied one-bug retrieval results, metric limits, pseudo-replication, and
+    the proposed [iterative retrieval preregistration](iterative-retrieval-preregistration.md).
+13. [Retrieval-dependence synthetic pilot results](retrieval-selection-dependence-results.md):
+    two pinned local-model runs, replay differences, policy baselines, and
+    limits of the synthetic evidence; its result JSON is compressed for storage.
 
 ## Program boundaries
 

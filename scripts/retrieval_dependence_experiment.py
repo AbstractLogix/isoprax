@@ -7,6 +7,7 @@ reproduce UNREAL, expose a retrieval product, or establish field performance.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import math
@@ -26,10 +27,14 @@ from sklearn.metrics import log_loss, roc_auc_score
 ROOT = Path(__file__).resolve().parents[1]
 PREREGISTRATION = ROOT / "specs/047-retrieval-selection-dependence/preregistration.json"
 MODEL_X = "qwen3.5:9b"
-MODEL_Y = "gemma4:e2b"
+MODEL_Y = "gemma4:e4b"
+MODEL_API_TAGS = {
+    MODEL_X: "llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+    MODEL_Y: "llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+}
 MODEL_DIGESTS = {
-    MODEL_X: "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
-    MODEL_Y: "7fbdbf8f5e45a75bb122155ed546e765b4d9c53a1285f62fd9f506baa1c5a47e",
+    MODEL_X: "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+    MODEL_Y: "a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
 }
 SEED = 47047
 MODEL_SEED = 47048
@@ -184,7 +189,7 @@ class OllamaClient:
         response = self._post(
             "/api/chat",
             {
-                "model": model,
+                "model": MODEL_API_TAGS.get(model, model),
                 "messages": [
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -223,6 +228,20 @@ def canonical_json(value: Any) -> str:
     )
 
 
+def read_json_artifact(path: Path) -> Any:
+    payload = path.read_bytes()
+    if path.suffix == ".gz":
+        payload = gzip.decompress(payload)
+    return json.loads(payload.decode("utf-8"))
+
+
+def write_text_artifact(path: Path, content: str) -> None:
+    payload = content.encode("utf-8")
+    if path.suffix == ".gz":
+        payload = gzip.compress(payload, compresslevel=9, mtime=0)
+    path.write_bytes(payload)
+
+
 def digest_json(value: Any) -> str:
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
@@ -237,8 +256,16 @@ def load_preregistration() -> dict[str, Any]:
     expected = {
         "study_id": "synthetic-retrieval-dependence-pilot-v1",
         "models": {
-            "X": {"tag": MODEL_X, "ollama_manifest_sha256": MODEL_DIGESTS[MODEL_X]},
-            "Y": {"tag": MODEL_Y, "ollama_manifest_sha256": MODEL_DIGESTS[MODEL_Y]},
+            "X": {
+                "tag": MODEL_X,
+                "api_model": MODEL_API_TAGS[MODEL_X],
+                "ollama_manifest_sha256": MODEL_DIGESTS[MODEL_X],
+            },
+            "Y": {
+                "tag": MODEL_Y,
+                "api_model": MODEL_API_TAGS[MODEL_Y],
+                "ollama_manifest_sha256": MODEL_DIGESTS[MODEL_Y],
+            },
         },
         "case_count": 36,
         "items_per_case": 16,
@@ -251,6 +278,7 @@ def load_preregistration() -> dict[str, Any]:
         "models": {
             name: {
                 "tag": value.get("models", {}).get(name, {}).get("tag"),
+                "api_model": value.get("models", {}).get(name, {}).get("api_model"),
                 "ollama_manifest_sha256": value.get("models", {})
                 .get(name, {})
                 .get("ollama_manifest_sha256"),
@@ -2436,9 +2464,10 @@ def run_benchmark(client: OllamaClient | None = None) -> dict[str, Any]:
         )
     available = client.model_digests()
     for model, expected in MODEL_DIGESTS.items():
-        if available.get(model) != expected:
+        api_model = MODEL_API_TAGS[model]
+        if available.get(api_model) != expected:
             raise ExperimentError(
-                f"pinned model mismatch for {model}: expected {expected}, got {available.get(model)}"
+                f"pinned model mismatch for {model} via {api_model}: expected {expected}, got {available.get(api_model)}"
             )
 
     cases = generate_cases()
@@ -2611,8 +2640,16 @@ def run_benchmark(client: OllamaClient | None = None) -> dict[str, Any]:
         "preregistration": preregistration,
         "runner_git_commit": _git_commit(),
         "models": {
-            "X": {"tag": MODEL_X, "manifest_sha256": MODEL_DIGESTS[MODEL_X]},
-            "Y": {"tag": MODEL_Y, "manifest_sha256": MODEL_DIGESTS[MODEL_Y]},
+            "X": {
+                "tag": MODEL_X,
+                "api_model": MODEL_API_TAGS[MODEL_X],
+                "manifest_sha256": MODEL_DIGESTS[MODEL_X],
+            },
+            "Y": {
+                "tag": MODEL_Y,
+                "api_model": MODEL_API_TAGS[MODEL_Y],
+                "manifest_sha256": MODEL_DIGESTS[MODEL_Y],
+            },
             "service": f"Ollama {service_version}",
             "generation": {
                 "temperature": 0,
@@ -2679,6 +2716,19 @@ def render_report(result: dict[str, Any]) -> str:
             "This result is limited to the authored fixture."
         )
     replay = result.get("replay", {})
+    second_run = replay.get("second_run_result")
+    if isinstance(second_run, dict):
+        second_operation = second_run["operation_policy_summary"]["operation_specific"]
+        second_metadata = second_run["operation_policy_summary"]["metadata_only"]
+        if (
+            second_operation["false_permissions"] == operation["false_permissions"]
+            and second_metadata["false_permissions"] == metadata["false_permissions"]
+            and second_operation["unnecessary_refusals"]
+            == operation["unnecessary_refusals"]
+            and second_metadata["unnecessary_refusals"]
+            == metadata["unnecessary_refusals"]
+        ):
+            operation_answer += " The same permission-error counts appeared in run 2."
     lines = [
         "# Retrieval and Interpretation Dependence: Synthetic Pilot Results",
         "",
@@ -2688,17 +2738,147 @@ def render_report(result: dict[str, Any]) -> str:
         f"- Case digest: `{result['case_set_sha256']}`.",
         f"- Selection trace digest: `{result['selection_trace_sha256']}`.",
         f"- Full replay matched: `{replay.get('complete_result_match', False)}`.",
-        f"- Model X: `{MODEL_X}` (`{MODEL_DIGESTS[MODEL_X]}`).",
-        f"- Model Y: `{MODEL_Y}` (`{MODEL_DIGESTS[MODEL_Y]}`).",
+        f"- Model X: `{MODEL_X}` via `{MODEL_API_TAGS[MODEL_X]}` (`{MODEL_DIGESTS[MODEL_X]}`).",
+        f"- Model Y: `{MODEL_Y}` via `{MODEL_API_TAGS[MODEL_Y]}` (`{MODEL_DIGESTS[MODEL_Y]}`).",
         "- Selector limitation: prompted ranking only; neither selector exposes hidden representations, and Model Y is not retrieval-specialized.",
-        "",
-        "## Selector output handling",
-        "",
-        "One surrounding JSON code fence is removed when present. The runner keeps the first occurrence of each valid item ID, drops repeated or unknown IDs, and appends missing IDs in candidate input order. The report counts these repairs. A response with no valid candidate ID stops the run.",
-        "",
-        "| Selector | Model calls | Raw exact permutations | Repaired calls | Repeated IDs | Unknown IDs dropped | Missing IDs appended |",
-        "|---|---:|---:|---:|---:|---:|---:|",
     ]
+    if isinstance(second_run, dict):
+
+        def trace_key(row: dict[str, Any]) -> tuple[str, str, int]:
+            return row["condition"], row["case_id"], row["budget"]
+
+        first_traces = {
+            trace_key(row): row for row in result["primary_interpretation_traces"]
+        }
+        second_traces = {
+            trace_key(row): row for row in second_run["primary_interpretation_traces"]
+        }
+        shared_trace_keys = first_traces.keys() & second_traces.keys()
+        changed_traces = [
+            key for key in shared_trace_keys if first_traces[key] != second_traces[key]
+        ]
+        trace_changes_by_condition = Counter(key[0] for key in changed_traces)
+
+        first_rows = {trace_key(row): row for row in result["primary_rows"]}
+        second_rows = {trace_key(row): row for row in second_run["primary_rows"]}
+        shared_row_keys = first_rows.keys() & second_rows.keys()
+        changed_interpretation_fields = Counter()
+        for key in shared_row_keys:
+            first_interpretation = first_rows[key]["interpretation"]
+            second_interpretation = second_rows[key]["interpretation"]
+            for field in set(first_interpretation) | set(second_interpretation):
+                if first_interpretation.get(field) != second_interpretation.get(field):
+                    changed_interpretation_fields[field] += 1
+
+        lines.extend(
+            [
+                "",
+                "## Replay reproducibility",
+                "",
+                f"- Case set matched: `{replay['case_set_match']}`; selector traces matched: `{replay['selection_trace_match']}`; complete results matched: `{replay['complete_result_match']}`.",
+                f"- Canonical result digests: run 1 `{replay['first_result_sha256']}`; run 2 `{replay['second_result_sha256']}`.",
+                f"- Interpretation traces changed in {len(changed_traces)}/{len(shared_trace_keys)} records: "
+                + ", ".join(
+                    f"{condition} {trace_changes_by_condition.get(condition, 0)}"
+                    for condition in CONDITIONS
+                )
+                + ".",
+                f"- Among {len(shared_row_keys)} held-out condition/budget rows, parsed field changes were "
+                + ", ".join(
+                    f"{field} {changed_interpretation_fields[field]}"
+                    for field in (
+                        "task_success",
+                        "interpretation_error",
+                        "false_belief",
+                        "abstain",
+                        "answer",
+                        "ranking",
+                    )
+                    if changed_interpretation_fields[field]
+                )
+                + ".",
+                "- The condition and operation-rule tables below show run 1. The next tables show where run 2 changed the outcome summaries.",
+                "- An earlier run using mutable model names is retained as `retrieval-selection-dependence-run-mutable-tag-unverified.json` and excluded: the Gemma tag changed during that run, and per-request model revisions were not recorded. A later retry stopped at preflight before scoring.",
+                "",
+                "| Condition | k | Task success (run 1 → run 2) | Interpretation error | False belief | Abstention |",
+                "|---|---:|---:|---:|---:|---:|",
+            ]
+        )
+        for condition in CONDITIONS:
+            for budget in BUDGETS:
+                first_overall = result["condition_metrics"][condition][str(budget)][
+                    "overall"
+                ]
+                second_overall = second_run["condition_metrics"][condition][
+                    str(budget)
+                ]["overall"]
+                metric_names = (
+                    "task_success_rate",
+                    "event_rate_interpretation_error",
+                    "event_rate_false_belief",
+                    "event_rate_abstention",
+                )
+                if all(
+                    first_overall[name] == second_overall[name] for name in metric_names
+                ):
+                    continue
+                n = first_overall["sample_count"]
+                counts = [
+                    f"{round(first_overall[name] * n)}/{n} → "
+                    f"{round(second_overall[name] * n)}/{n}"
+                    for name in metric_names
+                ]
+                lines.append(f"| {condition} | {budget} | " + " | ".join(counts) + " |")
+        lines.extend(
+            [
+                "",
+                "| Rule | False permissions | Unnecessary refusals | Interpretation errors | Ranking changes | Decision changes |",
+                "|---|---:|---:|---:|---:|---:|",
+            ]
+        )
+        for name, first_policy in result["operation_policy_summary"].items():
+            second_policy = second_run["operation_policy_summary"][name]
+            lines.append(
+                f"| {name} | {first_policy['false_permissions']} / {second_policy['false_permissions']} | "
+                f"{first_policy['unnecessary_refusals']} / {second_policy['unnecessary_refusals']} | "
+                f"{first_policy['interpretation_errors']} / {second_policy['interpretation_errors']} | "
+                f"{first_policy['ranking_changed_records_vs_naive']} / {second_policy['ranking_changed_records_vs_naive']} | "
+                f"{first_policy['decision_changed_records_vs_naive']} / {second_policy['decision_changed_records_vs_naive']} |"
+            )
+        first_h2 = result["H2_retrieval_interpretation_check"]
+        second_h2 = second_run["H2_retrieval_interpretation_check"]
+        first_h4 = result["H4_lineage_prediction"]
+        second_h4 = second_run["H4_lineage_prediction"]
+        h2_comparisons = first_h2["paired_case_budget_comparisons"]
+        lines.extend(
+            [
+                "",
+                f"- H2 check: C recall exceeded A in {first_h2['C_recall_improved_over_A']}/{h2_comparisons} comparisons in both runs; interpretation error was not lower in {first_h2['among_those_interpretation_error_not_lower']} cases in run 1 and {second_h2['among_those_interpretation_error_not_lower']} in run 2.",
+                f"- H4 lineage log-loss change: run 1 {first_h4['paired_log_loss_change_after_lineage']:.3f}; run 2 {second_h4['paired_log_loss_change_after_lineage']:.3f}. Both are descriptive predictions on the authored fixture.",
+                "",
+                "## Selector output handling",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "",
+                "## Replay reproducibility",
+                "",
+                "No second raw run is attached, so repeatability has not been assessed.",
+                "",
+                "## Selector output handling",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "One surrounding JSON code fence is removed when present. The runner keeps the first occurrence of each valid item ID, drops repeated or unknown IDs, and appends missing IDs in candidate input order. The report counts these repairs. A response with no valid candidate ID stops the run.",
+            "",
+            "| Selector | Model calls | Raw exact permutations | Repaired calls | Repeated IDs | Unknown IDs dropped | Missing IDs appended |",
+            "|---|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
     for selector, summary in result["selector_output_format"].items():
         lines.append(
             f"| {selector} | {summary['call_count']} | {summary['raw_exact_permutation_count']} | "
@@ -2712,7 +2892,7 @@ def render_report(result: dict[str, Any]) -> str:
             "",
             "The interpreter gets one retry when its JSON output is invalid or its ranking is incomplete. If both attempts fail, the runner records an invalid-output interpretation error. It does not invent missing ranks or count the response as an abstention. Invalid outputs have no root-cause rank and appear in the invalid-output rate.",
             "",
-            "## Results by condition and budget",
+            "## Run 1 results by condition and budget",
             "",
             "| Condition | k | n | Invalid interpreter output | Retrieval error | Interpretation error | Root-cause accuracy | Recall@k | Complete-evidence recall | Recovery with misleading evidence selected | Conditional error-risk difference (95% CI) | Binary error correlation (95% CI) |",
             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
@@ -2792,7 +2972,7 @@ def render_report(result: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## Operation-rule comparison",
+            "## Run 1 operation-rule comparison",
             "",
             "| Rule | False permissions / invalid | Unnecessary refusals / valid | Interpretation errors | Ranking changes | Decision changes |",
             "|---|---:|---:|---:|---:|---:|",
@@ -2881,7 +3061,7 @@ def render_report(result: dict[str, Any]) -> str:
             "",
             "- **Established repository results:** Feature 046 contains deterministic synthetic operation-gating and shared-JEPA outcome experiments. Those results do not measure retrieval-selection dependence.",
             "- **Literature-supported:** UNREAL reports retrieval and answer-quality results for its tested settings. It does not report the conditional selection/interpreter error measures in this study. See [UNREAL v1](https://arxiv.org/abs/2610.08463v1).",
-            "- **New findings:** The tables above report this fixed synthetic case set and two-replay local-model pilot. Labels were generator-invariant-checked, not independently expert-adjudicated. The results do not establish deployed performance or broad model effects.",
+            "- **New findings:** The run 1 tables above describe this fixed synthetic case set. The replay matched cases and selector traces but not complete interpreter results. Labels were generator-invariant-checked, not independently expert-adjudicated. Do not treat the run 1 table as a stable two-run estimate or as deployed performance.",
             "- **Remaining hypotheses:** General error dependence, learned-retriever behavior, hidden-representation selection, external populations, and operational policy value remain untested.",
             "",
             "## Answers and next test",
@@ -2922,16 +3102,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("--output is required")
     if args.finalize_runs:
         try:
-            first = json.loads(args.finalize_runs[0].read_text(encoding="utf-8"))
-            second = json.loads(args.finalize_runs[1].read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
+            first = read_json_artifact(args.finalize_runs[0])
+            second = read_json_artifact(args.finalize_runs[1])
+        except (OSError, EOFError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             parser.error(f"cannot read both replay files: {exc}")
         result = finalize_replay(first, second)
     else:
         result = run_benchmark(OllamaClient(args.base_url))
     rendered = canonical_json(result) + "\n"
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(rendered, encoding="utf-8")
+    write_text_artifact(args.output, rendered)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(render_report(result), encoding="utf-8")

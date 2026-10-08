@@ -54,6 +54,38 @@ This is a proposed record shape for the next benchmark slice. It is not a runtim
 - Audited source-status target and explicit handling of unknown labels.
 - Held-out Brier score, reliability-bin counts, calibration error, discrimination where defined, and prevalence baseline.
 
+## Model profile
+
+- Exact model tag and immutable manifest digest.
+- Declared role: general reasoning, code specialization, embedding/retrieval, decision probability, or critic/judge.
+- Known base-model or architecture lineage, with its source and uncertainty.
+- Native output type: embedding similarity, probability, numeric confidence, or categorical judgment.
+- Local service and relevant prompt or model configuration revision.
+- Role and lineage are metadata. They are not evidence of calibration or error independence.
+
+## Target and question family
+
+- **target_id**: exact event or judgment being predicted.
+- **family_id**: predeclared question family; never inferred from model output.
+- Target definition, positive and negative criteria, and label-generation rule.
+- Synthetic case ID, development/held-out split, and family-specific event rate.
+- Mixture estimand and fixed family weights, when an aggregate across families is reported.
+
+## Model score observation
+
+- Case, evidence item, model profile, target, and family IDs.
+- Native score type and unmodified native value.
+- Optional development-fitted mapping to the named target probability, with mapping revision.
+- Raw predicted label, output-validity state, and raw response digest.
+- Held-out calibration, discrimination, ranking, and error labels are recomputable from the record.
+
+## Judgment dependence
+
+- Same case and target IDs for every compared judge.
+- Paired error indicators, false-positive/false-negative overlap, and shared known lineage.
+- Development-estimated independence baseline and held-out observed joint error, with uncertainty.
+- Any declared pool rule, its fixed weights, and held-out outcome beside each component judge.
+
 ## Policy evaluation
 
 - **case_id**, operation, policy ID, and expected permission.
