@@ -134,3 +134,17 @@ No alternate embedding model, backend, or runner was substituted. The two comple
 **INDEPENDENT OPERATION-SPECIFIC VALIDATION NOT YET SUPPORTED**
 
 **NO SEMADMIT RULE WARRANTED**
+
+## Addendum — 2026-10-08 runtime and independent-review qualification
+
+The exact EmbeddingGemma Ollama blocker and the proposed upstream checkpoint condition are recorded in [the runtime qualification amendment](model-runtime-qualification-amendment-2026-10-08.md). Raw Ollama manifests and the pinned Google checkpoint identity record are preserved under `docs/experiments/model-runtime/`. The official Google checkpoint is a proposed alternate runner condition; output equivalence with either Ollama artifact has not been established. No model-role outputs were scored, no preregistration freeze SHA exists, and no two-run study exists. Keep the model-role study blocked.
+
+The [independent policy review packet](operation-specific-policy-independent-review-packet-2026-10-08.md) records the four forecast case defects, the unresolved reference for expected threshold decisions, the prospective unscored v3 files, and the reviewer availability check. The GitHub repository lists only the PR author as a collaborator and no review was submitted. Keep independent operation-specific validation unsupported. The [version 2 corrigendum](operation-policy-challenge-v2-corrigendum-2026-10-08.md) corrects the stale “unscored” status sentence without changing any frozen artifact.
+
+The branch history does not support a useful PR split without making a later review packet the only content of the model-role PR or rewriting the existing history. Keep PR #54 as one draft with explicit blockers. No Semadmit rule is warranted.
+
+**MODEL-ROLE FINDINGS NOT YET REPRODUCED**
+
+**INDEPENDENT OPERATION-SPECIFIC VALIDATION NOT YET SUPPORTED**
+
+**NO SEMADMIT RULE WARRANTED**
