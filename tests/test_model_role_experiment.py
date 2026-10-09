@@ -17,7 +17,12 @@ from scripts.model_role_experiment import (
 
 def _preregistration() -> dict[str, object]:
     models = {
-        key: {"tag": f"{key}:test", "manifest_sha256": f"{i:064x}"}
+        key: {
+            "requested_tag": f"{key}:requested",
+            "api_model": f"{key}:resolved",
+            "tag": f"{key}:requested",
+            "manifest_sha256": f"{i:064x}",
+        }
         for i, key in enumerate(
             ("qwen", "gemma", "coder", "embedding", "tev1", "guardian"), 1
         )
@@ -35,11 +40,13 @@ def _preregistration() -> dict[str, object]:
 class FakeClient:
     def __init__(self, prereg: dict[str, object]) -> None:
         self.prereg = prereg
+        self.pinned_tags: dict[str, str] = {}
 
     def server_version(self) -> str:
         return "0.40.1"
 
     def model_digests(self, tags: dict[str, str]) -> dict[str, str]:
+        self.pinned_tags = tags.copy()
         return {
             key: self.prereg["models"][key]["manifest_sha256"]  # type: ignore[index]
             for key in tags
@@ -185,6 +192,41 @@ def test_model_pin_fails_closed_when_a_role_digest_is_missing() -> None:
     prereg["models"]["embedding"]["manifest_sha256"] = None  # type: ignore[index]
     with pytest.raises(ExperimentError, match="exact manifest digest"):
         _pin_models(FakeClient(prereg), prereg)
+
+
+def test_model_pin_uses_resolved_api_model_not_requested_tag() -> None:
+    prereg = _preregistration()
+    client = FakeClient(prereg)
+
+    _pin_models(client, prereg)
+
+    assert client.pinned_tags == {
+        key: prereg["models"][key]["api_model"]  # type: ignore[index]
+        for key in ("qwen", "gemma", "coder", "embedding", "tev1", "guardian")
+    }
+
+
+def test_model_digests_rejects_ambiguous_duplicate_tag_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = OllamaClient()
+
+    def fake_request(route: str, payload: dict[str, object] | None = None):
+        del payload
+        if route == "/api/show":
+            return {"manifests": []}
+        if route == "/api/tags":
+            return {
+                "models": [
+                    {"name": "gemma4:e4b", "digest": "a" * 64},
+                    {"name": "gemma4:e4b", "digest": "b" * 64},
+                ]
+            }
+        raise AssertionError(f"unexpected route: {route}")
+
+    monkeypatch.setattr(client, "_request", fake_request)
+    with pytest.raises(ExperimentError, match="cannot resolve one selected manifest"):
+        client.model_digests({"gemma": "gemma4:e4b"})
 
 
 def test_model_client_rejects_non_loopback_hosts() -> None:

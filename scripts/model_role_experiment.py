@@ -178,6 +178,9 @@ def _pin_models(client: Any, prereg: dict[str, Any]) -> tuple[str, dict[str, str
     models = prereg.get("models", {})
     if any(
         not isinstance(models.get(key), dict)
+        or not isinstance(models[key].get("requested_tag"), str)
+        or not isinstance(models[key].get("api_model"), str)
+        or not models[key]["api_model"]
         or not isinstance(models[key].get("manifest_sha256"), str)
         or re.fullmatch(
             r"[0-9a-f]{64}", models[key]["manifest_sha256"].removeprefix("sha256:")
@@ -186,9 +189,9 @@ def _pin_models(client: Any, prereg: dict[str, Any]) -> tuple[str, dict[str, str
         for key in MODEL_KEYS
     ):
         raise ExperimentError(
-            "every requested model needs an exact manifest digest before scoring"
+            "every model needs requested/API tags and an exact manifest digest before scoring"
         )
-    tags = {key: str(models[key]["tag"]) for key in MODEL_KEYS}
+    tags = {key: str(models[key]["api_model"]) for key in MODEL_KEYS}
     version = client.server_version()
     if version != prereg.get("service_version"):
         raise ExperimentError(f"Ollama version {version} differs from preregistration")
@@ -999,7 +1002,7 @@ def run_suite(
     tev_rows, relevance_rows, raw = [], [], {}
     for n, case in enumerate(tev_cases):
         key = case["family"]
-        model = prereg["models"]["tev1"]["tag"]
+        model = prereg["models"]["tev1"]["api_model"]
         try:
             probs, response = _tev1_call(
                 client, model, case, int(prereg["seeds"]["calls"]) + n
@@ -1036,7 +1039,7 @@ def run_suite(
         raw[f"tev1:{case['case_id']}"] = response
     for n, case in enumerate(relevance_cases):
         for key in MODEL_KEYS:
-            tag = prereg["models"][key]["tag"]
+            tag = prereg["models"][key]["api_model"]
             seed = (
                 int(prereg["seeds"]["calls"])
                 + 10000

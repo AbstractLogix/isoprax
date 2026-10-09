@@ -1,6 +1,6 @@
 # Model-Role and Score-Commensurability Benchmark
 
-**Status:** Design and runner in progress. No model-role findings are available yet.
+**Status:** Protocol and runner are prepared. Scored runs are blocked at model identity resolution. No model-role findings are available.
 
 **Evidence class:** Synthetic. This study tests the named local model revisions on authored fixtures. It does not establish broad model-family or field performance.
 
@@ -21,11 +21,26 @@ The answer to question 5 is no by design. The study tests predictive behavior on
 | `qwen3.5:9b` | General reasoning baseline | Prompted probability and label | Exact revision; Qwen family |
 | `gemma4:e4b` | General-model comparison | Prompted probability and label | Exact revision; Gemma 4 family |
 | `qwen2.5-coder:7b` | Coding and debugging comparison | Prompted probability and label | Exact revision; Qwen2.5 family |
-| `embeddinggemma-2:740m-bf16` | Evidence retrieval | Query/document similarity | Same EmbeddingGemma 2 740M model variant; Linux-compatible precision tag |
+| `embeddinggemma-2:740m` | Evidence retrieval | Query/document similarity | EmbeddingGemma 2 740M; local runtime identity unresolved |
 | `tev1:4b` | Decision probability | Question-type-specific outcome probabilities | Fine-tuned from Qwen3.5-4B |
 | `granite4.1-guardian:8b` | Critic and relevance judge | Binary yes/no score | Fine-tuned from Granite 4.1 8B |
 
-Both `embeddinggemma-2:740m` and the proposed `embeddinggemma-2:740m-bf16` tag failed to load on the active Linux Ollama service. A compatible build is still being checked. The experiment will not substitute another embedding model without a dated protocol amendment. Freeze the exact manifest digest for every available model and the Ollama version before scored calls.
+## Local identity-resolution checkpoint — 2026-10-08
+
+No scored model calls were made. The preregistration remains a draft and is not frozen. The table below records the identities resolved from the active local Ollama 0.40.1 API. The machine-readable preregistration is the source of record.
+
+| Role | Requested tag | Resolved API model/tag | Manifest SHA-256 | Family | Runtime/backend | Selected runner |
+|---|---|---|---|---|---|---|
+| Qwen | `qwen3.5:9b` | `llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a` | `c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a` | `qwen35` | Local Ollama 0.40.1 API; Q4_K_M | `llamacpp` |
+| Gemma | `gemma4:e4b` | `llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986` | `a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986` | `gemma4` | Local Ollama 0.40.1 API; Q4_K_M | `llamacpp` |
+| Coder | `qwen2.5-coder:7b` | `qwen2.5-coder:7b` | `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364` | `qwen2` | Local Ollama 0.40.1 API; Q4_K_M | `ggml` |
+| Embedding | `embeddinggemma-2:740m` | None | No local manifest | `embeddinggemma-2` | Linux Ollama 0.40.1 rejected both `embeddinggemma-2:740m` and candidate `embeddinggemma-2:740m-bf16` because MLX support is unavailable. Registry manifest digest for the candidate: `54d809644cd8a4e4547a6cdcf165e91b13d89e86d5c30fc4fe2f147f0b2f82f1`. This is not a local runnable identity. | None |
+| Tev1 | `tev1:4b` | `tev1:4b` | `9b5bb969e46c4b776826d6f2d401e22893205693f172653af6254897255025b8` | `qwen35` | Local Ollama 0.40.1 `/v1/systemone` API; Q8_0 | `llamacpp` |
+| Guardian | `granite4.1-guardian:8b` | `granite4.1-guardian:8b` | `f82c0882cec110279601307cdd632d868e29f16eaa59947bef51096e5f740492` | `granite` | Local Ollama 0.40.1 API; Q6_K | `ggml` |
+
+The Gemma tag exposes two manifests: `537f7e16a1bb3870ba57e328fd60ca1ea28a0c35002c788a7d5845efa865cd86` for runner `ggml`, and the selected `a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986` for `llamacpp`. Only the selected manifest is pinned above. The previous Gemma digest in the draft was absent from the current inventory. The Qwen tag also exposes more than one manifest; the preregistration preserves its previously selected `llamacpp` digest.
+
+The EmbeddingGemma registry digest does not satisfy the required local identity gate. Do not score the role suite, freeze the preregistration, or substitute another model or runtime until the exact candidate is available and loadable. Any change to the candidate, backend, or runner requires a dated amendment before freeze.
 
 The Ollama model cards describe Tev1 as a Qwen3.5 fine-tune, EmbeddingGemma 2 as built on Gemma 4 architecture, and Guardian as a Granite 4.1 fine-tune. They describe Guardian's prescribed output as yes/no, including a context-relevance criterion. The runner uses the documented Guardian scoring block for one evidence item per call. Tev1's `confidence` field measures how concentrated its option probabilities are; it is not the probability that its answer is correct. These statements define recorded metadata and API use. They do not prove empirical error dependence. [Tev1 model card](https://ollama.com/library/tev1:4b), [EmbeddingGemma 2 model card](https://ai.google.dev/gemma/docs/embeddinggemma/model_card_2), [Granite Guardian 4.1 model card](https://ollama.com/library/granite4.1-guardian).
 
