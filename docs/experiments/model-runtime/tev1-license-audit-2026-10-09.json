@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-09",
+  "evidence": {
+    "local_ollama_license_inspection": "Ollama displayed Apache License 2.0 text for tev1:4b.",
+    "ollama_model_manifest_sha256": "9b5bb969e46c4b776826d6f2d401e22893205693f172653af6254897255025b8",
+    "runtime_identity_record": "docs/experiments/model-runtime/ollama-model-role-load-preflight-2026-10-09.json"
+  },
+  "limits": [
+    "This records the local Ollama package only.",
+    "It does not resolve the upstream fine-tuned weight license statement.",
+    "It does not establish a license for generated experiment outputs.",
+    "It does not cover Tev1 training sources or their licenses."
+  ],
+  "model_tag": "tev1:4b",
+  "source_model_card": "https://huggingface.co/togethercomputer/Tev1-4B-experimental",
+  "status": "output_reuse_rights_unresolved"
+}

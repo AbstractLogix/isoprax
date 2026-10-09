@@ -1,0 +1,85 @@
+{
+  "compression": "gzip -n -9; no JSONL transformations",
+  "description": "Lossless gzip snapshots of raw records from the pinned Bouleusis commit. Decompression reproduces the source bytes exactly. Raw source records are not rewritten.",
+  "files": [
+    {
+      "package_bytes": 543854,
+      "package_path": "docs/experiments/bouleusis-2026-10-08-raw/evidence-selection-sweep-2026-10-08.jsonl.gz",
+      "package_sha256": "d74c5e76abbc0ced449bd2575e819f627d774c5c7f2023deae78c111a9d2cb70",
+      "record_type": "metadata",
+      "source_blob_oid": "3fbe17ec456f882f95d91718fb8f5a7bb184b6fd",
+      "source_bytes": 5984854,
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_lines_including_header": 171,
+      "source_path": "docs/experiments/evidence-selection-sweep-2026-10-08.jsonl",
+      "source_repository": "AbstractLogix/Bouleusis (private)",
+      "source_run_or_record_count": 170,
+      "source_sha256": "0c186de744404ea39a33cc5625c2eaa52a4e6e9c398d489f9d32a237e446fb1c"
+    },
+    {
+      "package_bytes": 146030,
+      "package_path": "docs/experiments/bouleusis-2026-10-08-raw/retrieval-multibug-2026-10-08.jsonl.gz",
+      "package_sha256": "0470bd7e88dbc39826957766d1bf4c779651205531d587a00d8b8d0b4fb0de57",
+      "record_type": "metadata",
+      "source_blob_oid": "66ca3968090ddb6da9e71b9b20e2de4b84199177",
+      "source_bytes": 2501395,
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_lines_including_header": 229,
+      "source_path": "docs/experiments/retrieval-multibug-2026-10-08.jsonl",
+      "source_repository": "AbstractLogix/Bouleusis (private)",
+      "source_run_or_record_count": 228,
+      "source_sha256": "815d2eaaf49941b831f0f20ef3c780dba80c230e76b4424ddba876d12a803921"
+    },
+    {
+      "package_bytes": 110631,
+      "package_path": "docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-voi-2026-10-08.jsonl.gz",
+      "package_sha256": "eedcdfedb82fcb5dd015aeacc317c02ee78b708bdaef749eee77f674e31ac784",
+      "record_type": "metadata",
+      "source_blob_oid": "9a88e9a4b0bd9a65cd9f92cc783fd033f3593169",
+      "source_bytes": 3184258,
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_lines_including_header": 145,
+      "source_path": "docs/experiments/evidence-acquisition-voi-2026-10-08.jsonl",
+      "source_repository": "AbstractLogix/Bouleusis (private)",
+      "source_run_or_record_count": 144,
+      "source_sha256": "bd877311c8047f74d38293aebeb0a6024aeec4489e5b416be0240da5f310f568"
+    },
+    {
+      "package_bytes": 33567,
+      "package_path": "docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-audit-2026-10-08.jsonl.gz",
+      "package_sha256": "a201adfea594985ee118de87fa0c5e8e22472a3c0f33802afe5ed992142e91d9",
+      "record_type": "metadata",
+      "source_blob_oid": "adfeba5b5aba2defd5274ae1cdb9efa172faceac",
+      "source_bytes": 1076255,
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_lines_including_header": 544,
+      "source_path": "docs/experiments/evidence-acquisition-audit-2026-10-08.jsonl",
+      "source_repository": "AbstractLogix/Bouleusis (private)",
+      "source_run_or_record_count": 543,
+      "source_sha256": "3689d06770f1c1f0ebad903ae560a2a729984e866c161262ba697ba1f7ddcd59"
+    }
+  ],
+  "public_release": {
+    "authorization_date": "2026-10-09",
+    "authorization_record": "docs/experiments/bouleusis-2026-10-08-raw/README.md",
+    "authorization_scope": "The repository owner authorized public release of the selected original research data files from Bouleusis listed in this manifest.",
+    "data_license": "CC-BY-4.0",
+    "data_license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "excluded_materials": [
+      "Bouleusis source code",
+      "third-party materials",
+      "model weights and third-party datasets"
+    ],
+    "included_artifacts": [
+      "docs/experiments/bouleusis-2026-10-08-raw/evidence-selection-sweep-2026-10-08.jsonl.gz",
+      "docs/experiments/bouleusis-2026-10-08-raw/retrieval-multibug-2026-10-08.jsonl.gz",
+      "docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-voi-2026-10-08.jsonl.gz",
+      "docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-audit-2026-10-08.jsonl.gz"
+    ],
+    "license_scope_note": "CC BY 4.0 applies to the selected original research data files in this directory. It does not change the license for IsoPrax source code or grant rights in excluded materials."
+  },
+  "schema_version": 1,
+  "source_access": "private GitHub repository; reader access required",
+  "source_license": "NOASSERTION",
+  "source_license_context": "The pinned source repository did not assert a license. The repository owner separately authorized public release of these selected original research records. This source metadata and the public release license describe different facts."
+}
