@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "study_id": "synthetic-model-role-commensurability-pilot-v1",
+  "status": "draft; EmbeddingGemma is not loadable by the active Linux Ollama runtime; no scored calls permitted",
+  "frozen_date": null,
+  "evidence_class": "synthetic pilot; not field evidence",
+  "question": "Do model role and score source predict held-out performance on explicitly named synthetic targets, and do Qwen, Gemma, and Guardian judgments have independent errors on a shared relevance target?",
+  "service_version": "0.40.1",
+  "runtime": "Linux local host; Ollama 0.40.1",
+  "models": {
+    "qwen": {
+      "tag": "qwen3.5:9b",
+      "requested_tag": "qwen3.5:9b",
+      "api_model": "llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "manifest_sha256": "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "selected_runner": "llamacpp",
+      "model_family": "qwen35",
+      "quantization_level": "Q4_K_M",
+      "runtime_backend": "Ollama 0.40.1 local API; digest-qualified llama.cpp model alias",
+      "role": "general reasoning and common-target judge",
+      "lineage": "Qwen3.5 model family; independent fine-tuning source not inferred"
+    },
+    "gemma": {
+      "tag": "gemma4:e4b",
+      "requested_tag": "gemma4:e4b",
+      "api_model": "llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "manifest_sha256": "a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "selected_runner": "llamacpp",
+      "model_family": "gemma4",
+      "quantization_level": "Q4_K_M",
+      "runtime_backend": "Ollama 0.40.1 local API; digest-qualified llama.cpp model alias",
+      "role": "independent general-model comparison and common-target judge",
+      "lineage": "Gemma 4 model family",
+      "identity_amendment": "The earlier recorded digest c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb was not present in the current local manifest inventory. The current gemma4:e4b tag exposes ggml digest 537f7e16a1bb3870ba57e328fd60ca1ea28a0c35002c788a7d5845efa865cd86 and selected llamacpp digest a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986. Use only the selected digest-qualified alias; the ggml variant is not selected."
+    },
+    "coder": {
+      "tag": "qwen2.5-coder:7b",
+      "requested_tag": "qwen2.5-coder:7b",
+      "api_model": "qwen2.5-coder:7b",
+      "manifest_sha256": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+      "selected_runner": "ggml",
+      "model_family": "qwen2",
+      "quantization_level": "Q4_K_M",
+      "runtime_backend": "Ollama 0.40.1 local API",
+      "role": "coding/debugging-specialized comparison",
+      "lineage": "Qwen2.5 model family; fine-tuning details not inferred"
+    },
+    "embedding": {
+      "requested_tag": "embeddinggemma-2:740m",
+      "candidate_tag": "embeddinggemma-2:740m-bf16",
+      "tag": "embeddinggemma-2:740m-bf16",
+      "api_model": "embeddinggemma-2:740m-bf16",
+      "manifest_sha256": null,
+      "registry_manifest_sha256": "54d809644cd8a4e4547a6cdcf165e91b13d89e86d5c30fc4fe2f147f0b2f82f1",
+      "model_family": "embeddinggemma-2",
+      "quantization_level": null,
+      "runtime_backend": "Ollama 0.40.1 on Linux; registry manifest requires MLX, which is unavailable on this host",
+      "selected_runner": null,
+      "status": "blocked: registry identity known but active Linux runtime cannot load the model",
+      "identity_probe": "ollama pull embeddinggemma-2:740m-bf16 and ollama pull embeddinggemma-2:740m both failed with: this model requires MLX support, but the MLX runtime is not available",
+      "role": "query/evidence retrieval similarity",
+      "lineage": "EmbeddingGemma 2; architecture relation recorded from the model card only"
+    },
+    "tev1": {
+      "tag": "tev1:4b",
+      "requested_tag": "tev1:4b",
+      "api_model": "tev1:4b",
+      "manifest_sha256": "9b5bb969e46c4b776826d6f2d401e22893205693f172653af6254897255025b8",
+      "selected_runner": "llamacpp",
+      "model_family": "qwen35",
+      "quantization_level": "Q8_0",
+      "runtime_backend": "Ollama 0.40.1 local /v1/systemone API",
+      "role": "native decision probability for binary, categorical, ordinal, and relevance targets",
+      "lineage": "Fine-tuned from Qwen3.5-4B; shared training lineage is not an independence judgment"
+    },
+    "guardian": {
+      "tag": "granite4.1-guardian:8b",
+      "requested_tag": "granite4.1-guardian:8b",
+      "api_model": "granite4.1-guardian:8b",
+      "manifest_sha256": "f82c0882cec110279601307cdd632d868e29f16eaa59947bef51096e5f740492",
+      "selected_runner": "ggml",
+      "model_family": "granite",
+      "quantization_level": "Q6_K",
+      "runtime_backend": "Ollama 0.40.1 local API; Q6_K manifest",
+      "status": "local manifest verified",
+      "role": "binary relevance critic",
+      "lineage": "Fine-tuned from Granite 4.1 8B; yes/no output has no native probability"
+    }
+  },
+  "generation": {
+    "temperature": 0,
+    "top_p": 1,
+    "think": false,
+    "seed_base": 47069,
+    "chat_prompt_version": "model-role-relevance-v1",
+    "invalid_output_retry_limit": 1,
+    "max_invalid_output_policy": "record invalid output and exclude it from metrics and pools; never infer a label or probability"
+  },
+  "tev1_calibration": {
+    "families": {
+      "equipment_binary": {"type": "noul", "outcome_classes": ["false", "true"], "cases": 64, "development": 32, "heldout": 32},
+      "software_category": {"type": "choice", "outcome_classes": ["null_dereference", "race_condition", "bad_serialization", "stale_cache"], "cases": 64, "development": 32, "heldout": 32},
+      "incident_ordinal": {"type": "score", "outcome_classes": ["routine", "limited", "major", "critical"], "cases": 64, "development": 32, "heldout": 32}
+    },
+    "split": "stratify each family by outcome class; within each class, first half development and second half heldout",
+    "metrics": ["Brier score", "log loss", "reliability bins", "expected calibration error", "discrimination when defined", "ordinal ranked probability score and threshold calibration", "95% case-bootstrap intervals"],
+    "only_pooled_metric": {
+      "name": "equal_weight_expected_log_loss",
+      "estimand": "Expected Tev1 log loss when one authored question family is sampled uniformly",
+      "weights": {"equipment_binary": 0.3333333333333333, "software_category": 0.3333333333333333, "incident_ordinal": 0.3333333333333333}
+    }
+  },
+  "common_relevance_target": {
+    "definition": "Does this evidence item provide information relevant to answering this query?",
+    "domains": ["equipment", "software", "policy", "safety"],
+    "queries_per_domain": 32,
+    "items_per_query": 8,
+    "development_queries_per_domain": 16,
+    "heldout_queries_per_domain": 16,
+    "gold_properties_kept_separate": ["relevance", "source_status", "operation_use"],
+    "holdout_metrics": ["Brier score", "log loss", "reliability bins", "expected calibration error", "ROC AUC when defined", "recall@k", "mean reciprocal rank", "top-item changes", "binary decision changes at 0.5", "95% query-bootstrap intervals"],
+    "calibration": "One logistic map per score source fit on development queries only; per-domain maps are diagnostics. Guardian's mapped probability is not native.",
+    "only_pooled_metric": {
+      "name": "equal_weight_four_domain_mixture",
+      "estimand": "Expected relevance metric over the four authored domains sampled uniformly",
+      "weights": {"equipment": 0.25, "software": 0.25, "policy": 0.25, "safety": 0.25}
+    }
+  },
+  "judgment_dependence": {
+    "models": ["qwen", "gemma", "guardian"],
+    "pairing": "same heldout query and evidence item; report development marginal error product and heldout joint error",
+    "pooling": [
+      {"name": "majority_label", "weights": {"qwen": 0.3333333333333333, "gemma": 0.3333333333333333, "guardian": 0.3333333333333333}},
+      {"name": "equal_weight_calibrated_probability", "weights": {"qwen": 0.3333333333333333, "gemma": 0.3333333333333333, "guardian": 0.3333333333333333}}
+    ],
+    "pool_requires": "valid output from all three judges; no imputation",
+    "interpretation_limit": "Error dependence on these fixtures and this common target only. Shared model identity or architecture does not establish independence or semantic equivalence."
+  },
+  "specialization": {
+    "contrast": "qwen2.5-coder versus qwen3.5 and gemma4 by domain on the same evidence-relevance target",
+    "primary_interaction": "software debugging versus the three non-code domains",
+    "measures": ["paired per-query accuracy difference", "rank agreement", "top-item disagreement", "95% query-bootstrap interval"],
+    "leaderboard": false
+  },
+  "relevance_threshold": 0.5,
+  "seeds": {"tev1_cases": 47060, "relevance_cases": 47061, "metrics": 47062, "calibration": 47063, "bootstrap": 47064, "dependence": 47066, "specialization": 47067, "mixture": 47068, "calls": 47069},
+  "repeatability": {"full_runs": 2, "requirement": "same exact model digests, preregistration digest, case-set digest, and prompt-template digest; preserve and compare raw parsed outputs"},
+  "claim_limit": "Synthetic local model-role pilot only. It does not establish field calibration, broad family performance, error independence, score interchangeability, cross-target pooling permission, or a runtime enforcement rule.",
+  "protocol_amendments": [
+    {
+      "date": "2026-10-08",
+      "title": "Local identity resolution checkpoint",
+      "reason": "Resolve current local manifests before freezing; do not run scored calls while EmbeddingGemma is not loadable on the active Linux runtime.",
+      "changes": [
+        "Record the exact installed Granite Guardian manifest.",
+        "Replace the unavailable prior Gemma manifest with the selected gemma4:e4b llamacpp manifest and its digest-qualified API alias; record the unselected ggml manifest separately.",
+        "Keep the existing Qwen manifest pin because its digest-qualified alias remains installed.",
+        "Record the EmbeddingGemma registry digest separately from local runtime availability; do not substitute another model or runner."
+      ],
+      "scored_calls_made": false,
+      "freeze_status": "not frozen"
+    }
+  ]
+}

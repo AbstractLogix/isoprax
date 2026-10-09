@@ -29,6 +29,28 @@ operations on those results does the evidence support?**
 10. [Retrieval-dependence benchmark protocol](retrieval-selection-dependence-benchmark.md):
     four selector/interpreter conditions, evidence budgets, metrics, and
     falsification rules.
+11. [Model-role commensurability benchmark](model-role-commensurability-benchmark.md):
+    calibration across question families, retrieval scores, critic judgments,
+    shared-model error dependence, and specialization.
+12. [Bouleusis retrieval measurement validity](bouleusis-retrieval-measurement-validity.md):
+    supplied one-bug retrieval results, metric limits, pseudo-replication, and
+    the proposed [iterative retrieval preregistration](iterative-retrieval-preregistration.md).
+13. [Retrieval-dependence synthetic pilot results](retrieval-selection-dependence-results.md):
+    two pinned local-model runs, replay differences, policy baselines, and
+    limits of the synthetic evidence; its result JSON is compressed for storage.
+14. [Independent validation and model-role status](independent-validation-and-model-role-status-2026-10-08.md):
+    raw Bouleusis multi-bug and VOI reanalysis, policy-oracle limitation,
+    internal operation-policy challenge results, model-role identity gate, and
+    handoff conclusion.
+15. [Operation-specific policy validation preregistration](operation-specific-policy-validation-preregistration.md):
+    frozen version 2 public cases, separate evaluator labels, and the dated
+    fixture-QA amendment.
+16. [Operation-policy challenge results](../experiments/operation-policy-challenge-v2-results.json):
+    per-case candidate decisions, evaluator outcomes, and descriptive
+    operation-specific summaries.
+17. [Model-role blocker resolution and independent validation](model-role-blocker-resolution-results-2026-10-09.md):
+    pinned runtime investigation, raw two-run results, independent metric
+    recomputation, policy-review status, and remaining hypotheses.
 
 ## Program boundaries
 

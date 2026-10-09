@@ -1,24 +1,24 @@
-# Implementation Plan: Retrieval and Interpretation Dependence Research Design
+# Implementation Plan: Retrieval and Interpretation Dependence Benchmark
 
-**Branch**: codex/047-retrieval-selection-dependence
+**Branch**: codex/047-retrieval-selection-benchmark
 **Date**: 2026-10-08
 **Spec**: [spec.md](spec.md)
 
 ## Summary
 
-Publish a literature and repository evidence note, a pre-execution benchmark protocol, and a concrete next-slice plan. Keep the work research-only. Do not implement a retriever or runtime policy in this slice.
+Implement and execute the frozen synthetic selection-dependence benchmark plus a bounded model-role experiment. Use pinned local models and preserve the research-only boundary. Do not implement a retrieval product or runtime policy.
 
 ## Scope
 
-This slice delivers documents that define the question and prepare a controlled synthetic study. It does not execute a benchmark or claim a new experimental result.
+The selection-dependence track generates a seeded synthetic case set, runs conditions A-D and their budgets, compares operation rules, and writes replayable results. The model-role track tests Tev1 calibration across declared question families, score meaning on a common evidence-relevance target, model-judgment error dependence, and coding specialization. It writes separate replayable results and an evidence report. Both tracks are synthetic. Neither reproduces UNREAL or establishes general model behavior. Document-only handoffs analyze Bouleusis raw JSONL without changing its records or adding Bouleusis logic to IsoPrax. The existing operation-specific rule comparison is an oracle-informed structural control; a separate public-input challenge must keep evaluator labels outside candidate inputs.
 
-The next slice will implement and run the benchmark from [the protocol](../../docs/research/retrieval-selection-dependence-benchmark.md). That implementation must use a pinned model-native proxy if it does not use UNREAL itself.
+The local Ollama interface does not expose hidden representations. Condition C therefore uses a prompted Model X selector proxy. Condition B uses a distinct prompted Gemma selector; it is not retrieval-specialized. The role track uses the requested Qwen3.5, Gemma4, Qwen2.5-Coder, EmbeddingGemma 2, Tev1, and Granite Guardian models. It evaluates each model in a task suited to its output form; role labels do not rank models or establish independence.
 
 ## Constitution Check
 
 - **Specification Authority**: PASS. The research does not change the normative IsoPrax contract.
 - **Honest Conformance**: PASS. Prior results and paper claims stay within their tested settings. The next benchmark is synthetic.
-- **Contract-First Testing**: PASS for this documentation slice. The protocol states the checks and result fields for the future runner.
+- **Contract-First Testing**: PASS. Focused tests cover case generation, prompt isolation, deterministic selectors, metric calculations, and result replay.
 - **Deterministic Core, Explicit Effects**: PASS. The future study must pin seeds, inputs, model revisions, and software metadata.
 - **Minimal Reference Scope**: PASS. No retrieval product, admission engine, orchestration, or deliberation behavior is added.
 
@@ -35,18 +35,35 @@ The next slice will implement and run the benchmark from [the protocol](../../do
 9. Test score calibration against held-out source-status labels, not relevance alone.
 10. Require a reproducible held-out effect before proposing any Semadmit review.
 11. State the next slice as benchmark implementation and execution; do not report results in advance.
+12. Keep each target-family metric separate. Any pooled metric must name a mixture estimand and predeclared weights.
+13. Compare EmbeddingGemma similarity, Tev1 probability, language-model self-reported probability, and Guardian's binary judgment only after naming a common held-out target. Fit score mappings on development data only.
+14. Compare Qwen, Gemma, and Guardian errors on the same cases and target. Evaluate any equal-weight vote against each model alone; do not treat distinct model IDs as independent votes.
+15. Evaluate Qwen2.5-Coder on software-debugging cases and non-code controls. Report family-specific outcomes, not a raw model leaderboard.
+16. Record known lineage separately from exact model identity. Tev1's Qwen3.5 base and EmbeddingGemma 2's Gemma 4 architecture are declared analysis context, not proof of shared errors.
 
 ## Project Structure
 
 - **docs/research/retrieval-selection-dependence.md**: literature context, repository results, hypotheses, boundaries, and recommendation.
 - **docs/research/retrieval-selection-dependence-benchmark.md**: conditions, case protocol, measures, rules, analysis, falsification, and next-slice plan.
+- **specs/047-retrieval-selection-dependence/preregistration.json**: frozen pilot configuration, models, splits, thresholds, and analysis choices.
+- **scripts/retrieval_dependence_experiment.py**: local deterministic case generation, model calls, metrics, policies, and report rendering.
+- **tests/test_retrieval_dependence_experiment.py**: focused checks for evidence boundaries and calculations.
+- **specs/047-retrieval-selection-dependence/model-role-preregistration.json**: frozen model-role targets, families, revisions, splits, metrics, and pooling rules.
+- **scripts/model_role_experiment.py**: target-specific synthetic role experiment with Ollama chat, embedding, and Tev1 decision interfaces.
+- **tests/test_model_role_experiment.py**: focused checks for role-specific parsing, calibration, dependence, and pooling.
+- **docs/research/model-role-commensurability-benchmark.md**: role comparison protocol and model-score boundaries.
+- **docs/research/bouleusis-retrieval-measurement-validity.md**: raw-record reanalysis, metric limits, pseudo-replication, and claim assessment.
+- **docs/research/bouleusis-retrieval-sweep-reanalysis.json** and **scripts/reanalyze_bouleusis_sweep.py**: source-hashed per-run reanalysis and deterministic validation of the external JSONL.
+- **docs/research/iterative-retrieval-preregistration.md**: prospective multi-bug design; exact tasks and revisions must be frozen before execution.
+- **docs/research/independent-validation-and-model-role-status-2026-10-08.md**: raw multi-bug and VOI reanalysis, provenance limits, policy oracle leakage, and the blocked model-role conclusion.
+- **docs/research/operation-specific-policy-validation-preregistration.md**: public-input-only candidate policy and separate evaluator protocol.
 - **specs/047-retrieval-selection-dependence/**: scope, plan, task record, research source, data model, quickstart, checklist, and convergence record.
 - **docs/research/README.md**: entry points to the new research thread.
 
 ## Validation
 
-Review every paper claim against the primary source. Check the listed local paths and links, verify the four conditions and metric definitions against the user request, search for prohibited scope expansion, and run git diff --check. No software test is needed for this document-only slice.
+Run focused tests. Run each frozen synthetic study twice using the pinned local model digests and seeds. Compare canonical input, trace, and result digests. Check the reports against machine-readable metrics and run git diff --check.
 
 ## Complexity Tracking
 
-No exception. The protocol is intentionally a design for a future bounded study. It adds no runtime dependency or implementation.
+No exception. The runner uses the existing standard library, NumPy, and scikit-learn dependencies. Ollama is an explicit local research effect, not a project runtime dependency. The model proxy limitation remains visible in the report.

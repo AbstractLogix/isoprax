@@ -1,6 +1,6 @@
 # Retrieval and Interpretation Dependence
 
-**Status**: Research proposal. The benchmark in this note has not been run.
+**Status**: Research proposal with a completed, bounded synthetic pilot. The full replay did not match; see the [results report](retrieval-selection-dependence-results.md). The separate model-role experiment remains pending.
 **Paper reviewed**: UNREAL arXiv version 1, submitted 6 October 2026.
 
 ## Research question
@@ -51,11 +51,26 @@ The listed results do not measure source trust, selection-error dependence, or e
 
 ### New experimental findings
 
-None. This research slice defines a study. It does not implement or run the proposed benchmark.
+The prompted UNREAL-inspired IsoPrax pilot has run twice on its fixed synthetic
+case set. The case set and selection traces matched, but interpretation outputs
+and the complete result digests did not. Treat the run tables as descriptive
+pilot results, not a stable replay estimate. See the
+[pilot results report](retrieval-selection-dependence-results.md). A separate
+Bouleusis retrieval sweep has been reanalyzed from its JSONL records. Its ten
+seeds vary one defect and do not add ten independent bugs. See the
+[measurement-validity assessment](bouleusis-retrieval-measurement-validity.md)
+and its [prospective iterative-retrieval preregistration](iterative-retrieval-preregistration.md).
 
 ### Remaining hypotheses
 
-H1-H5 remain open. No current result supports Semadmit enforcement for shared selector/interpreter lineage. No current result says that a retrieval score measures source validity or confidence in the evidence.
+The pilot did not meet H1's preregistered support gate. It showed retrieval
+recall and interpretation error can differ on some paired cases; a lineage
+feature improved a descriptive prediction on this authored fixture; and the
+operation-specific rule did not increase either permission-error count over
+the metadata-only rule. These results do not establish those effects beyond
+this fixture. H1-H5 remain general hypotheses. No result supports Semadmit
+enforcement for shared selector/interpreter lineage, or says that a retrieval
+score measures source validity or confidence in the evidence.
 
 ## Three separate evidence properties
 

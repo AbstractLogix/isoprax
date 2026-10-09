@@ -1,6 +1,6 @@
 # Retrieval and Interpretation Dependence: Benchmark Specification
 
-**Status**: Pre-execution protocol. No benchmark result is available.
+**Status**: Pre-registered synthetic pilot; see [the frozen run plan](../../specs/047-retrieval-selection-dependence/preregistration.json).
 **Evidence class**: The initial benchmark must be synthetic and explicitly labeled synthetic.
 **Scope**: Test selection provenance and downstream interpretation. Do not implement a retrieval library or reproduce UNREAL.
 
@@ -17,21 +17,23 @@ Keep the candidate corpus, query, evidence labels, evidence budget, interpreter 
 | ID | Selector | Interpreter | Main comparison |
 |---|---|---|---|
 | A | BM25 lexical selector | Model X | Independent lexical baseline |
-| B | External learned Retriever Y | Model X | Learned external selector vs A |
-| C | Model X representation-based selector proxy | Model X | Same-model selection and interpretation vs A and B |
+| B | External learned Model Y prompted selector | Model X | External model selector vs A |
+| C | Model X prompted selector proxy | Model X | Same-model selection and interpretation vs A and B |
 | D | The same Model X selector as C | Model Y | Interpreter-lineage control vs C |
 
-The initial study may use a bounded model-native proxy for C. Record its design and revision. Label it as a proxy. Do not claim that proxy results establish a property of UNREAL.
+The local pilot uses prompted ranking for B and C. The available local model service does not expose hidden representations for these models. This proxy is not representation-based and is not UNREAL. Record that limitation with every result. Do not claim that proxy results establish a property of UNREAL. B is an external learned language model used as a prompted selector; it is not a retrieval-specialized model.
 
 Pin Model X and Model Y by full model and revision identifiers, not display names. Record selector revision, index and corpus digest, tokenizer, prompt, decoding parameters, software version, and run seed. Record shared base-model lineage separately from exact model identity. If a required model or immutable revision cannot be identified, do not report that condition as a completed comparison.
+
+The runner uses non-thinking JSON mode with a 512-token output cap. It removes one surrounding JSON code fence when present. For a selector ranking, it keeps the first occurrence of each valid candidate ID, drops repeated or unknown IDs, and appends omitted IDs in the fixed candidate input order. It records raw compliance and every repair. A response with no valid candidate ID stops the run. This output handling was added before the scored rerun after the pinned Model Y reached the earlier output cap and returned a duplicate ID; the preregistration records the amendment and excludes the failed attempt and smoke checks from analysis.
 
 An oracle-evidence control may give an interpreter only the gold decisive items. Use it to estimate interpretation performance when retrieval succeeds. Do not include it as one of the four primary selector conditions.
 
 ## Cross-selector corroboration probe
 
-Test whether outputs from different selectors provide independent corroboration. For selector pairs A+B, A+C, and B+C, combine the selected items under one fixed Model X interpreter. At nominal combined budgets 2, 4, 8, and 16, take the top half from each selector. The one-item budget does not apply to this pair probe.
+Test whether outputs from different selectors provide independent corroboration. For selector pairs A+B, A+C, and B+C, combine the selected items under one fixed Model X interpreter. At nominal combined budgets 2, 4, 8, and 16, take the top half from each selector. The one-item budget does not apply to this pair probe. The frozen pilot runs this probe on one held-out case per stratum and reports it as a small descriptive subset.
 
-Make every evidence item in this probe the same token length under Model X's pinned tokenizer. If both selectors return the same item, deduplicate it in the combined context and do not count it as two sources. Record the nominal budget, realized unique-item count, exact input token count, and item overlap. Compare the combined set with each selector's top-m set, where m is the combined set's realized unique-item count. This gives each comparison the same actual item and token budget even when the selector lists overlap. Do not compare a shorter, deduplicated pair set with a full nominal-k single-selector set.
+The local service does not expose its tokenizer directly. Instead, use its reported prompt-token count to match each combined prompt exactly to both single-selector control prompts with the same realized item count. Add only the declared non-evidence padding after an explicit end-of-evidence marker; ask the interpreter to ignore it. If exact token matching fails, mark that comparison unavailable. If both selectors return the same item, deduplicate it in the combined context and do not count it as two sources. Record the nominal budget, realized unique-item count, exact input token count, padding count, and item overlap. Compare the combined set with each selector's top-m set, where m is the combined set's realized unique-item count. Do not compare a shorter, deduplicated pair set with a full nominal-k single-selector set.
 
 Measure shared upstream source coverage, paired false-positive selection, and false corroboration: two or more selected items support the same incorrect root cause or are presented as independent when their gold source lineage overlaps or their source status is not verified. Keep the gold source and claim labels outside model inputs.
 
@@ -173,4 +175,4 @@ The next slice should implement and execute this protocol as a deterministic syn
 6. save machine-readable results and a report that labels the study synthetic;
 7. evaluate each hypothesis and state whether a Semadmit review is warranted.
 
-This slice must not add an IsoPrax retrieval product, choose evidence for Bouleusis, reproduce UNREAL, or add runtime admission or enforcement.
+This slice must not add an IsoPrax retrieval product, choose evidence for Bouleusis, reproduce UNREAL, or add runtime admission or enforcement. The local pilot's prompted-selector proxy does not test internal-representation retrieval.

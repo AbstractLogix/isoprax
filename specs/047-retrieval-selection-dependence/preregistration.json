@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "study_id": "synthetic-retrieval-dependence-pilot-v1",
+  "frozen_date": "2026-10-08",
+  "evidence_class": "synthetic pilot; not field evidence and not an UNREAL reproduction",
+  "question": "In this fixed synthetic fixture, does same-model prompted selection and interpretation change retrieval/interpretation error association or downstream operation results relative to the lexical and different-model controls?",
+  "implementation_limit": "The local Ollama service does not expose hidden representations. B and C use prompted ranking, not representation retrieval. Model Y is not retrieval-specialized.",
+  "models": {
+    "X": {
+      "tag": "qwen3.5:9b",
+      "api_model": "llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "ollama_manifest_sha256": "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "role": "condition A/B/C interpreter and condition C selector"
+    },
+    "Y": {
+      "tag": "gemma4:e4b",
+      "api_model": "llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "ollama_manifest_sha256": "a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "role": "condition B selector and condition D interpreter"
+    },
+    "service": "Ollama 0.40.1 local API",
+    "generation": {
+      "temperature": 0,
+      "top_p": 1,
+      "seed_base": 47048,
+      "num_predict": 512,
+      "think": false,
+      "prompt_version": "retrieval-dependence-prompt-v3"
+    }
+  },
+  "conditions": {
+    "A": "BM25 selector; Model X interpreter",
+    "B": "Model Y prompted selector; Model X interpreter",
+    "C": "Model X prompted selector; same Model X interpreter",
+    "D": "reuse the exact Model X selection from C; Model Y interpreter"
+  },
+  "case_design": {
+    "seed": 47047,
+    "case_count": 36,
+    "items_per_case": 16,
+    "strata": [
+      "clean",
+      "misleading",
+      "duplicate_shared_upstream",
+      "conflicting",
+      "unknown_source_status",
+      "wrong_initial_hypothesis"
+    ],
+    "cases_per_stratum": 6,
+    "split_by_stratum_replica": {
+      "0": "development",
+      "1": "rule_authoring",
+      "2-5": "heldout"
+    },
+    "heldout_case_count": 24,
+    "budgets": [1, 2, 4, 8, 16],
+    "wrong_hypothesis_probe": "All six cases in the wrong_initial_hypothesis stratum; same fixed wrong hypothesis for selectors A, B, and C; candidate pool unchanged."
+  },
+  "selector_pair_probe": {
+    "pairs": ["A+B", "A+C", "B+C"],
+    "nominal_budgets": [2, 4, 8, 16],
+    "sample": "one heldout case per stratum",
+    "control": "Each single selector supplies its top-m items, where m is the pair set's realized unique item count.",
+    "token_matching": "Use Model X prompt_eval_count. Add declared non-evidence padding after END_EVIDENCE until the pair and both single controls have the same total prompt token count. Fail closed if exact matching cannot be obtained."
+  },
+  "scores_and_calibration": {
+    "BM25": "Raw BM25 score.",
+    "prompted_selectors": "Rank-derived score 1/log2(rank+1); this is not model confidence.",
+    "fit": "One logistic calibration mapping per selector, fit only on development cases; C=1, solver=liblinear, max_iter=1000, random_state=47048.",
+    "target": "verified versus invalid/conflicting source status; unknown is excluded from fitting and reported separately.",
+    "heldout_metrics": ["Brier score", "five equal-width reliability bins", "expected calibration error", "ROC AUC when both classes exist", "development prevalence Brier baseline"]
+  },
+  "primary_analysis": {
+    "retrieval_error": "At least one required decisive item is absent from top-k, or a pre-labeled misleading item ranks above at least one required decisive item within top-k.",
+    "interpretation_error": "Wrong non-abstaining root cause, or abstention when the locked labels say sufficient decisive evidence is present.",
+    "primary_contrast": "Condition C minus A in the retrieval/interpretation conditional error-risk difference at k=4, pooled across the predeclared misleading and wrong_initial_hypothesis strata.",
+    "minimum_practically_meaningful_risk_difference": 0.15,
+    "H1_support_gate": "Both exact replay runs have a positive C-minus-A effect; the pooled point estimate is at least 0.15; the 95% stratified paired case bootstrap lower bound is above zero; and at least one predeclared downstream outcome changes in the same cases.",
+    "bootstrap": {
+      "method": "95% percentile bootstrap, paired by case and stratified by case type",
+      "replicates": 2000,
+      "seed": 47049,
+      "binary_error_correlation_seed": 47052,
+      "lineage_log_loss_change_seed": 47053
+    },
+    "downstream_decision": "Aggregate audited claim-support votes by unique verified upstream source. Decide the top root cause only when it has at least two independent upstream sources and at least 0.60 of all eligible source votes; otherwise abstain.",
+    "source_status_prediction": "Compare held-out error log loss using source/derivation metadata features alone with the same fixed logistic analysis plus selector/interpreter lineage features. Fit on development cases only at k=4 and evaluate heldout cases at k=4. Report the paired per-case log-loss change with a 95% case-stratified percentile bootstrap interval using seed 47053."
+  },
+  "operation": {
+    "id": "corroborate_root_cause",
+    "reference_permission": "At least two independent verified upstream records support the same locked claim, no selected record is conflicting, and lineage is known. If selector and interpreter have the same model identity, an independent review must also pass. The separately adjudicated operation_use_labels and review flag are available to the policy comparator but never to a selector or interpreter.",
+    "policies": {
+      "naive_aggregation": "Always permit; count every selected item as independent support and use its selector score as weight.",
+      "global_label": "Permit only if selector and interpreter model identities differ; apply this one label to all evidence and operations.",
+      "metadata_only": "Permit only when the selector and interpreter identities differ and selected items have at least two known upstream records with no duplicate/shared lineage; do not inspect source status or operation-use labels.",
+      "operation_specific": "Permit only when the named operation's reference conditions hold."
+    },
+    "decision_threshold": 0.60,
+    "ranking": "Rank root causes by policy-eligible weighted support; selector score weights are normalized within a case. A denied operation has no pooled ranking. Compare each policy with naive aggregation."
+  },
+  "repeatability": {
+    "full_runs": 2,
+    "comparison": "Canonical case-set, selection-trace, and complete-result SHA-256 digests must match. If model output differs, preserve both runs and report the nondeterminism; do not overwrite the first run."
+  },
+  "claim_limit": "The fixed local model pair, prompted selectors, small heldout set, authored synthetic evidence, and two replays do not establish real-world error rates, general model-family effects, UNREAL behavior, cross-target semantic equivalence, or a Semadmit enforcement rule.",
+  "protocol_amendments": [
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The first attempted run stopped at RD-001 because Model Y exhausted the 256-token output limit without final content. A non-scored output smoke returned a fenced JSON list with one repeated ID. JSON-schema response-format probes did not return a usable ranking.",
+      "change": "Set think=false and num_predict=512. Strip one outer JSON code fence before parsing. For selector rankings, keep the first occurrence of each valid candidate ID, drop unknown and repeated IDs, then append omitted candidate IDs in original input order. Record each repair and aggregate repair counts. Stop if no valid candidate ID is returned. No result file or scored condition metrics were written by the failed run or smoke checks."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The first scored attempt stopped at RD-028 after Model X returned an incomplete interpretation ranking on both attempts. The runner did not write a result file or retain scored condition metrics.",
+      "change": "Keep the complete-ranking and boolean-abstention requirements. Strengthen the retry with the exact allowed labels. If both attempts remain invalid, record an invalid interpreter output as an interpretation error and task failure, without inferring missing ranks or treating it as abstention. Exclude invalid outputs from root-cause rank summaries and report their count and rate. Increment prompt version to v3."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The pinned 0.20.4 service was not installed. Preflight found the active local Ollama service at 0.40.1, while both model manifest digests still matched the preregistered values. The run stopped before any scored prompt.",
+      "change": "Pin Ollama 0.40.1 for both full replays. Keep the exact Model X and Model Y manifest digest checks. Record the service version in each result. No outputs from the failed preflight are part of the analysis."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before scored rerun",
+      "reason": "The user expanded the initial model set to role-specific models and requested gemma4:e4b. A partial rerun using gemma4:e2b stopped during the first Qwen selector pass; no result file was written, and no partial output is analyzed.",
+      "change": "Replace Model Y with gemma4:e4b and pin its exact manifest digest. Keep the original four-condition study as a distinct general-model selection/interpreter comparison. Add the separate six-role experiment in model-role-preregistration.json."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "before any scored rerun",
+      "reason": "The active local Ollama API no longer reports the previously pinned Qwen manifest 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7. Its tag now exposes ggml and llamacpp manifests; /api/show marks c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a as selected.",
+      "change": "Pin the currently selected qwen3.5:9b manifest c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a. The runner must fail if the active tag resolves to another manifest. No scored prompt has been run under the old or new pin."
+    },
+    {
+      "date": "2026-10-08",
+      "timing": "after one complete replay; before inspecting its outcomes or starting the amended replay pair",
+      "reason": "The first replay started with the preregistered gemma4:e4b manifest c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb, but the local tag changed during the run. The runner did not log a manifest per request, so the run may mix revisions and cannot be certified. The next replay stopped at preflight before a scored prompt. No outcome table or metric was inspected.",
+      "change": "Preserve the first raw output separately and exclude it from scored analysis. For a new replay pair, use immutable digest-qualified llama.cpp API names for Qwen and Gemma, with their requested model tags and exact manifest digests recorded separately. Keep all fixtures, prompts, metrics, hypotheses, and thresholds unchanged. Do not combine the first run with the amended pair."
+    }
+  ]
+}
