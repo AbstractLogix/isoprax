@@ -18,7 +18,7 @@ A research reader needs to know what UNREAL reports and which claims remain unte
 **Acceptance Scenarios**:
 
 1. **Given** the UNREAL paper, **when** the note describes it, **then** it uses the arXiv version 1 title and reports retrieval and answer-quality outcomes within the paper's tested settings.
-2. **Given** the same-model dependence question, **when** the note states the evidence, **then** it labels H1-H5 as hypotheses and states that this benchmark has not run.
+2. **Given** the same-model dependence question, **when** the note states the evidence, **then** it labels H1-H5 as hypotheses and distinguishes the completed two-run retrieval/interpreter pilot from the still-unrun model-role benchmark.
 
 ### User Story 2 - Prepare a controlled benchmark (Priority: P1)
 
