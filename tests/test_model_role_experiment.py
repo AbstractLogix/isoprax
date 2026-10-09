@@ -7,6 +7,7 @@ import pytest
 from scripts import model_role_metrics as metrics
 from scripts.model_role_experiment import (
     ExperimentError,
+    ModelRoleClient,
     OllamaClient,
     _native_probabilities,
     _pin_models,
@@ -260,3 +261,56 @@ def test_synthetic_end_to_end_keeps_targets_pools_and_digests() -> None:
     }
     assert result["case_set_sha256"]
     assert result["predictions_sha256"]
+
+    embedding_key = next(
+        key for key in result["raw_responses"] if key.startswith("embedding:")
+    )
+    vectors = json.loads(result["raw_responses"][embedding_key])
+    assert len(vectors) == 9
+    assert all(len(vector) == 2 for vector in vectors)
+    embedding_rows = [
+        row for row in result["relevance_rows"] if row["model"] == "embedding"
+    ]
+    assert all("raw_response" not in row for row in embedding_rows)
+    assert all(row["raw_response_sha256"] for row in embedding_rows)
+
+
+def test_mixed_backend_client_pins_ollama_manifests_and_embedding_identity() -> None:
+    class FakeEmbedding:
+        identity_sha256 = "e" * 64
+
+        def embed(self, inputs: list[str]) -> list[list[float]]:
+            return [[1.0] for _ in inputs]
+
+        def runtime_metadata(self) -> dict[str, str]:
+            return {"backend": "sentence-transformers-cpu"}
+
+    class FakeOllama:
+        def __init__(self) -> None:
+            self.pinned_tags: dict[str, str] = {}
+
+        def model_digests(self, tags: dict[str, str]) -> dict[str, str]:
+            self.pinned_tags = tags.copy()
+            return {key: f"{index:064x}" for index, key in enumerate(tags, 1)}
+
+    prereg = _preregistration()
+    models = prereg["models"]
+    models["embedding"].update(
+        {
+            "backend": "sentence-transformers-cpu",
+            "api_model": "google/embeddinggemma-2@revision",
+        }
+    )
+    ollama = FakeOllama()
+    client = ModelRoleClient(ollama, FakeEmbedding(), models)
+
+    digests = client.model_digests(
+        {key: value["api_model"] for key, value in models.items()}
+    )
+
+    assert set(ollama.pinned_tags) == {"qwen", "gemma", "coder", "tev1", "guardian"}
+    assert digests["embedding"] == "e" * 64
+    assert client.embed("google/embeddinggemma-2@revision", ["query"]) == [[1.0]]
+    assert client.embedding_runtime_metadata() == {
+        "backend": "sentence-transformers-cpu"
+    }

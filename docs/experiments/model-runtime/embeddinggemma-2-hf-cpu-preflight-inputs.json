@@ -1,0 +1,23 @@
+{
+  "checks": [
+    "checkpoint loads at pinned revision",
+    "768 finite values per input",
+    "token ids stable within this runner",
+    "repeat embedding vectors are byte-identical"
+  ],
+  "condition": {
+    "checkpoint": "google/embeddinggemma-2",
+    "context_limit_tokens": 8192,
+    "normalize_embeddings": false,
+    "precision": "float32",
+    "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+    "runner": "SentenceTransformers / Transformers on Linux CPU"
+  },
+  "inputs": [
+    "task: search result | query: Which module reads the QUEUE setting from the environment?",
+    "title: none | text: The configuration loader reads the QUEUE setting from the environment.",
+    "title: none | text: The display theme sets the interface palette to blue and gray."
+  ],
+  "purpose": "non-scored runtime preflight; no relevance labels or success metric",
+  "repetitions": 2
+}

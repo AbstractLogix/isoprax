@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-09",
+  "host": "WSL2 Linux x86_64; Ollama 0.40.1",
+  "model_digest_matches_prereg": true,
+  "models": [
+    {
+      "api_model": "llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "elapsed_seconds": 37.434,
+      "manifest_sha256": "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "raw_response": "OK",
+      "response_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "role": "qwen"
+    },
+    {
+      "api_model": "llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "elapsed_seconds": 23.56,
+      "manifest_sha256": "a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "raw_response": "OK",
+      "response_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "role": "gemma"
+    },
+    {
+      "api_model": "qwen2.5-coder:7b",
+      "elapsed_seconds": 26.198,
+      "manifest_sha256": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+      "raw_response": "OK",
+      "response_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "role": "coder"
+    },
+    {
+      "api_model": "tev1:4b",
+      "elapsed_seconds": 35.334,
+      "manifest_sha256": "9b5bb969e46c4b776826d6f2d401e22893205693f172653af6254897255025b8",
+      "raw_response": "{\"answers\": {\"outcome\": {\"noul\": 0.9593986800868872, \"type\": \"noul\"}}, \"model\": \"tev1:4b\", \"usage\": {\"input_tokens\": 140, \"output_tokens\": 1}}",
+      "response_sha256": "a9d9de6f3cd32a316b7b0de0deef311d0d7f7b6fab720deec7bba85bdd5c5ada",
+      "role": "tev1"
+    },
+    {
+      "api_model": "granite4.1-guardian:8b",
+      "elapsed_seconds": 51.567,
+      "manifest_sha256": "f82c0882cec110279601307cdd632d868e29f16eaa59947bef51096e5f740492",
+      "raw_response": "\n<score>",
+      "response_sha256": "012bf9d66326ec80dba8755b0a3e33d15ac8216acbf745bc5f6c8f0c19a45c01",
+      "role": "guardian"
+    }
+  ],
+  "ollama_version": "0.40.1",
+  "probe_definitions": {
+    "chat_roles": {
+      "keep_alive": 0,
+      "messages": [
+        {
+          "content": "Runtime-only preflight. Reply with the word OK.",
+          "role": "user"
+        }
+      ],
+      "options": {
+        "num_ctx": 1024,
+        "num_predict": 4,
+        "temperature": 0,
+        "top_p": 1
+      },
+      "stream": false,
+      "think": false
+    },
+    "tev1": {
+      "questions": {
+        "outcome": {
+          "criteria": {
+            "false": "It is absent.",
+            "true": "It is present."
+          },
+          "instructions": "Is the word PREFLIGHT present in the supplied string?",
+          "type": "noul"
+        }
+      },
+      "seed": 47069,
+      "state": "Runtime-only preflight string: PREFLIGHT.",
+      "temperature": 0
+    }
+  },
+  "purpose": "unscored local model load preflight; outputs are not benchmark observations"
+}

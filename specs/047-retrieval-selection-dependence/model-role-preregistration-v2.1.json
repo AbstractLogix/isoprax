@@ -1,0 +1,370 @@
+{
+  "schema_version": 2,
+  "study_id": "synthetic-model-role-commensurability-pilot-v2.1-hf-cpu",
+  "status": "frozen before scored calls",
+  "frozen_date": "2026-10-09",
+  "evidence_class": "synthetic pilot; not field evidence",
+  "question": "Do model role and score source predict held-out performance on explicitly named synthetic targets, and do Qwen, Gemma, and Guardian judgments have independent errors on a shared relevance target?",
+  "service_version": "0.40.1",
+  "runtime": "WSL2 Linux x86_64; Ollama 0.40.1 for five chat/probability roles; pinned SentenceTransformers CPU float32 for EmbeddingGemma",
+  "models": {
+    "qwen": {
+      "tag": "qwen3.5:9b",
+      "requested_tag": "qwen3.5:9b",
+      "api_model": "llamacpp:c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "manifest_sha256": "c97eb11d70b1acdc88af01eef566c1fe4f7fbe93eb1afc06871132f293ff425a",
+      "selected_runner": "llamacpp",
+      "model_family": "qwen35",
+      "quantization_level": "Q4_K_M",
+      "runtime_backend": "Ollama 0.40.1 local API; digest-qualified llama.cpp model alias",
+      "role": "general reasoning and common-target judge",
+      "lineage": "Qwen3.5 model family; independent fine-tuning source not inferred"
+    },
+    "gemma": {
+      "tag": "gemma4:e4b",
+      "requested_tag": "gemma4:e4b",
+      "api_model": "llamacpp:a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "manifest_sha256": "a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986",
+      "selected_runner": "llamacpp",
+      "model_family": "gemma4",
+      "quantization_level": "Q4_K_M",
+      "runtime_backend": "Ollama 0.40.1 local API; digest-qualified llama.cpp model alias",
+      "role": "independent general-model comparison and common-target judge",
+      "lineage": "Gemma 4 model family",
+      "identity_amendment": "The earlier recorded digest c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb was not present in the current local manifest inventory. The current gemma4:e4b tag exposes ggml digest 537f7e16a1bb3870ba57e328fd60ca1ea28a0c35002c788a7d5845efa865cd86 and selected llamacpp digest a3d2b95350da03ff9b1943a753bb6617c49a3ee462b632a758518ec817743986. Use only the selected digest-qualified alias; the ggml variant is not selected."
+    },
+    "coder": {
+      "tag": "qwen2.5-coder:7b",
+      "requested_tag": "qwen2.5-coder:7b",
+      "api_model": "qwen2.5-coder:7b",
+      "manifest_sha256": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+      "selected_runner": "ggml",
+      "model_family": "qwen2",
+      "quantization_level": "Q4_K_M",
+      "runtime_backend": "Ollama 0.40.1 local API",
+      "role": "coding/debugging-specialized comparison",
+      "lineage": "Qwen2.5 model family; fine-tuning details not inferred"
+    },
+    "embedding": {
+      "requested_tag": "embeddinggemma-2:740m",
+      "api_model": "google/embeddinggemma-2@914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "backend": "sentence-transformers-cpu",
+      "model_id": "google/embeddinggemma-2",
+      "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "selected_runner": "SentenceTransformers 6.1.0 / Transformers 5.19.0",
+      "runtime_backend": "Linux CPU; float32; one thread",
+      "model_family": "embeddinggemma-2",
+      "quantization_level": "upstream safetensors checkpoint; loaded float32",
+      "role": "query/evidence retrieval similarity",
+      "lineage": "Official Google EmbeddingGemma 2 checkpoint; this upstream package is not asserted equivalent to either Ollama MLX package",
+      "dimension": 768,
+      "checkpoint_files_sha256": {
+        ".gitattributes": "bcdccfaa66bc1240c7192dbd374cfb39b695bb1d8ff6b7ce0113aa5e9ac21a44",
+        "1_Pooling/config.json": "8759bdf7c77efc7df7723f64856a593c8943b71ee38baf2a88771fbaf78438f9",
+        "2_Normalize/config.json": "cdb09dfca347a56aa2d691744e38d5ad3c7cbc2834e7181272b9a15328b82524",
+        "README.md": "b677a0ee2818c36f091b65fd3d9b4baea9f04d53b02b49cae916c74bf9682037",
+        "chat_template.jinja": "4b852efc0b9960283e735363331e6f325b33bc74bdbaa076f595bc4e9b94d85e",
+        "config.json": "b8f1e9931b57fbc054acdb445c41765d55b0074c58d145fa82839941ad1b5bb3",
+        "config_sentence_transformers.json": "031e56a498d33c349ab489a21885bcfe25b4fcba841149dc99e1e90d4a7c28f5",
+        "model.safetensors": "197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79",
+        "modules.json": "3d02572a0455b832de67fb8e63a54981bc7e8b46e337c95e917bd8122a533bfd",
+        "preprocessor_config.json": "ea2ae257e901064abdd98dceb19f2b0da06af600bed15e0f99f5c85c37ee9d78",
+        "processor_config.json": "168f6a08522f3ce5dea596d94d003af2fd691742d4f41fe1f9d8cce76bfbf69c",
+        "sentence_bert_config.json": "b1bcd9f2dce3ae863b359e87d0710b5dbc3314a59ecb4e2f97c7778fc8e4b228",
+        "tokenizer.json": "4d777ef5bdc1aa36227abdfb77c3e49e7b9c892d16e1b6bda41c393504828be4",
+        "tokenizer.model": "e594c8a90eb08d8bda498ff4747977dc827ae0c3c56b5c0d41a605a22d02ef03",
+        "tokenizer_config.json": "17bd5d6e9364ca49a534e1502076593317c298d4a663623091ed45388f004874"
+      },
+      "environment_lock_path": "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-requirements.txt",
+      "environment_lock_sha256": "c9b9ce74de4ea8319ed65a058b8b3025f4206947292076f739a3f02eb1891125",
+      "normalization": "No extra SentenceTransformers normalization requested; preflight returned unit-norm vectors from the pipeline",
+      "blocked_ollama_registry_artifacts": [
+        {
+          "tag": "embeddinggemma-2:740m",
+          "manifest_sha256": "969600645b5240cbf78f46456c819f38bea9f59c3e34a2993a0ae54334e3db04"
+        },
+        {
+          "tag": "embeddinggemma-2:740m-bf16",
+          "manifest_sha256": "54d809644cd8a4e4547a6cdcf165e91b13d89e86d5c30fc4fe2f147f0b2f82f1"
+        }
+      ],
+      "status": "distinct official upstream HF CPU condition; Ollama output parity not established",
+      "identity_sha256": "03f50c93bf327079f38373e5db2937f7826e487bed9e403f51583821737f8462"
+    },
+    "tev1": {
+      "tag": "tev1:4b",
+      "requested_tag": "tev1:4b",
+      "api_model": "tev1:4b",
+      "manifest_sha256": "9b5bb969e46c4b776826d6f2d401e22893205693f172653af6254897255025b8",
+      "selected_runner": "llamacpp",
+      "model_family": "qwen35",
+      "quantization_level": "Q8_0",
+      "runtime_backend": "Ollama 0.40.1 local /v1/systemone API",
+      "role": "native decision probability for binary, categorical, ordinal, and relevance targets",
+      "lineage": "Fine-tuned from Qwen3.5-4B; shared training lineage is not an independence judgment"
+    },
+    "guardian": {
+      "tag": "granite4.1-guardian:8b",
+      "requested_tag": "granite4.1-guardian:8b",
+      "api_model": "granite4.1-guardian:8b",
+      "manifest_sha256": "f82c0882cec110279601307cdd632d868e29f16eaa59947bef51096e5f740492",
+      "selected_runner": "ggml",
+      "model_family": "granite",
+      "quantization_level": "Q6_K",
+      "runtime_backend": "Ollama 0.40.1 local API; Q6_K manifest",
+      "status": "local manifest verified",
+      "role": "binary relevance critic",
+      "lineage": "Fine-tuned from Granite 4.1 8B; yes/no output has no native probability"
+    }
+  },
+  "generation": {
+    "temperature": 0,
+    "top_p": 1,
+    "think": false,
+    "seed_base": 47069,
+    "chat_prompt_version": "model-role-relevance-v1",
+    "invalid_output_retry_limit": 1,
+    "max_invalid_output_policy": "record invalid output and exclude it from metrics and pools; never infer a label or probability"
+  },
+  "tev1_calibration": {
+    "families": {
+      "equipment_binary": {
+        "type": "noul",
+        "outcome_classes": [
+          "false",
+          "true"
+        ],
+        "cases": 64,
+        "development": 32,
+        "heldout": 32
+      },
+      "software_category": {
+        "type": "choice",
+        "outcome_classes": [
+          "null_dereference",
+          "race_condition",
+          "bad_serialization",
+          "stale_cache"
+        ],
+        "cases": 64,
+        "development": 32,
+        "heldout": 32
+      },
+      "incident_ordinal": {
+        "type": "score",
+        "outcome_classes": [
+          "routine",
+          "limited",
+          "major",
+          "critical"
+        ],
+        "cases": 64,
+        "development": 32,
+        "heldout": 32
+      }
+    },
+    "split": "stratify each family by outcome class; within each class, first half development and second half heldout",
+    "metrics": [
+      "Brier score",
+      "log loss",
+      "reliability bins",
+      "expected calibration error",
+      "discrimination when defined",
+      "ordinal ranked probability score and threshold calibration",
+      "95% case-bootstrap intervals"
+    ],
+    "only_pooled_metric": {
+      "name": "equal_weight_expected_log_loss",
+      "estimand": "Expected Tev1 log loss when one authored question family is sampled uniformly",
+      "weights": {
+        "equipment_binary": 0.3333333333333333,
+        "software_category": 0.3333333333333333,
+        "incident_ordinal": 0.3333333333333333
+      }
+    }
+  },
+  "common_relevance_target": {
+    "definition": "Does this evidence item provide information relevant to answering this query?",
+    "domains": [
+      "equipment",
+      "software",
+      "policy",
+      "safety"
+    ],
+    "queries_per_domain": 32,
+    "items_per_query": 8,
+    "development_queries_per_domain": 16,
+    "heldout_queries_per_domain": 16,
+    "gold_properties_kept_separate": [
+      "relevance",
+      "source_status",
+      "operation_use"
+    ],
+    "holdout_metrics": [
+      "Brier score",
+      "log loss",
+      "reliability bins",
+      "expected calibration error",
+      "ROC AUC when defined",
+      "recall@k",
+      "mean reciprocal rank",
+      "top-item changes",
+      "binary decision changes at 0.5",
+      "95% query-bootstrap intervals"
+    ],
+    "calibration": "One logistic map per score source fit on development queries only; per-domain maps are diagnostics. Guardian's mapped probability is not native.",
+    "only_pooled_metric": {
+      "name": "equal_weight_four_domain_mixture",
+      "estimand": "Expected relevance metric over the four authored domains sampled uniformly",
+      "weights": {
+        "equipment": 0.25,
+        "software": 0.25,
+        "policy": 0.25,
+        "safety": 0.25
+      }
+    }
+  },
+  "judgment_dependence": {
+    "models": [
+      "qwen",
+      "gemma",
+      "guardian"
+    ],
+    "pairing": "same heldout query and evidence item; report development marginal error product and heldout joint error",
+    "pooling": [
+      {
+        "name": "majority_label",
+        "weights": {
+          "qwen": 0.3333333333333333,
+          "gemma": 0.3333333333333333,
+          "guardian": 0.3333333333333333
+        }
+      },
+      {
+        "name": "equal_weight_calibrated_probability",
+        "weights": {
+          "qwen": 0.3333333333333333,
+          "gemma": 0.3333333333333333,
+          "guardian": 0.3333333333333333
+        }
+      }
+    ],
+    "pool_requires": "valid output from all three judges; no imputation",
+    "interpretation_limit": "Error dependence on these fixtures and this common target only. Shared model identity or architecture does not establish independence or semantic equivalence."
+  },
+  "specialization": {
+    "contrast": "qwen2.5-coder versus qwen3.5 and gemma4 by domain on the same evidence-relevance target",
+    "primary_interaction": "software debugging versus the three non-code domains",
+    "measures": [
+      "paired per-query accuracy difference",
+      "rank agreement",
+      "top-item disagreement",
+      "95% query-bootstrap interval"
+    ],
+    "leaderboard": false
+  },
+  "relevance_threshold": 0.5,
+  "seeds": {
+    "tev1_cases": 47060,
+    "relevance_cases": 47061,
+    "metrics": 47062,
+    "calibration": 47063,
+    "bootstrap": 47064,
+    "dependence": 47066,
+    "specialization": 47067,
+    "mixture": 47068,
+    "calls": 47069
+  },
+  "repeatability": {
+    "full_runs": 2,
+    "requirement": "Same exact model identity hashes, Ollama version, embedding runtime metadata, preregistration digest, case-set digest, and prompt-template digest; preserve both complete raw outputs. Any output difference is reported, not overwritten."
+  },
+  "claim_limit": "Synthetic local model-role pilot only. It does not establish field calibration, broad family performance, error independence, score interchangeability, cross-target pooling permission, or a runtime enforcement rule.",
+  "protocol_amendments": [
+    {
+      "date": "2026-10-08",
+      "title": "Local identity resolution checkpoint",
+      "reason": "Resolve current local manifests before freezing; do not run scored calls while EmbeddingGemma is not loadable on the active Linux runtime.",
+      "changes": [
+        "Record the exact installed Granite Guardian manifest.",
+        "Replace the unavailable prior Gemma manifest with the selected gemma4:e4b llamacpp manifest and its digest-qualified API alias; record the unselected ggml manifest separately.",
+        "Keep the existing Qwen manifest pin because its digest-qualified alias remains installed.",
+        "Record the EmbeddingGemma registry digest separately from local runtime availability; do not substitute another model or runner."
+      ],
+      "scored_calls_made": false,
+      "freeze_status": "not frozen"
+    },
+    {
+      "date": "2026-10-09",
+      "timing": "before any scored call",
+      "reason": "The requested Ollama EmbeddingGemma tags require MLX and do not load on the active Linux Ollama runtime. The exact upstream Google checkpoint loads through the officially documented SentenceTransformers path on CPU.",
+      "changes": [
+        "Use pinned google/embeddinggemma-2 revision 914f7f89142e33e77833254d9c9b90c3cef7303b through SentenceTransformers on CPU float32 as a distinct runtime condition.",
+        "Pin all 15 checkpoint files, all environment package versions through the requirements-lock SHA-256, and a combined model identity SHA-256.",
+        "Keep all existing targets, generated cases, prompts, seeds, metrics, and declared mixture weights unchanged.",
+        "Store complete embedding vector outputs in each run artifact; do not duplicate those vectors in every item row.",
+        "Do not infer parity with Ollama MLX outputs or cross-host reproducibility."
+      ],
+      "scored_calls_made": false,
+      "freeze_status": "frozen before scored calls"
+    },
+    {
+      "date": "2026-10-09",
+      "timing": "before any scored call",
+      "reason": "Before scoring, review found that the first unused v2 freeze pinned code and models but did not make the runner verify all cited runtime preflight files.",
+      "changes": [
+        "Preserve the unused v2 freeze and its SHA-256; do not run it.",
+        "Issue v2.1 with a new study ID and frozen source digests.",
+        "Require the runner to verify all six cited runtime preflight artifact hashes, all three evaluator source hashes, the generated case-set hash, and the prompt-template hash before model loading or scored calls.",
+        "No targets, prompts, seeds, success criteria, metrics, mixture weights, or analysis rules changed."
+      ],
+      "scored_calls_made": false,
+      "freeze_status": "final preregistration frozen before scored calls"
+    }
+  ],
+  "result_schema_version": 2,
+  "runtime_matrix": {
+    "ollama": {
+      "version": "0.40.1",
+      "host": "WSL2 Linux x86_64",
+      "cpu": "AMD Ryzen 9 5900X",
+      "memory_gib": 31,
+      "roles": [
+        "qwen",
+        "gemma",
+        "coder",
+        "tev1",
+        "guardian"
+      ]
+    },
+    "embedding": {
+      "python": "3.13.14",
+      "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "torch": "2.14.1+cu130",
+      "transformers": "5.19.0",
+      "sentence_transformers": "6.1.0",
+      "huggingface_hub": "1.33.0",
+      "pillow": "12.3.0",
+      "torchvision": "0.29.1",
+      "threads": 1
+    }
+  },
+  "frozen_case_set_sha256": "c5fd80e08a3ae494a09ea7d4567cd6b23dbe1e86439e0f78a5fa80ee6c8618c5",
+  "frozen_prompt_template_sha256": "5c205b125ce95b261eba94bdd0a4dc4918a6717fa3cc839c473d8c69fddde157",
+  "frozen_source_sha256": {
+    "scripts/model_role_experiment.py": "ae333876659afb14c28f1d35825204317e7bf941429efa4a68608d1b3b969d09",
+    "scripts/model_role_metrics.py": "d9a185e92a583cad786a79fcb8d04a7f2d0ff70debfbbca7146926b1c80b739b",
+    "scripts/model_role_embedding.py": "01b5132525a93c3a485b4036a1acaf37916e0165fa158621353a158a97a362e4"
+  },
+  "preflight_artifacts_sha256": {
+    "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-inputs.json": "618de8341e621c88eed7ae3fcbd872a75adf96e71106dab7d307ef027a9221ca",
+    "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-output.json": "347d3ea86aba971a66faf1c032b2873e6930d59308a1b3fe9384f19a4a403b28",
+    "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-requirements.txt": "c9b9ce74de4ea8319ed65a058b8b3025f4206947292076f739a3f02eb1891125",
+    "docs/experiments/model-runtime/ollama-model-role-load-preflight-2026-10-09.json": "de312c3aa0fec670c15042bd47cfd6cc2b0860c227b2411769b7c06e69499bf1",
+    "docs/experiments/model-runtime/granite-guardian-output-schema-preflight-2026-10-09.json": "08e6bc8b517e3fedb778ecfa979a05b0c6c61237e91c64e24d28e928ec70d78b",
+    "docs/experiments/model-runtime/google-embeddinggemma-2-hf-checkpoint-identity.json": "7d923c0c4a76ddf7bf8810000d6c4295383a7f08c234bf55de15d7d51b1e4740"
+  },
+  "supersedes_preregistration_sha256": "cbc9c5b9e77affab138ecaa431f71c61f57c4f2174467c1c3845944438f6549e"
+}

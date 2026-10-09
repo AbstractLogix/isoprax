@@ -1,0 +1,32 @@
+{
+  "elapsed_seconds": 35.103,
+  "host": "WSL2 Linux x86_64",
+  "interpretation": "The model returned a parseable prescribed binary value. No correctness or calibration result is assigned because this smoke input has no gold label.",
+  "messages": [
+    {
+      "content": "Query: Which setting selects the job queue? Assess the relevance of the next evidence item.",
+      "role": "user"
+    },
+    {
+      "content": "The configuration loader reads the QUEUE setting from the environment.",
+      "role": "assistant"
+    },
+    {
+      "content": "<guardian>Do not think.\n### Criteria: Does this evidence item provide information relevant to answering the query?\n### Scoring Schema: If the preceding assistant message provides information relevant to answering the query, return 'yes'; otherwise return 'no'.\n</guardian>",
+      "role": "user"
+    }
+  ],
+  "model_manifest_sha256": "f82c0882cec110279601307cdd632d868e29f16eaa59947bef51096e5f740492",
+  "model_tag": "granite4.1-guardian:8b",
+  "ollama_version": "0.40.1",
+  "parsed_response": {
+    "label": false,
+    "raw_score": 0.0,
+    "score_type": "binary_critic_judgment"
+  },
+  "purpose": "non-scored Guardian output-schema smoke test",
+  "raw_response": "\n<score> no </score>",
+  "relevance_gold": null,
+  "scored": false,
+  "seed": 47069
+}

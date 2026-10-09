@@ -10,6 +10,7 @@ import os
 import random
 import re
 import statistics
+import sys
 import tempfile
 import urllib.error
 import urllib.parse
@@ -21,6 +22,7 @@ from typing import Any
 import numpy as np
 
 from scripts import model_role_metrics as metrics
+from scripts.model_role_embedding import HuggingFaceSentenceTransformerEmbedder
 
 ROOT = Path(__file__).resolve().parents[1]
 PREREG_PATH = (
@@ -29,6 +31,13 @@ PREREG_PATH = (
 MODEL_KEYS = ("qwen", "gemma", "coder", "embedding", "tev1", "guardian")
 JUDGES = ("qwen", "gemma", "guardian")
 PROMPT_VERSION = "model-role-relevance-v1"
+PROMPT_TEMPLATE = {
+    "chat_system": "Estimate each item's relevance probability. Keep source validity and operation use separate.",
+    "guardian": "BYOC yes/no relevance judgment in a documented guardian block, one item per call, no thinking.",
+    "embedding_query": "task: search result | query: {query}",
+    "embedding_document": "title: none | text: {content}",
+    "tev1": "native /v1/systemone noul relevance probability",
+}
 
 
 class ExperimentError(RuntimeError):
@@ -158,9 +167,10 @@ class OllamaClient:
         return embeddings
 
 
-def load_preregistration() -> dict[str, Any]:
+def load_preregistration(path: Path | None = None) -> dict[str, Any]:
+    path = path or PREREG_PATH
     try:
-        value = json.loads(PREREG_PATH.read_text(encoding="utf-8"))
+        value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ExperimentError(f"cannot read model-role preregistration: {exc}") from exc
     if not isinstance(value, dict):
@@ -168,38 +178,212 @@ def load_preregistration() -> dict[str, Any]:
     return value
 
 
-def _pin_models(client: Any, prereg: dict[str, Any]) -> tuple[str, dict[str, str]]:
+class ModelRoleClient:
+    """Route Ollama roles and one separately pinned HF embedding condition."""
+
+    def __init__(
+        self,
+        ollama: OllamaClient,
+        embedding: HuggingFaceSentenceTransformerEmbedder,
+        models: dict[str, Any],
+    ) -> None:
+        self.ollama = ollama
+        self.embedding = embedding
+        self.models = models
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.ollama, name)
+
+    @property
+    def embedding_identity_sha256(self) -> str:
+        return self.embedding.identity_sha256
+
+    def model_digests(self, tags: dict[str, str]) -> dict[str, str]:
+        ollama_tags = {
+            key: tag
+            for key, tag in tags.items()
+            if self.models[key].get("backend", "ollama") == "ollama"
+        }
+        result = self.ollama.model_digests(ollama_tags)
+        for key in tags.keys() - ollama_tags.keys():
+            if key != "embedding" or self.models[key].get("backend") != (
+                "sentence-transformers-cpu"
+            ):
+                raise ExperimentError(f"unsupported model backend for {key}")
+            result[key] = self.embedding_identity_sha256
+        return result
+
+    def embed(self, model: str, inputs: list[str]) -> list[list[float]]:
+        expected_model = self.models["embedding"]["api_model"]
+        if model != expected_model:
+            raise ExperimentError(
+                "embedding request does not match the frozen identity"
+            )
+        return self.embedding.embed(inputs)
+
+    def embedding_runtime_metadata(self) -> dict[str, Any]:
+        return self.embedding.runtime_metadata()
+
+
+def validate_frozen_plan(prereg: dict[str, Any]) -> None:
     if prereg.get("status") != "frozen before scored calls" or not prereg.get(
         "frozen_date"
     ):
         raise ExperimentError(
             "model-role preregistration must be frozen before scored calls"
         )
-    models = prereg.get("models", {})
-    if any(
-        not isinstance(models.get(key), dict)
-        or not isinstance(models[key].get("requested_tag"), str)
-        or not isinstance(models[key].get("api_model"), str)
-        or not models[key]["api_model"]
-        or not isinstance(models[key].get("manifest_sha256"), str)
-        or re.fullmatch(
-            r"[0-9a-f]{64}", models[key]["manifest_sha256"].removeprefix("sha256:")
-        )
-        is None
-        for key in MODEL_KEYS
-    ):
+    source_hashes = prereg.get("frozen_source_sha256")
+    if prereg.get("schema_version") == 2:
+        required_sources = {
+            "scripts/model_role_experiment.py",
+            "scripts/model_role_metrics.py",
+            "scripts/model_role_embedding.py",
+        }
+        if not isinstance(source_hashes, dict) or not required_sources.issubset(
+            source_hashes
+        ):
+            raise ExperimentError(
+                "version 2 preregistration needs frozen source hashes"
+            )
+        if not isinstance(prereg.get("frozen_case_set_sha256"), str) or not isinstance(
+            prereg.get("frozen_prompt_template_sha256"), str
+        ):
+            raise ExperimentError(
+                "version 2 preregistration needs frozen case and prompt hashes"
+            )
+        for key in ("frozen_case_set_sha256", "frozen_prompt_template_sha256"):
+            if re.fullmatch(r"[0-9a-f]{64}", prereg[key]) is None:
+                raise ExperimentError(f"{key} is not a SHA-256 digest")
+        preflight_hashes = prereg.get("preflight_artifacts_sha256")
+        required_preflights = {
+            "docs/experiments/model-runtime/google-embeddinggemma-2-hf-checkpoint-identity.json",
+            "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-inputs.json",
+            "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-output.json",
+            "docs/experiments/model-runtime/embeddinggemma-2-hf-cpu-preflight-requirements.txt",
+            "docs/experiments/model-runtime/ollama-model-role-load-preflight-2026-10-09.json",
+            "docs/experiments/model-runtime/granite-guardian-output-schema-preflight-2026-10-09.json",
+        }
+        if not isinstance(preflight_hashes, dict) or not required_preflights.issubset(
+            preflight_hashes
+        ):
+            raise ExperimentError(
+                "version 2 preregistration needs all runtime preflight hashes"
+            )
+        for relative_path, expected_hash in preflight_hashes.items():
+            if (
+                not isinstance(relative_path, str)
+                or Path(relative_path).is_absolute()
+                or not isinstance(expected_hash, str)
+                or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None
+            ):
+                raise ExperimentError("runtime preflight hash entry is malformed")
+            path = ROOT / relative_path
+            try:
+                resolved_path = path.resolve()
+                resolved_path.relative_to(ROOT.resolve())
+                actual_hash = hashlib.sha256(resolved_path.read_bytes()).hexdigest()
+            except ValueError as exc:
+                raise ExperimentError(
+                    "runtime preflight path escapes the repository"
+                ) from exc
+            except OSError as exc:
+                raise ExperimentError(
+                    f"cannot read runtime preflight {relative_path}"
+                ) from exc
+            if actual_hash != expected_hash:
+                raise ExperimentError(
+                    f"runtime preflight hash mismatch: {relative_path}"
+                )
+    if source_hashes is None:
+        return
+    for relative_path, expected_hash in source_hashes.items():
+        if (
+            not isinstance(relative_path, str)
+            or Path(relative_path).is_absolute()
+            or not isinstance(expected_hash, str)
+            or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None
+        ):
+            raise ExperimentError("frozen source hash entry is malformed")
+        path = ROOT / relative_path
+        try:
+            resolved_path = path.resolve()
+            resolved_path.relative_to(ROOT.resolve())
+            actual_hash = hashlib.sha256(resolved_path.read_bytes()).hexdigest()
+        except ValueError as exc:
+            raise ExperimentError("frozen source path escapes the repository") from exc
+        except OSError as exc:
+            raise ExperimentError(f"cannot read frozen source {relative_path}") from exc
+        if actual_hash != expected_hash:
+            raise ExperimentError(f"frozen source hash mismatch: {relative_path}")
+
+
+def build_model_role_client(
+    prereg: dict[str, Any], base_url: str = "http://127.0.0.1:11434"
+) -> Any:
+    ollama = OllamaClient(base_url)
+    spec = prereg["models"]["embedding"]
+    if spec.get("backend", "ollama") == "ollama":
+        return ollama
+    if spec.get("backend") != "sentence-transformers-cpu":
+        raise ExperimentError("unsupported embedding backend")
+    lock_path = ROOT / spec["environment_lock_path"]
+    try:
+        lock_path.resolve().relative_to(ROOT.resolve())
+    except ValueError as exc:
         raise ExperimentError(
-            "every model needs requested/API tags and an exact manifest digest before scoring"
-        )
+            "embedding environment lock must be inside the repository"
+        ) from exc
+    embedder = HuggingFaceSentenceTransformerEmbedder(
+        model_id=spec["model_id"],
+        revision=spec["revision"],
+        files_sha256=spec["checkpoint_files_sha256"],
+        dimension=int(spec["dimension"]),
+        environment_lock_path=lock_path,
+        environment_lock_sha256=spec["environment_lock_sha256"],
+    )
+    expected_runtime = prereg.get("runtime_matrix", {}).get("embedding", {})
+    actual_runtime = embedder.runtime_metadata()
+    for key, expected in expected_runtime.items():
+        if actual_runtime.get(key) != expected:
+            raise ExperimentError(
+                f"embedding runtime mismatch for {key}: "
+                f"expected {expected}, got {actual_runtime.get(key)}"
+            )
+    return ModelRoleClient(ollama, embedder, prereg["models"])
+
+
+def _pin_models(client: Any, prereg: dict[str, Any]) -> tuple[str, dict[str, str]]:
+    validate_frozen_plan(prereg)
+    models = prereg.get("models", {})
+    expected = {}
+    for key in MODEL_KEYS:
+        spec = models.get(key)
+        if (
+            not isinstance(spec, dict)
+            or not isinstance(spec.get("requested_tag"), str)
+            or not isinstance(spec.get("api_model"), str)
+            or not spec["api_model"]
+        ):
+            raise ExperimentError("every model needs requested and API identities")
+        backend = spec.get("backend", "ollama")
+        if backend == "ollama":
+            field, label = "manifest_sha256", "exact manifest digest"
+        elif backend == "sentence-transformers-cpu":
+            field, label = "identity_sha256", "exact model identity SHA-256"
+        else:
+            raise ExperimentError(f"unsupported backend for {key}")
+        digest = spec.get(field)
+        if (
+            not isinstance(digest, str)
+            or re.fullmatch(r"[0-9a-f]{64}", digest.removeprefix("sha256:")) is None
+        ):
+            raise ExperimentError(f"every model needs an {label} before scoring")
+        expected[key] = digest.removeprefix("sha256:")
     tags = {key: str(models[key]["api_model"]) for key in MODEL_KEYS}
     version = client.server_version()
     if version != prereg.get("service_version"):
         raise ExperimentError(f"Ollama version {version} differs from preregistration")
     digests = client.model_digests(tags)
-    expected = {
-        key: str(models[key]["manifest_sha256"]).removeprefix("sha256:")
-        for key in MODEL_KEYS
-    }
     if digests != expected:
         raise ExperimentError(
             "one or more selected Ollama model digests differ from preregistration"
@@ -362,9 +546,7 @@ def _embedding_predictions(
                 "score_type": "cosine_similarity",
             }
         )
-    return predictions, hashlib.sha256(
-        json.dumps(vectors, separators=(",", ":")).encode()
-    ).hexdigest()
+    return predictions, json.dumps(vectors, separators=(",", ":"))
 
 
 def _call_chat(
@@ -451,8 +633,9 @@ def _valid_rows(
 ) -> list[dict[str, Any]]:
     by_id = {item["item_id"]: item for item in case["items"]}
     raw_hash = hashlib.sha256(raw.encode()).hexdigest()
-    return [
-        {
+    rows = []
+    for pred in predictions:
+        row = {
             "query_id": case["query_id"],
             "domain": case["domain"],
             "split": case["split"],
@@ -464,10 +647,11 @@ def _valid_rows(
             "score_type": pred["score_type"],
             "valid": True,
             "raw_response_sha256": raw_hash,
-            "raw_response": raw,
         }
-        for pred in predictions
-    ]
+        if key != "embedding":
+            row["raw_response"] = raw
+        rows.append(row)
+    return rows
 
 
 def _tev1_call(
@@ -990,15 +1174,31 @@ def _dependence(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def run_suite(
-    client: Any | None = None, prereg: dict[str, Any] | None = None
+    client: Any | None = None,
+    prereg: dict[str, Any] | None = None,
+    base_url: str = "http://127.0.0.1:11434",
 ) -> dict[str, Any]:
-    client = client or OllamaClient()
     prereg = prereg or load_preregistration()
+    validate_frozen_plan(prereg)
+    client = client or build_model_role_client(prereg, base_url)
     version, digests = _pin_models(client, prereg)
     tev_cases = metrics.generate_tev1_cases(int(prereg["seeds"]["tev1_cases"]))
     relevance_cases = metrics.generate_relevance_cases(
         int(prereg["seeds"]["relevance_cases"])
     )
+    case_set_sha256 = metrics.digest_json(
+        {"tev1": tev_cases, "relevance": relevance_cases}
+    )
+    prompt_template_sha256 = metrics.digest_json(
+        {"version": PROMPT_VERSION, **PROMPT_TEMPLATE}
+    )
+    if prereg.get("schema_version") == 2 and (
+        case_set_sha256 != prereg["frozen_case_set_sha256"]
+        or prompt_template_sha256 != prereg["frozen_prompt_template_sha256"]
+    ):
+        raise ExperimentError(
+            "generated cases or prompt template differ from preregistration"
+        )
     tev_rows, relevance_rows, raw = [], [], {}
     for n, case in enumerate(tev_cases):
         key = case["family"]
@@ -1037,6 +1237,12 @@ def run_suite(
                 }
             )
         raw[f"tev1:{case['case_id']}"] = response
+        if (n + 1) % 8 == 0 or n + 1 == len(tev_cases):
+            print(
+                f"Tev1 cases complete: {n + 1}/{len(tev_cases)}",
+                file=sys.stderr,
+                flush=True,
+            )
     for n, case in enumerate(relevance_cases):
         for key in MODEL_KEYS:
             tag = prereg["models"][key]["api_model"]
@@ -1067,29 +1273,28 @@ def run_suite(
                     else str(exc)
                 )
             raw[f"{key}:{case['query_id']}"] = response
+            print(
+                f"Relevance cases complete: {n + 1}/{len(relevance_cases)} ({key})",
+                file=sys.stderr,
+                flush=True,
+            )
     tev_summary = _analyse_tev1(tev_rows)
     relevance_summary = _analyse_relevance(relevance_rows)
     result = {
-        "schema_version": 1,
+        "schema_version": int(prereg.get("result_schema_version", 1)),
         "study_id": prereg["study_id"],
         "evidence_class": "synthetic",
         "ollama_version": version,
-        "model_manifest_sha256": digests,
+        "model_identity_sha256": digests,
+        "embedding_runtime": (
+            client.embedding_runtime_metadata()
+            if hasattr(client, "embedding_runtime_metadata")
+            else None
+        ),
         "preregistration_sha256": metrics.digest_json(prereg),
-        "case_set_sha256": metrics.digest_json(
-            {"tev1": tev_cases, "relevance": relevance_cases}
-        ),
+        "case_set_sha256": case_set_sha256,
         "prompt_version": PROMPT_VERSION,
-        "prompt_template_sha256": metrics.digest_json(
-            {
-                "version": PROMPT_VERSION,
-                "chat_system": "Estimate each item's relevance probability. Keep source validity and operation use separate.",
-                "guardian": "BYOC yes/no relevance judgment in a documented guardian block, one item per call, no thinking.",
-                "embedding_query": "task: search result | query: {query}",
-                "embedding_document": "title: none | text: {content}",
-                "tev1": "native /v1/systemone noul relevance probability",
-            }
-        ),
+        "prompt_template_sha256": prompt_template_sha256,
         "tev1_rows": tev_rows,
         "relevance_rows": relevance_rows,
         "raw_responses": raw,
@@ -1146,9 +1351,11 @@ def finalize_runs(first_path: Path, second_path: Path) -> dict[str, Any]:
     )
     for key in (
         "study_id",
+        "ollama_version",
+        "embedding_runtime",
         "preregistration_sha256",
         "case_set_sha256",
-        "model_manifest_sha256",
+        "model_identity_sha256",
         "prompt_template_sha256",
     ):
         if first.get(key) != second.get(key):
@@ -1159,7 +1366,7 @@ def finalize_runs(first_path: Path, second_path: Path) -> dict[str, Any]:
         "evidence_class": "synthetic",
         "configuration_match": True,
         "case_set_sha256": first["case_set_sha256"],
-        "model_manifest_sha256": first["model_manifest_sha256"],
+        "model_identity_sha256": first["model_identity_sha256"],
         "predictions_match": first["predictions_sha256"]
         == second["predictions_sha256"],
         "raw_responses_match": first["raw_response_sha256"]
@@ -1183,15 +1390,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--base-url", default="http://127.0.0.1:11434")
+    parser.add_argument("--preregistration", type=Path)
     parser.add_argument(
         "--finalize-runs", nargs=2, type=Path, metavar=("FIRST", "REPLAY")
     )
     args = parser.parse_args(argv)
-    result = (
-        finalize_runs(*args.finalize_runs)
-        if args.finalize_runs
-        else run_suite(OllamaClient(args.base_url))
-    )
+    if args.finalize_runs:
+        result = finalize_runs(*args.finalize_runs)
+    else:
+        prereg = load_preregistration(args.preregistration)
+        result = run_suite(prereg=prereg, base_url=args.base_url)
     _write_json(args.output, result)
     print(
         json.dumps(
