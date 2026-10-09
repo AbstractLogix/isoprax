@@ -240,7 +240,7 @@ def build_cases() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         event=relevance_event,
         score=0.61,
         semantics="cosine",
-        calibration=_cal(relevance_target),
+        calibration=_cal(relevance_target, "model-v2"),
         revision="model-v2",
         mapped_score=0.43,
     )
@@ -263,7 +263,7 @@ def build_cases() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                     "global_label": "bm25",
                     "score": 3.2,
                     "calibration": _cal(relevance_target),
-                    "mapped_score": 0.31,
+                    "mapped_score": 0.91,
                 }
             },
             ["r-right", "r-left"],

@@ -26,7 +26,7 @@ Store public inputs and evaluator labels in separate files. The public input con
 
 The 36-case set was authored internally from the stated challenge dimensions. The evaluator labels are explicitly assigned in the case-authoring record; the candidate policy does not generate them. No outside case author or reviewer took part. These files were committed before the candidate policy implementation:
 
-- Public cases: `docs/experiments/operation-policy-challenge-public.jsonl`, SHA-256 `a2b99eee4b9be004bf58b072d3522b0f6cb323255db3b5bd04e8da49a5e91185`.
+- Public cases: `docs/experiments/operation-policy-challenge-public.jsonl`, SHA-256 `927f536cf706f80ed52ccf258d826544d45ee95c3e61d79186e4b5d18d116bf1`.
 - Evaluator outcomes: `docs/experiments/operation-policy-challenge-evaluator.jsonl`, SHA-256 `e67e7d397b5d686025032aada387f5a2cc8c15b75f09ecadf032afafd80463c7`.
 - Case-authoring source: `scripts/build_operation_policy_cases.py`.
 
