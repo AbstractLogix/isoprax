@@ -51,6 +51,36 @@ operations on those results does the evidence support?**
 17. [Model-role blocker resolution and independent validation](model-role-blocker-resolution-results-2026-10-09.md):
     pinned runtime investigation, raw two-run results, independent metric
     recomputation, policy-review status, and remaining hypotheses.
+18. [Paper scope decision](paper-scope-decision-2026-10-09.md): separate the
+    outcome-contract paper from the model-role companion study.
+19. [Literature and citation audit](literature-citation-audit-2026-10-09.md):
+    targeted primary-record audit through 2026-10-09.
+20. [Paper claim registry](paper-claims-evidence.json), [counterexamples](paper-counterexamples-2026-10-09.md),
+    and [review packet](paper-review-packet-2026-10-09.md): claim provenance,
+    falsification cases, and questions for an independent reviewer.
+21. [Replication instructions and results](paper-replication.md),
+    [machine-readable recomputation](paper-recomputed-results.json), and
+    [frozen integrity lock](paper-integrity-lock.json),
+    [pinned Bouleusis raw-record manifest](../experiments/bouleusis-2026-10-08-raw/manifest.json).
+22. [Cross-repository assurance evidence](cross-repository-assurance-evidence-2026-10-09.md):
+    bounded Semadmit Core checks and Bouleusis replay invariants, kept separate
+    from claim truth, forecast performance, and outcome commensurability.
+23. [Adversarial internal review](adversarial-peer-review-2026-10-09.md),
+    [threats to validity](threats-to-validity-2026-10-09.md),
+    [rights audit](publication-rights-audit-2026-10-09.md),
+    [publication readiness](publication-readiness-2026-10-09.md), and
+    [external reviewer packet](paper-review-packet-2026-10-09.md).
+
+## Evidence status
+
+The main-paper package is designed for mechanical reproduction from pinned
+artifacts. Selected original Bouleusis research records have owner
+authorization for CC BY 4.0 release, separate from the source-code license.
+The selected-data grant does not cover Bouleusis source code or third-party
+material. The model-role raw outputs have a separate, unresolved reuse basis.
+The package is not an independent scientific review. Submission readiness
+remains gated on a resolved artifact scope, external review, a persistent data
+identifier, and independent validation of the contract's value.
 
 ## Program boundaries
 

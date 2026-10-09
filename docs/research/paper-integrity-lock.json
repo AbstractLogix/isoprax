@@ -1,0 +1,206 @@
+{
+  "artifacts": [
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/LICENSE.md",
+      "sha256": "506933a782282eccf7a7c2c7aad51eb8948b0bbb6ebb04fdb873aa99280984be"
+    },
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/README.md",
+      "sha256": "03df206c476cc8fce64b773322935883354d977abf095ce434cbfdf0931b1962"
+    },
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-audit-2026-10-08.jsonl.gz",
+      "sha256": "a201adfea594985ee118de87fa0c5e8e22472a3c0f33802afe5ed992142e91d9"
+    },
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-voi-2026-10-08.jsonl.gz",
+      "sha256": "eedcdfedb82fcb5dd015aeacc317c02ee78b708bdaef749eee77f674e31ac784"
+    },
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/evidence-selection-sweep-2026-10-08.jsonl.gz",
+      "sha256": "d74c5e76abbc0ced449bd2575e819f627d774c5c7f2023deae78c111a9d2cb70"
+    },
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/manifest.json",
+      "sha256": "3c374b95e62886138c56d1a366e8c2690542a7cc0a7e3c5319d9bcbf30705658"
+    },
+    {
+      "path": "docs/experiments/bouleusis-2026-10-08-raw/retrieval-multibug-2026-10-08.jsonl.gz",
+      "sha256": "0470bd7e88dbc39826957766d1bf4c779651205531d587a00d8b8d0b4fb0de57"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-artifact-manifest.json",
+      "sha256": "0a26f04a29f3672ba585a39e2fb66b02ede2e805f934bd551900cec451df7abd"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-replay-summary.json",
+      "sha256": "188b716be28d76cdbc2a84e10d3d586297cbed8b40c505b7e9b15f64e761b0e9"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-00",
+      "sha256": "a6a0525186a1996f5b2f81525935766dc5858fa3f294b9e8867d9131a3ffbe53"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-01",
+      "sha256": "baea0d3d066b8045c894a6822745508d26647109ac8c0dbb641d9408d58fa0ef"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-02",
+      "sha256": "f8615e598c6ae7993b77e19ff0b85b3a8473b82e5844afae30a5cadb06acb455"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-03",
+      "sha256": "331b02377259dd6e5fbbf1c1fae22c3386dccc7ea54bedc4b257685c10791286"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-04",
+      "sha256": "66c5263ba6160ea0860412fb5cb37e1575cb693addb39cf6b2551d541c2f68f9"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-05",
+      "sha256": "350fe95fa371d2a4c350223374c22dbea7b5299d80d95104f16f3b0f03a6ef1a"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-06",
+      "sha256": "dd2b72f72ab49cd205b77876a20ff03bba94317373ddc8e603604369137465fe"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-07",
+      "sha256": "0f4bd5a12208bc9d61d50c8ec5cc8af5f74f06432f2671ad2fc41f486e792ae5"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-08",
+      "sha256": "23e3710f2654a03b7b76ad1e3245d16da994d22182b94ae720a556315e7fec34"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-09",
+      "sha256": "67b26246c23e0a5b237a5a7cb66cd040ee89a8d381bb153123c1ef8ac1905c52"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-00",
+      "sha256": "a6a0525186a1996f5b2f81525935766dc5858fa3f294b9e8867d9131a3ffbe53"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-01",
+      "sha256": "baea0d3d066b8045c894a6822745508d26647109ac8c0dbb641d9408d58fa0ef"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-02",
+      "sha256": "f8615e598c6ae7993b77e19ff0b85b3a8473b82e5844afae30a5cadb06acb455"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-03",
+      "sha256": "331b02377259dd6e5fbbf1c1fae22c3386dccc7ea54bedc4b257685c10791286"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-04",
+      "sha256": "66c5263ba6160ea0860412fb5cb37e1575cb693addb39cf6b2551d541c2f68f9"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-05",
+      "sha256": "350fe95fa371d2a4c350223374c22dbea7b5299d80d95104f16f3b0f03a6ef1a"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-06",
+      "sha256": "dd2b72f72ab49cd205b77876a20ff03bba94317373ddc8e603604369137465fe"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-07",
+      "sha256": "0f4bd5a12208bc9d61d50c8ec5cc8af5f74f06432f2671ad2fc41f486e792ae5"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-08",
+      "sha256": "23e3710f2654a03b7b76ad1e3245d16da994d22182b94ae720a556315e7fec34"
+    },
+    {
+      "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-09",
+      "sha256": "67b26246c23e0a5b237a5a7cb66cd040ee89a8d381bb153123c1ef8ac1905c52"
+    },
+    {
+      "path": "docs/experiments/model-runtime/tev1-license-audit-2026-10-09.json",
+      "sha256": "9cb0903507590bb227edca4b5211bc343c25c57a9c9d6c2f6a03f5f489bf8961"
+    },
+    {
+      "path": "docs/experiments/operation-policy-challenge-v2-evaluator.jsonl",
+      "sha256": "e67e7d397b5d686025032aada387f5a2cc8c15b75f09ecadf032afafd80463c7"
+    },
+    {
+      "path": "docs/experiments/operation-policy-challenge-v2-public.jsonl",
+      "sha256": "b5a927f3053aae1a365b9b28d75926cb0b527ba0fc651aadb53839972d6d5f76"
+    },
+    {
+      "path": "docs/experiments/operation-policy-challenge-v2-results.json",
+      "sha256": "211cec206853b67f0debe1b8eb33280627dd3ad862c730664e5af492813ab975"
+    },
+    {
+      "path": "docs/research/Calibration Is Not Enough_ Outcome Commensurability as a Precondition for Cross-Family Failure Prediction.md",
+      "sha256": "2400753e99add3241ebba713e77ac3b0a01a54611f2a0a95f448970eb6fb4467"
+    },
+    {
+      "path": "docs/research/experimental-results.json",
+      "sha256": "02d3642044768c47957221a1e615dc221baf248b97eb4a61c8d75fa8eca80fcd"
+    },
+    {
+      "path": "docs/research/operation-specific-policy-validation-preregistration.md",
+      "sha256": "9b09e19909825a60002bc5fea9a48b4e231b148f7693142c01966f4f7fa33f36"
+    },
+    {
+      "path": "docs/research/paper-claims-evidence.json",
+      "sha256": "51e2ab6b34d0b5101eb518a8b9a181e0f7a94f02d4365b1411fc8b68081dfdce"
+    },
+    {
+      "path": "docs/research/publication-rights-audit-2026-10-09.md",
+      "sha256": "36dc21fa3febcb3395d19b64407bd0bce46da1ed6047eb7b9a3a792962d3b23e"
+    },
+    {
+      "path": "isoprax/commensurability.py",
+      "sha256": "f260bc4f508c9b1a44c27c87c58a013bb1fb5c3381b2a1eadfb4f74c0fc0d2d2"
+    },
+    {
+      "path": "isoprax/operation_gate_experiment.py",
+      "sha256": "99b7cb92bfb73987817bcf359169e81b18a12f17928bf00f8e42fd75fb856a1b"
+    },
+    {
+      "path": "isoprax/research_experiments.py",
+      "sha256": "1e04c99b0ceb50a0b987ee4e9a8c3a44f9a10f1f44a2a4058e20219b12bf1a0e"
+    },
+    {
+      "path": "scripts/model_role_embedding.py",
+      "sha256": "b18d6b0c96e9b8129d9f269bff0650eb99c92215daa050ca87a1349d9c233773"
+    },
+    {
+      "path": "scripts/model_role_experiment.py",
+      "sha256": "8018726e87041990468930540de4914d6e944530791f0c9561ac735a82cc6910"
+    },
+    {
+      "path": "scripts/model_role_metrics.py",
+      "sha256": "d9a185e92a583cad786a79fcb8d04a7f2d0ff70debfbbca7146926b1c80b739b"
+    },
+    {
+      "path": "scripts/operation_policy_challenge.py",
+      "sha256": "747c500f693597235f2ab4cf5ec14cb1bca227311bd2a515833b145c36235e94"
+    },
+    {
+      "path": "scripts/paper_integrity.py",
+      "sha256": "225253c99b7ed7b8785d954fdf35107d26cca165aa8a388024c1873b10c970a1"
+    },
+    {
+      "path": "scripts/reanalyze_bouleusis_sweep.py",
+      "sha256": "dab165c04a27176a921b777ca9b4fe7d39c07e90394bf985527565bfa8617f01"
+    },
+    {
+      "path": "specs/047-retrieval-selection-dependence/model-role-preregistration-v2.3.json",
+      "sha256": "dc1f009389566e4a2cf1ff5e465c3b2bfb2e41e9b5af7a13ab980ce96b838436"
+    },
+    {
+      "path": "tests/test_paper_integrity.py",
+      "sha256": "59de4e8d3b76d6825f5960f25877ecca429166c293f59ba6db3236ff83e738c4"
+    },
+    {
+      "path": "tests/test_research_experiments.py",
+      "sha256": "3a9b768c257b7b4bdd59f97c610531f97a50c75abc9407ec320ca656e1b709f8"
+    }
+  ],
+  "description": "Frozen source and protocol identities for the publication candidate. Generated tables and review summaries are recomputed outputs.",
+  "schema_version": 1
+}

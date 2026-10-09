@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "id": "frozen-integrity-lock",
+      "status": "PASS"
+    },
+    {
+      "id": "raw-source-hashes-and-record-counts",
+      "status": "PASS"
+    },
+    {
+      "id": "public-data-sensitive-string-scan",
+      "status": "PASS"
+    },
+    {
+      "id": "experiment-and-model-identities",
+      "status": "PASS"
+    },
+    {
+      "id": "development-heldout-split-checks",
+      "status": "PASS"
+    },
+    {
+      "id": "raw-result-recomputation",
+      "status": "PASS"
+    },
+    {
+      "id": "claim-and-numeric-coverage",
+      "status": "PASS"
+    },
+    {
+      "id": "generated-manuscript-tables",
+      "status": "PASS"
+    }
+  ],
+  "failures": [],
+  "independent_scientific_review": "not completed",
+  "limitations": [
+    "All new experiments use synthetic, authored records or a fixed finite challenge.",
+    "Byte-identical model runs are one repeated execution on one frozen case set, not independent replication.",
+    "The 23-case challenge was authored within the project and was not independently adjudicated.",
+    "The 23-case saved rows omit the per-case ranking and decision outputs needed to reproduce those totals independently.",
+    "A string scan cannot establish that all privacy, copyright, or third-party rights questions are resolved.",
+    "Automated checks do not establish construct validity, operational value, or independent peer review."
+  ],
+  "review_questions": [
+    "Does an executable operation-sensitive declaration contract add a publishable contribution beyond measurement and construct-validity frameworks?",
+    "Are the authored expected labels and valid semantic bridges correct under independent review?",
+    "Would a simpler rule achieve comparable permission and coverage results on independently authored cases?",
+    "Which data and generated model outputs should be deposited with a persistent identifier before submission?"
+  ],
+  "review_type": "automated evidence and artifact checks",
+  "status": "PASS"
+}
