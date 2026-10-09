@@ -1,6 +1,6 @@
 # Operation-Specific Policy Challenge: Preregistration
 
-**Status:** Challenge cases and evaluator outcomes are frozen before candidate-policy implementation and scoring. The set is internally authored. It does not provide independent external validation or validate an operational policy.
+**Status:** Version 2 cases and evaluator outcomes are frozen before the complete candidate-policy run. The set is internally authored. It does not provide independent external validation or validate an operational policy.
 
 **Evidence class:** Synthetic and internally authored unless separate case authors and reviewers are added before case freeze.
 
@@ -26,9 +26,15 @@ Store public inputs and evaluator labels in separate files. The public input con
 
 The 36-case set was authored internally from the stated challenge dimensions. The evaluator labels are explicitly assigned in the case-authoring record; the candidate policy does not generate them. No outside case author or reviewer took part. These files were committed before the candidate policy implementation:
 
-- Public cases: `docs/experiments/operation-policy-challenge-public.jsonl`, SHA-256 `18dcb1bb9dceb2cc442a88ba1720ae410653618ec58ecd3c13b66e4bb86a2f3e`.
-- Evaluator outcomes: `docs/experiments/operation-policy-challenge-evaluator.jsonl`, SHA-256 `e67e7d397b5d686025032aada387f5a2cc8c15b75f09ecadf032afafd80463c7`.
+- Public cases: `docs/experiments/operation-policy-challenge-v2-public.jsonl`, SHA-256 `b5a927f3053aae1a365b9b28d75926cb0b527ba0fc651aadb53839972d6d5f76`.
+- Evaluator outcomes: `docs/experiments/operation-policy-challenge-v2-evaluator.jsonl`, SHA-256 `e67e7d397b5d686025032aada387f5a2cc8c15b75f09ecadf032afafd80463c7`.
 - Case-authoring source: `scripts/build_operation_policy_cases.py`.
+
+### Dated fixture-QA amendment — 2026-10-08
+
+The first frozen version used `RL02` as a valid mapped-relevance case, but its public calibration record named `model-v1` while the score source named `model-v2`. A focused candidate-policy test correctly refused that case. This was a fixture construction error. The test did not produce a complete scored result artifact or aggregate metrics. Version 1 remains preserved at `docs/experiments/operation-policy-challenge-public.jsonl` with SHA-256 `18dcb1bb9dceb2cc442a88ba1720ae410653618ec58ecd3c13b66e4bb86a2f3e`; it is retired from the complete comparison.
+
+Version 2 corrects only that public calibration revision, uses a new artifact path and digest, and retains the predeclared operation rules, outcome labels, thresholds, and analysis. The complete comparison must use only version 2. No candidate-policy result from version 1 is included in the report.
 
 If no independent case author or reviewer takes part, record `internal authorship` in the result and do not call the comparison independent external validation.
 
@@ -74,4 +80,4 @@ No decision threshold, target mapping, source rule, calibration map, or expected
 
 ## Current status
 
-The case files are frozen and unscored. The existing policy result remains available with its oracle-leakage limitation in [the pilot report](retrieval-selection-dependence-results.md). No independent operation-specific validation is supported yet.
+Version 2 is frozen and unscored. The existing policy result remains available with its oracle-leakage limitation in [the pilot report](retrieval-selection-dependence-results.md). No independent operation-specific validation is supported yet.

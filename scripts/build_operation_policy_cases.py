@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_PATH = ROOT / "docs/experiments/operation-policy-challenge-public.jsonl"
-EVALUATOR_PATH = ROOT / "docs/experiments/operation-policy-challenge-evaluator.jsonl"
+PUBLIC_PATH = ROOT / "docs/experiments/operation-policy-challenge-v2-public.jsonl"
+EVALUATOR_PATH = ROOT / "docs/experiments/operation-policy-challenge-v2-evaluator.jsonl"
 
 
 def _source(
@@ -272,7 +272,7 @@ def build_cases() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                     "score_semantics": "bm25",
                     "global_label": "bm25",
                     "score": 3.2,
-                    "calibration": _cal(relevance_target),
+                    "calibration": _cal(relevance_target, "model-v2"),
                     "mapped_score": 0.91,
                 }
             },
