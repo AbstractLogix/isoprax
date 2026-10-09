@@ -2,7 +2,7 @@
 
 ## Required status
 
-- `PAPER CLAIMS MECHANICALLY VERIFIED / NOT VERIFIED`: **PAPER CLAIMS MECHANICALLY VERIFIED**. The integrity runner passed for 36 registered claims and 17 numeric manuscript lines. Deliberately changed manuscript numbers, source bytes, and recorded artifact digests were rejected. The clean-checkout rerun remains on the checklist below.
+- `PAPER CLAIMS MECHANICALLY VERIFIED / NOT VERIFIED`: **PAPER CLAIMS MECHANICALLY VERIFIED**. The integrity runner passed for 36 registered claims and 17 numeric manuscript lines. Deliberately changed manuscript numbers, source bytes, and recorded artifact digests were rejected. A clean checkout at commit `a63e819` passed locked-environment installation, `--check-only`, all 16 focused integrity tests, and repository lint/format checks.
 - `PUBLIC REPLICATION PACKAGE READY / NOT READY`: **NOT READY** for permanent public deposit. The four selected Bouleusis data records have an exact owner authorization and CC BY 4.0 license. The six-role model output files have no asserted reuse license and are outside that authorization. See the [rights audit](publication-rights-audit-2026-10-09.md).
 - `INDEPENDENT SCIENTIFIC REVIEW COMPLETED / NOT COMPLETED`: **NOT COMPLETED**. The [adversarial review](adversarial-peer-review-2026-10-09.md) is internal. No independent external referee has reviewed the claims or case labels.
 - `SUBMISSION CANDIDATE READY / BLOCKED`: **BLOCKED**. The candidate still needs a rights decision for model outputs, a persistent archive identifier, independent scientific review, author approval and title-page metadata, and final journal declarations.
@@ -35,8 +35,8 @@ No separate artifact-evaluation badge or mandatory artifact-review gate was foun
 | Calibration and construct-validity novelty claims are bounded | Ready for review | The manuscript treats the premise as established background and claims only the proposed declaration contract and synthetic demonstration. |
 | Mixture and decision comparisons are distinguished from direct pooling | Ready for review | The manuscript includes a named mixture counterexample and a separate common-utility decision example. |
 | Four disputed forecast cases remain unresolved | Ready for review | `FP02`, `FP03`, `FP05`, and `FP06` remain excluded from positive policy-validity claims. |
-| Quantitative tables and integrity lock | Mechanically verified | Tables were regenerated from pinned inputs. Three full-suite mutation checks rejected a changed manuscript number, changed raw source bytes, and changed recorded digest. |
-| Clean-checkout reproduction without private source repositories | Pending clean checkout | Run the locked environment and integrity suite from the stacked PR branch. The check must make no network or model calls. |
+| Quantitative tables and integrity lock | Mechanically verified | Tables were regenerated from pinned inputs. Three integrity-CLI mutation checks rejected a changed manuscript number, changed raw source bytes, and changed recorded digest. |
+| Clean-checkout reproduction without private source repositories | Passed at `a63e819` | `uv sync --locked`, `uv run python scripts/paper_integrity.py --check-only`, focused integrity tests (16 passed), Ruff check, and Ruff format check passed. The integrity command makes no network or model calls. |
 | Selected Bouleusis data permission | Ready within exact scope | Four listed files only; CC BY 4.0; original private source code excluded. |
 | Six-role model output release basis | Blocked | Tev1 fine-tune terms and output reuse rights are not established by this audit. Do not extend the Bouleusis license to these files. |
 | Third-party and secret screening | Partial | Deterministic pattern scan passes or fails with the integrity run; it cannot establish all privacy, copyright, or license rights. |
