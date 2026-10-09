@@ -176,13 +176,23 @@ def build_cases() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         (False, {"right": {"observation_process": "satellite-process"}}, False, None),
         (
             False,
-            {"right": {"calibration": _cal(forecast_target, split="evaluation")}},
+            {
+                "right": {
+                    "model_revision": "model-v1",
+                    "calibration": _cal(forecast_target, split="evaluation"),
+                }
+            },
             True,
             True,
         ),
         (
             False,
-            {"right": {"calibration": _cal(forecast_target, "old-model")}},
+            {
+                "right": {
+                    "model_revision": "model-v1",
+                    "calibration": _cal(forecast_target, "old-model"),
+                }
+            },
             True,
             False,
         ),
@@ -318,15 +328,29 @@ def build_cases() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             },
             None,
         ),
-        (False, {"right": {"calibration": None}}, ["r-left", "r-right"]),
         (
             False,
-            {"right": {"calibration": _cal(relevance_target, split="evaluation")}},
+            {"right": {"model_revision": "model-v1", "calibration": None}},
             ["r-left", "r-right"],
         ),
         (
             False,
-            {"right": {"calibration": _cal(relevance_target, "old-model")}},
+            {
+                "right": {
+                    "model_revision": "model-v1",
+                    "calibration": _cal(relevance_target, "model-v1", "evaluation"),
+                }
+            },
+            ["r-left", "r-right"],
+        ),
+        (
+            False,
+            {
+                "right": {
+                    "model_revision": "model-v1",
+                    "calibration": _cal(relevance_target, "old-model"),
+                }
+            },
             ["r-left", "r-right"],
         ),
         (False, {"right": {"source_status": "unknown"}}, ["r-left", "r-right"]),
@@ -407,7 +431,17 @@ def build_cases() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         ),
         (False, {"right": {"lineage_group": "root-a"}}),
         (False, {"right": {"source_status": "unknown"}}),
-        (False, {"right": {"conflict": True}}),
+        (
+            False,
+            {
+                "right": {
+                    "model_revision": "qwen-v1",
+                    "observation_process": "document-review",
+                    "observation_window": "revision-4",
+                    "conflict": True,
+                }
+            },
+        ),
         (
             False,
             {

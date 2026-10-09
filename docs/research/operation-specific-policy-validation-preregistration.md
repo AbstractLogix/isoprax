@@ -26,7 +26,7 @@ Store public inputs and evaluator labels in separate files. The public input con
 
 The 36-case set was authored internally from the stated challenge dimensions. The evaluator labels are explicitly assigned in the case-authoring record; the candidate policy does not generate them. No outside case author or reviewer took part. These files were committed before the candidate policy implementation:
 
-- Public cases: `docs/experiments/operation-policy-challenge-public.jsonl`, SHA-256 `927f536cf706f80ed52ccf258d826544d45ee95c3e61d79186e4b5d18d116bf1`.
+- Public cases: `docs/experiments/operation-policy-challenge-public.jsonl`, SHA-256 `18dcb1bb9dceb2cc442a88ba1720ae410653618ec58ecd3c13b66e4bb86a2f3e`.
 - Evaluator outcomes: `docs/experiments/operation-policy-challenge-evaluator.jsonl`, SHA-256 `e67e7d397b5d686025032aada387f5a2cc8c15b75f09ecadf032afafd80463c7`.
 - Case-authoring source: `scripts/build_operation_policy_cases.py`.
 
@@ -40,7 +40,7 @@ Compare these rules:
 
 1. **Naive aggregation:** permit aggregation of all supplied values and apply the declared threshold, if one exists.
 2. **One global label:** permit only when the pair has the same frozen global `commensurable` label. Assign one label per score-source pair from declared score metadata before case freeze. Do not change it by operation or case.
-3. **Metadata-only:** permit only when declared target, event, observation process, window, score semantics, model revision, verified source status, and source-lineage requirements match. It does not inspect operation-specific admissibility.
+3. **Metadata-only:** permit only when declared target, event, observation process, window, score semantics, model revision, verified source status, and distinct source-lineage requirements match. This frozen simple rule does not inspect calibration split or map identity, explicit-mixture requirements, or operation-specific conflict semantics.
 4. **Operation-specific candidate:** apply the predeclared requirements for the named operation. Probability pooling requires the same target definition and observation process, compatible horizon/window, development-fitted calibration for that target and exact model revision, and explicit mixture weights when targets differ. Relevance ranking may compare different native score types only after a development-fitted map to the same relevance event and exact score-source revision; raw values remain separate. Evidence combining requires verified provenance, no unresolved conflict, distinct upstream sources, and any declared independent-review condition. Unknown or missing required metadata causes refusal.
 5. **Evaluator-only oracle:** read the separate expected labels after the candidate decisions are fixed. It is a reference, never a deployable policy.
 
