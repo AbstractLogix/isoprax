@@ -29,6 +29,7 @@ The 36-case set was authored internally from the stated challenge dimensions. Th
 - Public cases: `docs/experiments/operation-policy-challenge-v2-public.jsonl`, SHA-256 `b5a927f3053aae1a365b9b28d75926cb0b527ba0fc651aadb53839972d6d5f76`.
 - Evaluator outcomes: `docs/experiments/operation-policy-challenge-v2-evaluator.jsonl`, SHA-256 `e67e7d397b5d686025032aada387f5a2cc8c15b75f09ecadf032afafd80463c7`.
 - Case-authoring source: `scripts/build_operation_policy_cases.py`.
+- Candidate-policy runner: `scripts/operation_policy_challenge.py`, SHA-256 `747c500f693597235f2ab4cf5ec14cb1bca227311bd2a515833b145c36235e94`.
 
 ### Dated fixture-QA amendment — 2026-10-08
 
