@@ -1,0 +1,125 @@
+{
+  "compression": "gzip -n -9; stream split into consecutive 900 KiB chunks",
+  "reconstruction": "cat docs/experiments/model-role-v2.3-run-N.json.gz.part-* | gzip -dc > docs/experiments/model-role-v2.3-run-N.json",
+  "runs": {
+    "1": {
+      "gzip_bytes": 8349127,
+      "gzip_sha256": "5c823506d2d7daa7b9ced0b6e6ef70498b57107e72e5562b0bb3fa4a51e55aa1",
+      "parts": [
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-00",
+          "sha256": "a6a0525186a1996f5b2f81525935766dc5858fa3f294b9e8867d9131a3ffbe53"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-01",
+          "sha256": "baea0d3d066b8045c894a6822745508d26647109ac8c0dbb641d9408d58fa0ef"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-02",
+          "sha256": "f8615e598c6ae7993b77e19ff0b85b3a8473b82e5844afae30a5cadb06acb455"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-03",
+          "sha256": "331b02377259dd6e5fbbf1c1fae22c3386dccc7ea54bedc4b257685c10791286"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-04",
+          "sha256": "66c5263ba6160ea0860412fb5cb37e1575cb693addb39cf6b2551d541c2f68f9"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-05",
+          "sha256": "350fe95fa371d2a4c350223374c22dbea7b5299d80d95104f16f3b0f03a6ef1a"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-06",
+          "sha256": "dd2b72f72ab49cd205b77876a20ff03bba94317373ddc8e603604369137465fe"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-07",
+          "sha256": "0f4bd5a12208bc9d61d50c8ec5cc8af5f74f06432f2671ad2fc41f486e792ae5"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-08",
+          "sha256": "23e3710f2654a03b7b76ad1e3245d16da994d22182b94ae720a556315e7fec34"
+        },
+        {
+          "bytes": 54727,
+          "path": "docs/experiments/model-role-v2.3-run-1.json.gz.part-09",
+          "sha256": "67b26246c23e0a5b237a5a7cb66cd040ee89a8d381bb153123c1ef8ac1905c52"
+        }
+      ],
+      "uncompressed_bytes": 25036866,
+      "uncompressed_path": "docs/experiments/model-role-v2.3-run-1.json",
+      "uncompressed_sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7"
+    },
+    "2": {
+      "gzip_bytes": 8349127,
+      "gzip_sha256": "5c823506d2d7daa7b9ced0b6e6ef70498b57107e72e5562b0bb3fa4a51e55aa1",
+      "parts": [
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-00",
+          "sha256": "a6a0525186a1996f5b2f81525935766dc5858fa3f294b9e8867d9131a3ffbe53"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-01",
+          "sha256": "baea0d3d066b8045c894a6822745508d26647109ac8c0dbb641d9408d58fa0ef"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-02",
+          "sha256": "f8615e598c6ae7993b77e19ff0b85b3a8473b82e5844afae30a5cadb06acb455"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-03",
+          "sha256": "331b02377259dd6e5fbbf1c1fae22c3386dccc7ea54bedc4b257685c10791286"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-04",
+          "sha256": "66c5263ba6160ea0860412fb5cb37e1575cb693addb39cf6b2551d541c2f68f9"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-05",
+          "sha256": "350fe95fa371d2a4c350223374c22dbea7b5299d80d95104f16f3b0f03a6ef1a"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-06",
+          "sha256": "dd2b72f72ab49cd205b77876a20ff03bba94317373ddc8e603604369137465fe"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-07",
+          "sha256": "0f4bd5a12208bc9d61d50c8ec5cc8af5f74f06432f2671ad2fc41f486e792ae5"
+        },
+        {
+          "bytes": 921600,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-08",
+          "sha256": "23e3710f2654a03b7b76ad1e3245d16da994d22182b94ae720a556315e7fec34"
+        },
+        {
+          "bytes": 54727,
+          "path": "docs/experiments/model-role-v2.3-run-2.json.gz.part-09",
+          "sha256": "67b26246c23e0a5b237a5a7cb66cd040ee89a8d381bb153123c1ef8ac1905c52"
+        }
+      ],
+      "uncompressed_bytes": 25036866,
+      "uncompressed_path": "docs/experiments/model-role-v2.3-run-2.json",
+      "uncompressed_sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7"
+    }
+  },
+  "schema_version": 1
+}

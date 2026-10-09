@@ -48,6 +48,9 @@ operations on those results does the evidence support?**
 16. [Operation-policy challenge results](../experiments/operation-policy-challenge-v2-results.json):
     per-case candidate decisions, evaluator outcomes, and descriptive
     operation-specific summaries.
+17. [Model-role blocker resolution and independent validation](model-role-blocker-resolution-results-2026-10-09.md):
+    pinned runtime investigation, raw two-run results, independent metric
+    recomputation, policy-review status, and remaining hypotheses.
 
 ## Program boundaries
 
