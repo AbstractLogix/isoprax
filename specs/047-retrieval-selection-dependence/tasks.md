@@ -83,7 +83,7 @@ description: "Research note and benchmark protocol tasks"
 - [x] T029 Recompute counts, source hashes, action choices, prediction errors, and untied action comparisons from the 228-run, 144-run, 144-row, and 38-action Bouleusis artifacts. Report unresolved source-version hash mismatches.
 - [x] T030 Write a prospective public-input-only policy challenge protocol with separate evaluator outcomes and explicit internal-authorship limits.
 - [x] T031 Create and freeze the 36 public cases and separate expected outcomes before running any candidate policy.
-- [ ] T032 Run the predeclared policy alternatives on the frozen cases; report per-operation false permissions, unnecessary refusals, coverage, ranking and decision changes, and cost.
+- [x] T032 Run the predeclared policy alternatives on the frozen cases; report per-operation false permissions, unnecessary refusals, coverage, ranking and decision changes, and cost. The report flags four calibration-revision errors in valid forecast cases; do not treat that family as a policy-value result.
 - [ ] T033 Resolve a local runnable identity for the exact EmbeddingGemma candidate and freeze all six model identities and protocol before any scored role call.
 - [ ] T034 Run the complete model-role suite twice and report raw outputs, per-target metrics, uncertainty, repeatability, and score limits.
 - [ ] T035 Complete full local validation, request GitHub review, and merge only when the model-role and policy-validation requirements, CI, and review are complete.

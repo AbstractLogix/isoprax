@@ -38,6 +38,16 @@ operations on those results does the evidence support?**
 13. [Retrieval-dependence synthetic pilot results](retrieval-selection-dependence-results.md):
     two pinned local-model runs, replay differences, policy baselines, and
     limits of the synthetic evidence; its result JSON is compressed for storage.
+14. [Independent validation and model-role status](independent-validation-and-model-role-status-2026-10-08.md):
+    raw Bouleusis multi-bug and VOI reanalysis, policy-oracle limitation,
+    internal operation-policy challenge results, model-role identity gate, and
+    handoff conclusion.
+15. [Operation-specific policy validation preregistration](operation-specific-policy-validation-preregistration.md):
+    frozen version 2 public cases, separate evaluator labels, and the dated
+    fixture-QA amendment.
+16. [Operation-policy challenge results](../experiments/operation-policy-challenge-v2-results.json):
+    per-case candidate decisions, evaluator outcomes, and descriptive
+    operation-specific summaries.
 
 ## Program boundaries
 

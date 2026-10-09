@@ -24,6 +24,12 @@
 - The condition and operation-rule tables below show run 1. The next tables show where run 2 changed the outcome summaries.
 - An earlier run using mutable model names is retained as `retrieval-selection-dependence-run-mutable-tag-unverified.json.gz` and excluded: the Gemma tag changed during that run, and per-request model revisions were not recorded. A later retry stopped at preflight before scoring.
 
+## Policy-evaluation validity note
+
+The operation-specific row in the original result artifact is an oracle-informed structural control. Code review found that `_reference_permission()` reads the hidden gold root cause and hidden operation-use labels; `_policy_permission("operation_specific", ...)` calls that reference; and `evaluate_policies()` uses the same reference to set the expected permission. The operation-specific ranking and decision paths also read hidden operation-use labels.
+
+The earlier permission-error counts are preserved as recorded. They are not an independent test of a deployable candidate policy. In particular, the zero false permissions and zero unnecessary refusals do not show that an operation-specific policy adds value over simpler rules. A separate validation phase must give the candidate only declared public metadata and operation context, then compare its output with separately authored reference decisions.
+
 | Condition | k | Task success (run 1 → run 2) | Interpretation error | False belief | Abstention |
 |---|---:|---:|---:|---:|---:|
 | A | 1 | 13/24 → 18/24 | 11/24 → 6/24 | 11/24 → 6/24 | 8/24 → 13/24 |
@@ -160,7 +166,7 @@ The policies were scored against the authored operation reference in this fixtur
 - **H2_retrieval_is_not_epistemic_reliability**: observed in some paired cases.
 - **H3_evidence_budget**: descriptive; no monotone assumption.
 - **H4_lineage_and_independence**: lineage added predictive value.
-- **H5_simpler_rule_may_suffice**: operation-specific rule was no worse than metadata-only on both permission-error counts.
+- **H5_simpler_rule_may_suffice**: unresolved. The operation-specific comparison used hidden reference labels and cannot establish deployable policy value.
 
 ## Evidence classes and limits
 
@@ -171,7 +177,7 @@ The policies were scored against the authored operation reference in this fixtur
 
 ## Answers and next test
 
-1. The operation-specific rule changed held-out permission errors versus metadata-only: false permissions delta -79; unnecessary refusals delta -91. This result is limited to the authored fixture. The same permission-error counts appeared in run 2.
+1. No independent result answers whether operation-specific commensurability adds value over simpler rules. The prior deltas versus metadata-only (false permissions -79; unnecessary refusals -91 in each run) came from the oracle-informed structural control described above.
 2. Shared model identity does not establish semantic equivalence or authorize cross-family pooling. This retrieval pilot does not test cross-target outcome pooling.
 3. Only evidence-recording practices are mature enough to propose for Semadmit review: preserve source status, upstream lineage, model revision, and unknown values. This synthetic pilot does not justify an enforcement rule.
 4. Any hypothesis not meeting its preregistered gate is weakened or unsupported in this pilot, not disproven generally.

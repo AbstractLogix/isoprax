@@ -2,7 +2,7 @@
 
 **Feature Branch**: codex/047-retrieval-selection-benchmark
 **Created**: 2026-10-08
-**Status**: Synthetic benchmark and model-role experiment implementation in progress
+**Status**: Synthetic benchmark and policy comparison executed; policy cases include authoring defects and have no outside review. Model-role scoring remains blocked by an unavailable exact local EmbeddingGemma identity.
 **Input**: User request to study evidence-selection and interpretation dependence, inspired by UNREAL arXiv:2610.08463v1.
 
 ## User Scenarios & Testing
@@ -108,7 +108,7 @@ A research reader needs to know whether reported retrieval recall supports claim
 - **FR-011**: A Semadmit handoff MUST require a reproducible held-out result with scope, limits, a falsifier, and required runtime metadata.
 - **FR-012**: The benchmark MUST test combined evidence from different selectors against single-selector controls matched to the realized item and token budget, and MUST NOT treat selector IDs alone as independent source evidence.
 - **FR-013**: The benchmark MUST test whether a held-out calibration of selector scores predicts audited source status, separately from relevance and operation admissibility.
-- **FR-014**: The initial role comparison MUST include `qwen3.5:9b`, `gemma4:e4b`, `qwen2.5-coder:7b`, `embeddinggemma-2:740m`, `tev1:4b`, and `granite4.1-guardian:8b`; an environment-compatible precision tag MAY be used for the same EmbeddingGemma 2 740M variant when the requested default tag cannot run.
+- **FR-014**: The initial role comparison MUST include the exact requested identities `qwen3.5:9b`, `gemma4:e4b`, `qwen2.5-coder:7b`, `embeddinggemma-2:740m-bf16`, `tev1:4b`, and `granite4.1-guardian:8b`. If an exact identity cannot run in the selected local runtime, scored model-role work MUST remain blocked. Do not substitute a model, precision, backend, or runner without a dated preregistration amendment before freeze.
 - **FR-015**: Each model output MUST be evaluated against a named target. Similarity, probability, confidence, and categorical judgment MUST remain distinct score types.
 - **FR-016**: Tev1 MUST be evaluated for calibration on at least three predeclared question families. It MUST report per-family sample counts, event rates, calibration, discrimination where meaningful, and uncertainty.
 - **FR-017**: The EmbeddingGemma retrieval score, model-reported probability, and Guardian judgment MUST be compared on a common held-out target where their outputs apply. Any score-to-probability mapping MUST be fit on development cases only.
@@ -121,6 +121,11 @@ A research reader needs to know whether reported retrieval recall supports claim
 - **FR-024**: The report MUST identify the independent bug as the unit for multi-bug inference and MUST NOT count seed or order variants around one defect as independent tasks.
 - **FR-025**: The prospective iterative-retrieval protocol MUST predefine equal-budget comparisons, verified success, retrieval and reasoning costs, false-repair safeguards, uncertainty units, and falsification rules.
 - **FR-026**: The report MUST NOT propose a Semadmit independence rule from selector identity alone; a handoff requires a reproducible held-out association with downstream errors across distinct bugs and a simpler-rule comparison.
+- **FR-027**: A deployable policy candidate MUST receive only declared public inputs and MUST NOT receive evaluator-only root causes, hidden operation-use labels, or expected permissions. The evaluator MUST use separately authored reference outcomes.
+- **FR-028**: If an existing policy comparison uses its oracle to implement the candidate or answer key, the report MUST preserve it as an oracle-informed control and MUST NOT present it as independent policy evidence.
+- **FR-029**: A new policy challenge MUST freeze its case set and expected outcomes before evaluation. It MUST report internal authorship and MUST NOT claim external validation when independent authors or reviewers are absent.
+- **FR-030**: A Bouleusis evidence handoff MUST use raw JSONL, verify source hashes, recompute aggregates, keep experiment estimands separate, and report unresolved source-version mismatches.
+- **FR-031**: Model-role scoring MUST remain blocked until every requested role has an exact runnable local manifest and the complete preregistration is committed before scored calls.
 
 ### Success Criteria
 
@@ -137,6 +142,9 @@ A research reader needs to know whether reported retrieval recall supports claim
 - **SC-011**: Qwen2.5-Coder is evaluated by family interaction, with no global leaderboard claim.
 - **SC-012**: The retrieval measurement report answers all six supplied claim questions and separates evidence status, current findings, and open hypotheses.
 - **SC-013**: The next iterative study has a prospective, reviewable protocol with the bug sample, controls, estimands, costs, and decision criteria specified before execution.
+- **SC-014**: The prior oracle-informed policy result is clearly separated from any public-input candidate result.
+- **SC-015**: The Bouleusis multi-bug and VOI reports show raw-record counts, source hashes, independently recomputed findings, and any provenance discrepancy.
+- **SC-016**: The model-role report does not claim findings until both complete, identical, pinned runs are available.
 
 ## Assumptions
 

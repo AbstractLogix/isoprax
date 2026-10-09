@@ -10,7 +10,7 @@ Implement and execute the frozen synthetic selection-dependence benchmark plus a
 
 ## Scope
 
-The selection-dependence track generates a seeded synthetic case set, runs conditions A-D and their budgets, compares operation rules, and writes replayable results. The model-role track tests Tev1 calibration across declared question families, score meaning on a common evidence-relevance target, model-judgment error dependence, and coding specialization. It writes separate replayable results and an evidence report. Both tracks are synthetic. Neither reproduces UNREAL or establishes general model behavior. A separate document-only addendum reanalyzes the Bouleusis raw JSONL and preregisters a future multi-bug iterative-retrieval study; it adds no Bouleusis logic to IsoPrax.
+The selection-dependence track generates a seeded synthetic case set, runs conditions A-D and their budgets, compares operation rules, and writes replayable results. The model-role track tests Tev1 calibration across declared question families, score meaning on a common evidence-relevance target, model-judgment error dependence, and coding specialization. It writes separate replayable results and an evidence report. Both tracks are synthetic. Neither reproduces UNREAL or establishes general model behavior. Document-only handoffs analyze Bouleusis raw JSONL without changing its records or adding Bouleusis logic to IsoPrax. The existing operation-specific rule comparison is an oracle-informed structural control; a separate public-input challenge must keep evaluator labels outside candidate inputs.
 
 The local Ollama interface does not expose hidden representations. Condition C therefore uses a prompted Model X selector proxy. Condition B uses a distinct prompted Gemma selector; it is not retrieval-specialized. The role track uses the requested Qwen3.5, Gemma4, Qwen2.5-Coder, EmbeddingGemma 2, Tev1, and Granite Guardian models. It evaluates each model in a task suited to its output form; role labels do not rank models or establish independence.
 
@@ -55,6 +55,8 @@ The local Ollama interface does not expose hidden representations. Condition C t
 - **docs/research/bouleusis-retrieval-measurement-validity.md**: raw-record reanalysis, metric limits, pseudo-replication, and claim assessment.
 - **docs/research/bouleusis-retrieval-sweep-reanalysis.json** and **scripts/reanalyze_bouleusis_sweep.py**: source-hashed per-run reanalysis and deterministic validation of the external JSONL.
 - **docs/research/iterative-retrieval-preregistration.md**: prospective multi-bug design; exact tasks and revisions must be frozen before execution.
+- **docs/research/independent-validation-and-model-role-status-2026-10-08.md**: raw multi-bug and VOI reanalysis, provenance limits, policy oracle leakage, and the blocked model-role conclusion.
+- **docs/research/operation-specific-policy-validation-preregistration.md**: public-input-only candidate policy and separate evaluator protocol.
 - **specs/047-retrieval-selection-dependence/**: scope, plan, task record, research source, data model, quickstart, checklist, and convergence record.
 - **docs/research/README.md**: entry points to the new research thread.
 

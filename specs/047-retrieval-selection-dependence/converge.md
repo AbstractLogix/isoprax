@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-08
 **Feature**: [spec.md](spec.md)
-**Outcome**: Research-design slice converged; the prompted retrieval pilot is reported; the model-role experiment remains pending.
+**Outcome**: Retrieval and raw evidence handoff results are reported. The public-input policy challenge ran, but four forecast cases have calibration-revision errors and the cases have no external review. The model-role experiment remains blocked by the exact EmbeddingGemma runtime identity.
 
 ## Scope checked
 
@@ -35,7 +35,7 @@ The original documentation slice is complete. The local prompted pilot has run t
 
 Implement and run the synthetic benchmark defined in [the protocol](../../docs/research/retrieval-selection-dependence-benchmark.md). Preserve the stated model and source lineage, held-out policy cases, budgets, metrics, uncertainty, and falsification rules.
 
-That pilot is now complete and reported below. The outstanding slice is the separately preregistered model-role experiment. It remains blocked from scored calls until every requested role has an exact model identity, including the EmbeddingGemma alternative.
+That pilot is complete and reported below. The follow-on policy challenge now has a frozen public-input runner and per-case output. Its forecast family is invalid because four reference-valid cases have calibration metadata for the wrong model revision; the challenge does not support independent policy validation. The separately preregistered model-role experiment remains blocked from scored calls until every requested role has an exact local identity, including `embeddinggemma-2:740m-bf16`.
 
 ## Addendum: Bouleusis measurement-validity scope
 
@@ -62,3 +62,23 @@ run. This addendum does not complete the pending Feature 047 local-model
 benchmark and does not authorize a runtime rule. The next research step is to
 freeze and run the separate multi-bug iterative-retrieval design in Bouleusis,
 then assess its held-out results in IsoPrax.
+
+## Addendum: independent validation and model-role status
+
+The new [evidence report](../../docs/research/independent-validation-and-model-role-status-2026-10-08.md)
+recomputes the separate multi-bug and VOI handoff records. It also identifies
+evaluator-label leakage in the existing operation-specific policy comparison.
+Those results remain unchanged and are now labeled as an oracle-informed
+structural control.
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| Raw Bouleusis multi-bug and VOI analysis | Complete with source-version limits | Raw rows and aggregates were checked. The multi-bug preregistration hash and one report-code hash do not match the current checkout or reachable history. |
+| Public-only operation-specific candidate | Version 2 comparison executed; external validation unsupported | The [runner](../../scripts/operation_policy_challenge.py) uses only frozen public inputs before reading the separate evaluator file. The [result](../../docs/research/independent-validation-and-model-role-status-2026-10-08.md) records four calibration-revision errors in valid forecast cases and internal authorship. |
+| Model-role identity | Blocked | Five local identities pass digest preflight. EmbeddingGemma remains unavailable on the active Linux Ollama runtime. No role-scored calls were made. |
+| Semadmit handoff | None | The available synthetic results do not justify an operational rule. |
+
+Do not move PR #54 out of draft or merge it until the forecast fixture defect is
+reviewed, the complete pinned model-role suite is run twice, local checks pass,
+hosted CI is green, and GitHub review is complete. The ownership boundary remains unchanged: IsoPrax reports
+scientific evidence; Bouleusis and Semadmit own their respective behavior.
