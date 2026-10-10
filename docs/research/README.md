@@ -29,6 +29,9 @@ operations on those results does the evidence support?**
 10. [Retrieval-dependence benchmark protocol](retrieval-selection-dependence-benchmark.md):
     four selector/interpreter conditions, evidence budgets, metrics, and
     falsification rules.
+11. [Flagship paper and replication package](paper-review-packet-2026-10-10.md):
+    the isolated manuscript, 36-claim evidence registry, clean reproduction
+    commands, and questions for an independent researcher.
 
 ## Program boundaries
 

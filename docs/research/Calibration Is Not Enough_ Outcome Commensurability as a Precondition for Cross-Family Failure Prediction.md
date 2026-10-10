@@ -1,117 +1,184 @@
-# Calibration Is Not Enough: Outcome Commensurability as a Precondition for Cross-Family Failure Prediction
+# Calibration Is Not Enough: An Executable Contract for Outcome Commensurability in Cross-Family Forecasting
 
 ## Abstract
 
-Just-in-Time (JIT) software defect prediction and AIOps operational-failure prediction are established but largely separate research families, developed with different benchmarks and vocabularies. Recent work illustrates both sides of that separation: ReDef studies code-change representations and high-confidence repository-derived defect labels (Nam et al., 2026), while AIOpsLab provides an operational environment for deploying services, injecting faults, generating workloads, exporting telemetry, and evaluating agents (Shetty et al., 2024; Chen et al., 2025). They nonetheless share an abstract structure: ingest an event, compare it against historical outcomes, emit a score, and learn from the observed result. We formalize that shared structure as an implementation-independent conformance contract spanning both families, and isolate a precondition for meaningful cross-family probabilistic comparison: the outcome definitions must be commensurable.
+Probabilistic forecasts are calibrated relative to specified outcomes. Calibration alone does not show that forecasts from different prediction tasks measure the same event. We examine this distinction for just-in-time software defect prediction and operational failure prediction, where labels, observation processes, and prediction windows can differ. The statistical premise is established background; this paper does not claim it as a new calibration theorem. We propose an operation-sensitive contract, implement a structural check for direct pooling, and test a separate operation-specific rule on synthetic cases. In Benchmark A, two lanes each produced mean forecast 0.8, event rate 0.8, and Brier score 0.16, while their event definitions, observation processes, thresholds, and windows differed. A same-target control used the same numeric setup. The different-target summary is valid only as its named equal-weight mixture estimand, not as a forecast of one common event. In a finite, internally authored policy challenge, the operation-specific rule made fewer false permissions than the tested simpler rules; the fixture does not establish general superiority or field value. The checker compares declared fields; it does not establish the truth of measurement pipelines. Independent scientific review and external validation remain open. [[C9]] [[C10]] [[C11]]
 
-Calibration is widely and correctly treated as necessary for interpreting and comparing predicted probabilities. We argue that it is not sufficient. Calibration is a property of a probability relative to its own event definition: a perfectly calibrated forecast of “this commit was later linked to a fix” and a perfectly calibrated forecast of “a telemetry threshold was crossed” are both correct and remain incommensurable, because the mismatch is in what is predicted rather than how well. The failure is silent: the arithmetic yields a tidy joint ranking without establishing a common semantic interpretation. We therefore introduce outcome commensurability as a second, independent necessary condition, make the event definition an explicit and mechanically checkable object, and make cross-family comparison conditional on it. This motivates a split between Structural conformance, in which one contract governs both families, and Semantic conformance, in which their scores are actually comparable.
+**Keywords:** forecast calibration; outcome definition; commensurability; software defect prediction; operational failure prediction; reproducibility
 
-The public benchmark pairings considered here do not provide the shared observation semantics required for a Semantic claim. ReDef's repository-derived labels and AIOpsLab's operational fault-and-telemetry environment serve different evaluation purposes; neither should be treated as a shared outcome definition merely because both produce prediction targets. Calibration, corpus size, and record linkage do not by themselves repair that mismatch. We report a reference implementation that demonstrates the distinction by failing it deliberately: its two baseline strategies carry non-commensurable outcome definitions, so it withholds pooled cross-family figures and self-reports Structural conformance only. We identify deterministic replay under a single observation process as a concrete route to a Semantic claim, and specify the predeclaration and admission discipline such a self-constructed corpus requires.
+## Introduction
 
-## 1. Introduction
+Just-in-time software defect prediction (JIT-DP) and operational failure prediction use different prediction tasks. JIT-DP often predicts whether a code change will later receive a defect-related label (Ni et al., 2022; Nam et al., 2026). Operational prediction may forecast a service or system event from logs, metrics, traces, or injected faults (Chen et al., 2025; Shetty et al., 2024; Yang et al., 2026). These fields have different data and evaluation practices. A score from each field can be represented as a probability without making the events equivalent. These studies illustrate task-specific settings; they do not themselves pair their labels into one shared target. [[L5]] [[L6]] [[L9]] [[L10]] [[L11]] [[L15]]
 
-Software changes and operational failures are closely related in practice but are usually studied through different predictive tasks. Just-in-Time defect prediction estimates the risk associated with a code change, often using repository history, change metrics, or learned code representations. AIOps failure prediction estimates the risk associated with a running system, using telemetry, execution records, and operational history. Both families seek to support decisions before an adverse outcome occurs, yet their models, benchmarks, and evaluation conventions have largely developed independently.
+This paper asks a limited question: what must be declared before a system treats forecasts as predictions of one common event? Our central premise is that calibration is target-relative. A forecast may be calibrated for its own outcome while another calibrated forecast concerns a different outcome. Proper scoring rules evaluate forecasts against realized outcomes, but they do not erase differences in the outcome variables being scored. [[C1]] [[L1]] [[L16]]
 
-This separation creates an interoperability problem. A system may produce a risk score for a commit and an anomaly score for a running service, but the existence of two scores does not establish that they can be compared. Even when both are represented as probabilities, their numerical similarity may conceal a difference in the events being predicted. A probability of 0.8 that a commit will later be linked to a defect fix is not necessarily comparable to a probability of 0.8 that a service will cross a failure threshold within an hour. The two forecasts may each be well calibrated while answering different questions.
+We call the proposed declaration-and-operation conditions an **outcome-commensurability contract**. The contract is not a new statistical law and does not replace construct validity, measurement invariance, estimand definition, or forecast-combination theory. It makes a subset of those concerns explicit. The implemented checker compares selected declarations for direct pooling; a separate synthetic rule challenge explores other operations. Neither establishes that the declarations accurately describe how labels were produced. [[C11]]
 
-Calibration is therefore necessary but insufficient for the intended form of cross-family comparison. A calibrated forecast relates predicted probability to observed frequency under a particular outcome definition. It does not establish that two outcome definitions denote the same event. This distinction matters whenever scores are jointly ranked, thresholded, aggregated, or used to reason about the relative risk of changes and operational states. Without a common outcome semantics, such operations may be numerically well formed while lacking the interpretation attributed to them.
+The paper has two research questions:
 
-We call the missing condition **outcome commensurability**. Two outcome definitions are commensurable when they denote the same adverse event under the same observation process, observation-window semantics, and thresholds, while permitting different conditioning information. Under this formulation, a Change-family model and an Operational-family model may use different inputs and techniques but still predict the same outcome. For example, one model may estimate whether a predeclared runtime failure will occur after a deployment, while another estimates whether that same failure will occur given the current operational state. The distinction between the models lies in what they know, not in what their probabilities mean.
+- **RQ1:** Can equal numeric forecasts and equal calibration summaries support a common-event interpretation when target definitions differ?
+- **RQ2:** On the authored challenge, how does operation-specific gating compare with simpler rules on false permission, unnecessary refusal, and interpretation errors?
 
-This paper introduces IsoPrax, an implementation-independent conformance contract designed to make that distinction explicit. The contract unifies event ingestion, strategy execution, signal provenance, historical storage, outcome feedback, and evaluation obligations across the Change and Operational families. More importantly, it separates **Structural conformance** from **Semantic conformance**. Structural conformance establishes that both families can operate through the same contract. Semantic conformance additionally requires commensurable outcome definitions and calibrated probabilities before cross-family comparison is permitted.
+Our experiments are deterministic and synthetic. They demonstrate cases in which the contract distinguishes direct same-event pooling from a named mixture. They do not measure production prediction performance, establish an operational policy, or validate JIT/AIOps outcome equivalence. The model-role, retrieval, and acquisition studies are separate evidence and are not used to answer these research questions.
 
-The distinction is not merely terminological. A shared interface can successfully normalize events, execute strategies, persist signals, and calibrate outputs while still producing probabilities of different outcomes. Such an implementation has achieved structural interoperability but has not established semantic comparability. IsoPrax makes this boundary explicit and requires implementations to report it rather than treating a shared score range as sufficient evidence of unification.
+## Related work
 
-The reference implementation demonstrates this boundary using deliberately non-commensurable baseline outcome definitions. Both prediction families operate through the shared contract, but the implementation rejects pooled cross-family reporting and declares Structural conformance only. This is an intentional negative result: the system demonstrates that it can enforce the precondition for comparison rather than silently producing an invalid joint figure. The implementation does not claim real-world predictive superiority or Semantic conformance.
+Calibration and post-processing methods are established for forecasts of declared labels (Guo et al., 2017). Proper scoring rules such as Brier score and logarithmic score assess predictive distributions against observations (Gneiting and Raftery, 2007). Neither calibration nor a proper score makes distinct observations the same random variable. [[L1]] [[L16]]
 
-The same distinction constrains empirical validation. Established change-prediction benchmarks commonly derive labels from repository archaeology, such as fix-linkage heuristics, while operational benchmarks derive labels from runtime observations. Joining records from these sources may establish a relationship between changes and incidents, but it does not automatically make their outcome definitions equivalent. We therefore distinguish real-data Structural validation from Semantic validation and identify deterministic replay under a shared observation process as a concrete route to constructing the latter. Because such a corpus is self-constructed, its admission criteria, outcome definitions, thresholds, observation windows, censoring rules, and evaluation plan must be declared before acquisition and preserved as auditable evidence.
+Forecast combination is also established (Bates and Granger, 1969; Ranjan and Gneiting, 2010). Its validity depends on the combination target and the forecast construction. A combination defined for the same event differs from a summary over a declared mixture of event types. The latter can be useful, but it estimates the named mixture and does not become a forecast of one event. [[L2]] [[L3]]
 
-### Contributions
+The concern overlaps with construct validity and measurement invariance. Construct validity asks whether observations support the intended interpretation (Cronbach and Meehl, 1955). Measurement invariance asks whether measurements have comparable meaning across groups or conditions (Vandenberg and Lance, 2000). Software-engineering guidance also treats construct validity as a core threat to claims based on empirical indicators (Sjøberg and Bergersen, 2023). Recent work makes a related case for construct validity in LLM benchmarks (Bean et al., 2025). These are related foundations, not synonyms for the proposed contract, and this study does not conduct a psychometric invariance test. [[L4]] [[L18]] [[L19]] [[L20]]
 
-This paper makes four contributions:
+Freiesleben and Zezulka (2026) treat benchmark scores as measurements whose broader interpretation needs explicit validity conditions. Qin (2026, arXiv v1) shows that effects and rankings can change across admitted evaluation semantics even with fixed predictions. Later versions of Qin's paper use a different title and extend the claim-replay audit. These works address the inference problem more broadly and, in Qin's case, with recorded benchmark outcomes. Our synthetic counterexample does not establish a new validity principle or stronger empirical evidence. The Open Data Contract Standard can record semantics and quality rules; its CLI resolves shared definitions and runs executable checks. A custom policy can express outcome and operation conditions in that framework. We have not compared its implementation effort or reliability with IsoPrax's checker. [[C11]]
 
-1. **A cross-family conformance contract.** We formalize a shared, implementation-independent structure for Change-family and Operational-family prediction, without prescribing a particular model, programming language, storage system, or deployment architecture.
+Software prediction studies also face label and evaluation risks. Defect labels can depend on collection and linking methods (Herbold et al., 2022); AIOps results can depend on data splits (Lyu et al., 2021), interpretation practice (Lyu et al., 2022), and adaptation to change (Poenaru-Olaru et al., 2024). Recent autonomous-cloud diagnosis work extends this operational line but does not pair its outcomes with JIT targets. Those works motivate explicit outcome and observation declarations, but they do not establish that any two datasets are commensurable. [[L5]] [[L6]] [[L7]] [[L8]] [[L15]]
 
-2. **Outcome commensurability as a necessary condition.** We distinguish probability calibration from outcome equivalence and formalize the conditions under which scores from different prediction families may be interpreted and compared as probabilities of the same event.
+The candidate contribution is a small forecast-specific structural pooling check and a synthetic challenge of proposed operation-specific rules. We do not establish a capability that cannot be built by combining validity methods with a general data contract and policy engine. Whether this focused implementation saves effort or improves reliability requires a matched comparison and independent cases. [[C10]] [[C11]]
 
-3. **A Structural/Semantic conformance distinction.** We define separate conformance claims for shared-contract interoperability and meaningful cross-family comparability, making the latter conditional on explicit outcome definitions and calibration evidence.
+## Formal problem
 
-4. **A reference implementation and evidence boundary.** We demonstrate the shared contract and its refusal to pool non-commensurable scores, and define a staged validation path that separates synthetic structural evidence, real-data admission and evaluation, and future shared-outcome Semantic validation.
+Let a forecast be a probability \(p\) for a binary outcome \(Y\). Calibration for that outcome means that forecasts at level \(p\) agree with the conditional event frequency under the relevant population and information regime; for example, \(\mathbb{E}[Y \mid p] = p\) under the stated conditions. This relation is indexed by \(Y\). It does not imply that another outcome \(Z\) equals \(Y\), has the same measurement process, or answers the same decision question. [[C1]]
 
-The contribution is not a new defect predictor, anomaly detector, calibration algorithm, or claim of improved predictive accuracy. It is a contract and an interoperability argument: **a common prediction interface does not establish a common predicted outcome, and calibration cannot supply the missing semantics.**
-
-## 2. Related Work and Positioning
-
-We organize the relevant literature around four separable questions rather than treating all prior work as evidence for one claim.
-
-1. **Predictive methods.** JIT defect-prediction work, including JIT-Fine and ReDef, studies how code changes, representations, and model families support change-level risk prediction. JIT-Fine is also a useful reminder that defect prediction and defect localization can share inputs while targeting different units and decisions (Ni et al., 2022). ReDef is especially relevant to label quality and change semantics: its revert-anchored corpus and counterfactual probes test whether models respond to code modifications rather than superficial cues (Nam et al., 2026). These targets remain repository-derived defect labels, not runtime events observed after deployment.
-
-2. **Evaluation and calibration.** Calibration and discrimination determine whether a model's score is useful as a probability or ranking signal relative to its declared target. They do not determine whether two targets are the same estimand. Data-splitting choices can materially affect reported AIOps performance, so the split protocol is itself part of the evidence boundary (Lyu et al., 2021). Interpretation adds a related but distinct concern: consistency across learners, samples, and time affects whether explanations are stable enough to support analysis (Lyu et al., 2022). Adaptation adds a temporal-validity concern: operational data evolve, and full-history versus sliding-window retraining can change the model's effective population and evaluation behavior (Poenaru-Olaru et al., 2024). IsoPrax therefore treats calibration, split discipline, interpretation stability, and model-version/adaptation policy as evaluation evidence—not as cross-family label-equivalence tests.
-
-3. **Outcome and label semantics.** Repository archaeology, revert evidence, and SZZ-style fix linkage are observation processes for constructing change-family labels. Their validity and noise properties are important, but they should not be silently equated with telemetry-defined operational outcomes. The relevant question for IsoPrax is not which label source is universally superior; it is whether the source, window, threshold, censoring, and prediction-time rules define the same event for the proposed comparison.
-
-4. **Cross-family evidence infrastructure.** The AIOpsLab vision paper describes design principles for autonomous-cloud evaluation and a prototype that orchestrates applications, fault injection, and agent interaction (Shetty et al., 2024). The subsequent AIOpsLab framework makes that infrastructure concrete: it deploys microservice environments, injects faults, generates workloads, exports telemetry, and evaluates agents (Chen et al., 2025). IsoPrax is complementary rather than a replacement: AIOpsLab can supply an operational replay/evaluation environment, while IsoPrax specifies the outcome-comparability contract, provenance requirements, and refusal rule for cross-family pooling.
-
-The novelty claim is consequently narrow. We do not claim to introduce fault injection, telemetry collection, JIT prediction, calibration, or replay infrastructure. We claim an explicit contract boundary: those components may produce valid family-specific evidence without thereby establishing that their probabilities refer to a common outcome.
-
-## 3. Problem Statement
-
-Let a prediction strategy emit a score \(p \in [0,1]\) for an outcome \(Y\), conditioned on information \(X\). Calibration concerns the relationship between the stated probability and the observed frequency of \(Y\). For example, a calibrated strategy that assigns probability 0.8 should observe the corresponding event approximately 80% of the time among comparable predictions assigned that probability.
-
-Now consider two strategies:
+We represent a target declaration as:
 
 \[
-p_C = P(Y_C = 1 \mid X_C)
+T = (E, O, W, H, \tau, P, I),
 \]
 
-\[
-p_O = P(Y_O = 1 \mid X_O)
-\]
+where \(E\) is the event rule, \(O\) the observation process, \(W\) the time window, \(H\) the horizon, \(\tau\) any threshold or event boundary, \(P\) the target population, and \(I\) the information available at prediction time. A declaration may need further fields for a domain, censoring, label adjudication, or versioning. The tuple is a contract schema, not a complete theory of measurement.
 
-where \(C\) denotes the Change family and \(O\) denotes the Operational family. Both strategies may be calibrated relative to their respective outcomes. Nevertheless, calibration alone does not imply:
+We distinguish four operations:
 
-\[
-Y_C \equiv Y_O
-\]
+- **Calibration assessment:** compare a forecast with outcomes for its declared target.
+- **Direct same-event pooling:** combine forecast probabilities as if they estimate one event.
+- **Ranking:** order items under a declared ranking target and population.
+- **Decision comparison:** compare actions using a declared action set, state mapping, and common utility or loss.
 
-If \(Y_C\) denotes a repository-derived defect label and \(Y_O\) denotes a runtime threshold crossing, the two probabilities refer to different events. Their numerical values may be compared arithmetically, but that comparison does not establish a common failure-risk interpretation.
+These are interpretation categories. The separate synthetic challenge uses six requested actions: compare, rank, pool, transfer, average, and combine. It does not implement calibration assessment as a gate. [[C10]]
 
-The problem addressed by this paper is therefore not whether two models can emit probabilities in the same range. It is whether a system can determine, before permitting cross-family comparison, that those probabilities refer to commensurable outcomes.
+The proposed contract requires sufficient target alignment before direct same-event pooling. The implemented checker compares event, observation process, window, and threshold declarations for that pooling decision. The synthetic rule challenge tests further conditions for each requested operation. A different-event summary may still be reported if it has a predeclared mixture estimand and weights. A decision comparison across distinct events can also be meaningful when both are mapped to common states, actions, and utilities. That utility comparison does not make the event probabilities interchangeable. The current reference implementation does not implement a general utility bridge, so it does not certify one. [[C10]] [[C11]]
 
-## 4. Outcome Commensurability
+### Counterexamples to overbroad claims
 
-An **Outcome Definition** specifies the event whose probability a score denotes. At minimum, it includes the adverse event, the observation process used to determine occurrence, the observation-window semantics, and any applicable thresholds.
+Two forecasts can each report \(p=0.8\) and be calibrated when their respective event rates are 0.8, yet one can concern a defect-fix link within a window and another a telemetry threshold crossing within a different window. Their numeric equality does not make them forecasts of the same event. Benchmark A instantiates this construction. [[C9]]
 
-Two Outcome Definitions are commensurable when they denote the same event under equivalent observation semantics, while allowing the prediction strategies to differ in their conditioning information. The contract requires this relationship to be declared and mechanically checked rather than inferred from the existence of calibrated scores.
+Conversely, different event labels can support a legitimate common decision comparison. For example, a short-horizon stockout and a longer-horizon service failure may trigger actions with known costs. Expected utility can be compared if each forecast is mapped to a common action and state space and the utility is declared. This supports decision comparison, not direct probability pooling.
 
-This yields two independent obligations. First, the score must be calibrated relative to its declared outcome. Second, the outcome definitions must be commensurable. Neither obligation substitutes for the other. A perfectly calibrated score can still predict the wrong event for a proposed comparison, while a shared outcome definition does not make an uncalibrated score a reliable probability.
+Identical event wording can hide different observation processes. Complete request traces and sampled logs can produce different label sensitivity or censoring even if both labels are called “service unavailable.” Equal text is therefore insufficient when the observation process differs or is unknown.
 
-The contract consequently prohibits pooled ranking, aggregation, and cross-family threshold comparison when the outcome definitions are non-commensurable. Separately scoped reporting remains permitted. This is the central behavioral distinction between Structural and Semantic conformance.
+Different horizons may be related by a survival or hazard model. If the model and assumptions support a transformation, a separate bridge can define comparable horizon risks. The transformed forecasts then depend on that bridge and its validation; horizon mismatch is not repaired by renaming the target.
 
-## 5. Reference Implementation and Evaluation Boundary
+Two forecasts can concern the same event but use different information sets. Their predictive performance can be compared on a common evaluation population, but their conditioning information, calibration, and error dependence still need to be reported. Same target does not establish equal information, independent errors, or equal decision value.
 
-The reference implementation is intended to demonstrate the contract rather than establish a new predictive-performance benchmark. Its baseline Change and Operational strategies emit signals through a shared interface, use common persistence and calibration machinery, and retain explicit outcome-definition provenance.
+Finally, a predeclared random mixture over target types can define a valid aggregate estimand. Its probability is the weighted mean for that mixture. It is not the probability of a common event unless a separate semantic construction establishes one.
 
-The baseline outcomes are deliberately non-commensurable. The implementation therefore withholds pooled cross-family figures and reports Structural conformance only. This behavior is the principal evidence for the contract's semantic gate: a structurally unified system can recognize that its scores do not support the stronger comparison claim.
+## Contract and implementation
 
-Real-data validation and Semantic validation are treated as separate stages. Public change and operational datasets can exercise the contract under realistic label noise, class imbalance, and temporal variation, but their results remain separately scoped when their outcome definitions differ. A Semantic claim requires evidence that both families predict a common outcome under a shared observation process.
+The public specification distinguishes structural conformance from semantic conformance. Structural conformance means that records follow a declared shared interface. It does not mean that two outputs predict the same event. The reference checker compares selected structured outcome fields for direct pooling; the operation-specific rule runs in the separate synthetic challenge. The checker can reject a mismatch represented in its fields. It cannot inspect a real measurement pipeline and prove a declaration true. It can also refuse a valid semantic bridge if that bridge is absent from the supported schema. [[C10]] [[C11]]
 
-A concrete route is deterministic replay of code changes in an instrumented environment. The Change family predicts the occurrence of a predeclared runtime event after deployment, while the Operational family predicts that same event from an observed runtime state. Both labels are determined by the same observation semantics. The corpus-construction process must additionally preserve lineage, prediction-time information boundaries, censoring rules, frozen splits, and predeclared admission criteria so that the resulting evidence is auditable.
+The operation-gating proposal is therefore a conservative interface rule, not a universal semantic oracle. A false permission can encourage an unsupported interpretation. An unnecessary refusal can block a valid operation, especially a utility comparison supported by an explicit bridge. The policy trade-off must be tested on independently adjudicated cases; matching metadata is not ground truth.
 
-## 6. Limitations and Future Work
+## Experimental protocol
 
-The present contribution establishes a conformance distinction and demonstrates its enforcement; it does not establish that a unified model improves predictive performance or that cross-family joint reasoning produces better operational decisions. Structural conformance is not Semantic conformance, and passing corpus-admission gates does not itself upgrade the conformance class.
+Benchmark A is generated deterministically by the repository experiment runner. It uses synthetic binary outcomes and fixed forecasts. The Change lane declares a fix-linked defect event with a thirty-day window. The Operational lane declares a threshold-breach event observed through an operational process with a thirty-minute window. The same-target positive control uses one shared threshold-breach target in two lanes. A 50:50 different-target mixture and a same-target positive-control mixture are reported with exact target IDs and weights. [[C9]]
 
-The proposed deterministic-replay corpus remains a research objective. Its feasibility depends on historical build reproducibility, deployment and observation costs, sufficient positive-event counts, and the ability to preserve a single observation process across both prediction families. These constraints may limit corpus scale and the generality of any eventual Semantic evaluation.
+The operation-rule challenge contains internally authored cases labeled as valid or invalid for specified operations. Four rules are compared: naive aggregation, one global label, a metadata-only rule, and operation-specific gating. Outcomes in this challenge are finite case counts, not estimates of error rates on an external case population. The reference outcomes have not been independently adjudicated. [[C10]]
 
-Future work will evaluate the contract on real per-family datasets, construct and admit a shared-outcome replay corpus, and test whether commensurable Change and Operational signals can support meaningful joint reasoning. The central claim remains independent of those future results: **calibration alone cannot establish that two probabilities predict the same event.**
+No production dataset, natural-language target assessment, prospective operational decision, or independently authored test set was used. No sample-size or power claim is made for field validity. The exact runner, frozen inputs, and table generator are included in the replication package.
+
+## Results
+
+### Forecast targets
+
+The two distinct-target lanes each have 100 observations, mean forecast 0.800, event rate 0.800, and Brier score 0.160. The two same-target controls have the same summaries. The forecasts are constant, so ROC AUC is not available. These equal summaries do not identify a common event. The different-target aggregate is valid only for the declared 50:50 mixture target shown below. [[C9]]
+
+## Table 1. Synthetic forecast targets and declared mixtures [[C9]]
+
+| Condition | Exact target ID | n | Mean forecast | Event rate | Brier | ROC AUC | Evidence |
+|---|---|---:|---:|---:|---:|---|---|
+| change | `synthetic.change.fix-linked-defect.30d` | 100 | 0.800 | 0.800 | 0.160 | not available (constant scores) | [[C9]] |
+| operational | `synthetic.operations.threshold-breach.30m` | 100 | 0.800 | 0.800 | 0.160 | not available (constant scores) | [[C9]] |
+| control-a (positive control) | `synthetic.shared.threshold-breach.30m` | 100 | 0.800 | 0.800 | 0.160 | not available (constant scores) | [[C9]] |
+| control-b (positive control) | `synthetic.shared.threshold-breach.30m` | 100 | 0.800 | 0.800 | 0.160 | not available (constant scores) | [[C9]] |
+| Different-target numeric mixture | `synthetic.mixture.change-30d-and-operational-30m.equal-weight` | 200 | 0.800 | 0.800 | 0.160 | not available (constant scores) | [[C9]] |
+| Same-target positive-control mixture | `synthetic.shared.threshold-breach.30m` | 200 | 0.800 | 0.800 | 0.160 | not available (constant scores) | [[C9]] |
+
+The two target-specific lane risks differ in event, observation process, threshold, and window. The different-target mean is a 50:50 mixture over those lane risks. Its exact estimand is the target ID shown. It is not the probability of one shared event. [[C9]]
+
+### Operation-specific gating
+
+On the 23 internally authored cases, operation-specific gating made no false permissions, unnecessary refusals, or interpretation errors. Metadata-only gating also made no unnecessary refusals or interpretation errors, but it made five false permissions. The global-label and naive rules made more errors on this fixture. These descriptive results do not show general superiority: case construction and expected labels were controlled by the same project, and saved per-case rows do not support independent recomputation of ranking-change or decision-change totals. [[C10]]
+
+## Table 2. Operation-specific rule challenge [[C10]]
+
+The 23 cases were internally authored. Counts are descriptive and are not estimated population rates. [[C10]]
+
+| Rule | False permissions / invalid cases | Unnecessary refusals / valid cases | Interpretation errors / cases | Evidence |
+|---|---:|---:|---:|---|
+| global label | 7/12 | 3/11 | 3/23 | [[C10]] |
+| metadata only | 5/12 | 0/11 | 0/23 | [[C10]] |
+| naive aggregation | 12/12 | 0/11 | 8/23 | [[C10]] |
+| operation specific | 0/12 | 0/11 | 0/23 | [[C10]] |
+
+## Discussion
+
+The synthetic benchmark shows why calibration summaries cannot establish target equivalence. It does not estimate the frequency or cost of cross-family aggregation errors in practice. The main empirical result is a counterexample to the sufficiency claim: separate calibration can coexist with distinct target semantics. This result was built into a deterministic fixture and should be read as a reproducible demonstration, not as a surprising population discovery. [[C9]]
+
+The policy challenge gives limited evidence that operation-specific conditions can distinguish cases that simpler rules miss in this fixture. It does not show that the operation-specific rule is necessary in general: the metadata-only baseline matched it on unnecessary refusals and interpretation errors here. A new blinded case set could show the simpler rule performs equally well, or that the current rule refuses valid operations. Such a result would weaken the complexity argument. [[C10]]
+
+The strongest novelty objection is that the paper may restate construct validity, estimand alignment, and measurement-equivalence concerns in a software contract. The strongest formal objection is that a direct same-event pooling gate can conflate forecast equivalence with decision usefulness. A common utility function can support a cross-target decision comparison even where probabilities are not interchangeable. We address this by limiting the proposed refusal to unsupported direct pooling and by identifying utility bridges as a separate, currently unsupported operation. Whether the contract's implementation adds practical value remains unresolved. [[C11]]
+
+## Threats to validity
+
+**Construct validity.** Event and observation-process declarations may omit important features such as censoring, measurement error, case ascertainment, and adjudication. Equal structured values are not proof that the underlying constructs or procedures match. A future study needs independent reviewers and blinded cases, including equal-wording/different-process negatives and different-wording/same-target positives.
+
+**Internal validity.** The forecast experiment uses deterministic synthetic data with fixed forecasts; it has no stochastic training procedure, label noise, deployment shift, or data leakage pathway to estimate. The policy challenge was authored in the same project as the candidate rule. The table reports counts only and cannot establish unbiased policy performance.
+
+**Statistical conclusion validity.** The repeated construction is not a sample from a defined population of JIT/AIOps tasks. No inferential confidence intervals or power claims are made for the main synthetic benchmark. Calibration claims beyond the stated finite empirical frequency are not inferred. Ranking and decision-change totals are unavailable from saved per-case outputs and are omitted. [[C10]]
+
+**External validity.** No production JIT or AIOps targets were paired, and no shared real-world observation process was validated. The results do not establish that any real dataset pair is commensurable or non-commensurable. Related benchmark studies provide context but do not supply evidence for this paper's target mappings. [[L5]] [[L6]] [[L7]] [[L8]] [[L9]] [[L10]] [[L11]]
+
+**Reproducibility.** The source, generated tables, and synthetic outcomes can be checked from a clean repository checkout. Hashes establish byte identity, not correctness of target meanings or independence. Provenance records help trace source and derived artifacts; they do not establish claim truth. Dataset and model reporting templates can improve documentation but cannot validate a target declaration. This paper's public package pins its synthetic result sections, source code, specification, tests, and generated tables. It contains no model weights or per-run model responses. The companion claim summaries in the registry are marked out of scope and are not inputs. The package also excludes the separate Bouleusis retrieval records. [[L12]] [[L13]]
+
+## Limitations and future work
+
+The current contract is intentionally incomplete. It does not establish measurement truth, perform statistical measurement-invariance tests, validate transport between populations, infer causal relationships, or implement general utility transformations. Structured equality can be too strict for semantically equivalent targets and too permissive when declarations omit relevant facts. The present challenge does not settle that trade-off.
+
+The next test should be preregistered and independently authored. It should include semantic bridges, transformation cases, distinct-event utility comparisons, identical labels with different observation processes, and missing or incorrect metadata. Independent reviewers should set reference outcomes before the rule is run. The analysis should compare operation-specific gating with simpler rules and report case-level false permission, unnecessary refusal, interpretation errors, ranking changes, and decision changes only when those outputs and decision rules are fully specified.
+
+## Reproducibility and data availability
+
+The replication instructions, claim registry, source hashes, recomputation code, generated tables, and reviewer packet are in the public repository. The runner reads only the `benchmark_a` and `gate_comparison.cases` and `.rules` sections of `docs/research/experimental-results.json`. The full source file's SHA-256 is recorded for provenance; unrelated fields are not inputs to the flagship check. A clean checkout can reproduce the paper's numeric tables without private credentials, model weights, or companion-study artifacts. This is mechanical reproduction, not independent scientific review. [[C11]]
+
+For eventual journal submission, deposit this exact release in a public repository with a persistent identifier and use that identifier in the Data Availability Statement. The current repository branch does not yet have a DOI.
+
+## Conclusion
+
+Calibration is target-relative. Therefore, calibration alone does not establish that forecasts from different prediction families measure the same event. A named mixture can support a pooled summary for that mixture, while a common utility mapping can support some cross-target decisions; neither operation makes distinct event probabilities interchangeable. The structural checker makes a direct pooling decision from declared fields, and the synthetic challenge tests additional operation-specific conditions. These results expose limits in the current policy evidence. The contract's novelty, completeness, and operational value remain hypotheses for independent review and prospective testing.
 
 ## References
 
-- Chen, Y., Shetty, M., Somashekar, G., Ma, M., Simmhan, Y., Mace, J., Bansal, C., Wang, R., and Rajmohan, S. (2025). *AIOpsLab: A Holistic Framework to Evaluate AI Agents for Enabling Autonomous Clouds*. arXiv:2501.06706. https://arxiv.org/abs/2501.06706
-- Lyu, Y., Li, H., Sayagh, M., Jiang, Z. M., and Hassan, A. E. (2021). *An Empirical Study of the Impact of Data Splitting Decisions on the Performance of AIOps Solutions*. ACM Transactions on Software Engineering and Methodology, 30(4), 1–38. https://doi.org/10.1145/3447876
-- Lyu, Y., Rajbahadur, G. K., Lin, D., Chen, B., and Jiang, Z. M. (2022). *Towards a Consistent Interpretation of AIOps Models*. ACM Transactions on Software Engineering and Methodology, 31(1), Article 16, 1–38. https://doi.org/10.1145/3488269
-- Ni, C., Wang, W., Yang, K., Xia, X., Liu, K., and Lo, D. (2022). *The Best of Both Worlds: Integrating Semantic Features with Expert Features for Defect Prediction and Localization*. Proceedings of the 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering (ESEC/FSE 2022), 672–683. https://doi.org/10.1145/3540250.3549165. Replication artifact: https://github.com/jacknichao/JIT-Fine
-- Nam, D., Kim, T., Ryu, D., and Baik, J. (2026). *ReDef: Do Code Language Models Truly Understand Code Changes for Just-in-Time Software Defect Prediction?* FSE 2026 Research Papers. DOI: 10.1145/3808179. Preprint: arXiv:2509.09192. https://arxiv.org/abs/2509.09192
-- Poenaru-Olaru, L., Karpova, N., Cruz, L., Rellermeyer, J. S., and Van Deursen, A. (2024). *Is Your Anomaly Detector Ready for Change? Adapting AIOps Solutions to the Real World*. Proceedings of the 2024 IEEE/ACM 3rd International Conference on AI Engineering—Software Engineering for AI, 222–233. https://doi.org/10.1145/3644815.3644961
-- Shetty, M., Chen, Y., Somashekar, G., Ma, M., Simmhan, Y., Zhang, X., Mace, J., Vandevoorde, D., Las-Casas, P., and Mishra Gupta, S. (2024). *Building AI Agents for Autonomous Clouds: Challenges and Design Principles*. Proceedings of the 2024 ACM Symposium on Cloud Computing. DOI: 10.1145/3698038.3698525.
+- ACM SIGSOFT. Empirical standards and artifact evaluation guidance. https://www2.sigsoft.org/EmpiricalStandards/; https://github.com/acmsigsoft/artifact-evaluation [[L14]]
+- Bates, J. M., and Granger, C. W. J. (1969). The combination of forecasts. *Operational Research Quarterly*, 20(4), 451–468. https://doi.org/10.1057/jors.1969.103 [[L2]]
+- Bean, A. M., et al. (2025). Measuring what matters: Construct validity in large language model benchmarks. NeurIPS 2025 Track on Datasets and Benchmarks. https://arxiv.org/abs/2511.04703 [[L4]]
+- Bitol. (2026). Open Data Contract Standard, version 3.2.0. https://bitol-io.github.io/open-data-contract-standard/v3.2.0/; Data Contract CLI documentation, https://docs.datacontract.com/open-data-contract-standard and https://docs.datacontract.com/testing
+- Chen, Y., et al. (2025). AIOpsLab: A holistic framework to evaluate AI agents for enabling autonomous clouds. arXiv:2501.06706. https://arxiv.org/abs/2501.06706 [[L11]]
+- Cronbach, L. J., and Meehl, P. E. (1955). Construct validity in psychological tests. *Psychological Bulletin*, 52(4), 281–302. https://doi.org/10.1037/h0040957 [[L18]]
+- Freiesleben, T., and Zezulka, S. (2026). The benchmarking epistemology: Validity theory for evaluating machine learning models. *Philosophy of Science*, First View. https://doi.org/10.1017/psa.2026.10280
+- Gebru, T., et al. (2021). Datasheets for datasets. *Communications of the ACM*, 64(12), 86–92. https://doi.org/10.1145/3458723; Mitchell, M., et al. (2019). Model cards for model reporting. https://arxiv.org/abs/1810.03993 [[L12]]
+- Gneiting, T., and Raftery, A. E. (2007). Strictly proper scoring rules, prediction, and estimation. *Journal of the American Statistical Association*, 102(477), 359–378. https://doi.org/10.1198/016214506000001437 [[L1]]
+- Guo, C., Pleiss, G., Sun, Y., and Weinberger, K. Q. (2017). On calibration of modern neural networks. *Proceedings of the 34th International Conference on Machine Learning*, 1321–1330. https://proceedings.mlr.press/v70/guo17a.html [[L16]]
+- Herbold, S., Trautsch, A., and Trautsch, F. (2022). On the feasibility of SZZ-based data filtering. *Empirical Software Engineering*. https://doi.org/10.1007/s10664-021-10092-4 [[L5]]
+- Lyu, Y., et al. (2021). An empirical study of the impact of data splitting decisions on the performance of AIOps solutions. *ACM Transactions on Software Engineering and Methodology*, 30(4). https://doi.org/10.1145/3447876 [[L6]]
+- Lyu, Y., et al. (2022). Towards a consistent interpretation of AIOps models. *ACM Transactions on Software Engineering and Methodology*, 31(1), Article 16. https://doi.org/10.1145/3488269 [[L7]]
+- Nam, D., Kim, T., Ryu, D., and Baik, J. (2026). ReDef: Do code language models truly understand code changes for just-in-time software defect prediction? *Proceedings of the ACM on Software Engineering*, 3(FSE), Article FSE172. https://doi.org/10.1145/3808179 [[L10]]
+- Ni, C., et al. (2022). The best of both worlds: Integrating semantic features with expert features for defect prediction and localization. *Proceedings of ESEC/FSE 2022*, 672–683. https://doi.org/10.1145/3540250.3549165 [[L9]]
+- Poenaru-Olaru, L., et al. (2024). Is your anomaly detector ready for change? Adapting AIOps solutions to the real world. *Proceedings of the 2024 IEEE/ACM 3rd International Conference on AI Engineering*, 222–233. https://doi.org/10.1145/3644815.3644961 [[L8]]
+- Qin, X. (2026). Stable within, unidentified across: Semantic identification of benchmark effects and rankings. arXiv:2608.19269v1. https://arxiv.org/abs/2608.19269v1 (Later versions have a different title and scope.)
+- Ranjan, R., and Gneiting, T. (2010). Combining probability forecasts. *Journal of the Royal Statistical Society: Series B*, 72(1), 71–91. https://doi.org/10.1111/j.1467-9868.2009.00726.x [[L3]]
+- Shetty, M., et al. (2024). Building AI agents for autonomous clouds: Challenges and design principles. *Proceedings of the ACM Symposium on Cloud Computing*. https://doi.org/10.1145/3698038.3698525 [[L11]]
+- Sjøberg, D. I. K., and Bergersen, G. R. (2023). Construct validity in software engineering. *IEEE Transactions on Software Engineering*, 49(3), 1374–1396. https://doi.org/10.1109/TSE.2022.3176725 [[L20]]
+- Vandenberg, R. J., and Lance, C. E. (2000). A review and synthesis of the measurement invariance literature: Suggestions, practices, and recommendations for organizational research. *Organizational Research Methods*, 3(1), 4–70. https://doi.org/10.1177/109442810031002 [[L19]]
+- W3C. (2013). PROV-DM: The PROV data model. W3C Recommendation. https://www.w3.org/TR/prov-dm/ [[L13]]
+- Wilkinson, T., and Ferro, C. A. T. (2026). Calibrated probability forecast sequences and measure-valued martingales. Preprint. https://arxiv.org/abs/2606.31621 [[L17]]
+- Yang, P., et al. (2026). AOI: Turning failed trajectories into training signals for autonomous cloud diagnosis. Preprint. https://arxiv.org/abs/2603.03378 [[L15]]

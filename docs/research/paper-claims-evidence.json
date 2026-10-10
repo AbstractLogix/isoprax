@@ -1,0 +1,1873 @@
+{
+  "claims": [
+    {
+      "artifacts": [
+        {
+          "access": "local pinned copy",
+          "path": "specs/014-normative-commensurability-evidence/spec.md",
+          "role": "repository contract",
+          "sha256": "4272bf6ef677904813123a0af6b2be1f96c69a6889b3a5fbc41a9a1d7b437cf6",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "isoprax/commensurability.py",
+          "role": "executable structured check",
+          "sha256": "f260bc4f508c9b1a44c27c87c58a013bb1fb5c3381b2a1eadfb4f74c0fc0d2d2",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Each forecast is assessed against its own specified event."
+      ],
+      "category": "literature-supported",
+      "id": "C1",
+      "manuscript_section": [
+        "main manuscript: Introduction; Formal problem"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Not an empirical metric; forecasts remain indexed to their declared outcomes.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Established statistical and definitional distinction; not an IsoPrax statistical novelty claim.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Does not prove that an outcome declaration is complete or true.",
+      "uncertainty": "Not a numerical estimate.",
+      "wording": "Calibration is a property of a forecast relative to its declared outcome; calibration does not establish equality of two outcome definitions.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw frozen study",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-1.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw archive manifest",
+          "sha256": "0a26f04a29f3672ba585a39e2fb66b02ede2e805f934bd551900cec451df7abd",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-artifact-manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Model identity is provenance, not a target definition."
+      ],
+      "category": "synthetic-finding",
+      "id": "C2",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Model-role runs use shared study records across authored targets; the cross-family benchmark keeps targets explicit. This supports only the limited statement that identity alone is insufficient.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Synthetic tasks; this establishes no equivalence claim for a real model.",
+      "uncertainty": "No population estimate.",
+      "wording": "A shared backend or model identity does not by itself establish outcome commensurability.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw outputs and score types",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-1.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "role comparison report",
+          "sha256": "072c7e76affab179e204b16666e1352ab5eaa0b5c548cc46141314dbab172eb5",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/research/model-role-blocker-resolution-results-2026-10-09.md"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Output role and score-generation process are recorded in raw rows."
+      ],
+      "category": "synthetic-finding",
+      "id": "C3",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "reproduced-not-replicated",
+      "result_or_counterexample": "Raw score types differ; per-domain behavior is recomputed. No raw score is treated as a shared probability without development-only calibration.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "One authored relevance target; calibration does not make score roles universally equivalent.",
+      "uncertainty": "Per-domain query-cluster bootstrap intervals are included in the generated results.",
+      "wording": "Shared numeric output types do not make self-reported confidence, embedding similarity, native model probability, and binary critic judgment interchangeable.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw frozen model-role records",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-1.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "exact replay records",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-2.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "archive digests",
+          "sha256": "0a26f04a29f3672ba585a39e2fb66b02ede2e805f934bd551900cec451df7abd",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-artifact-manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Pool three globally calibrated judges; use the common synthetic relevance target; equal model weights and equal domain weights over four authored domains."
+      ],
+      "category": "synthetic-finding",
+      "id": "C4",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "Binary Brier is the two-class sum of squared probability errors; log loss uses held-out labels; accuracy thresholds calibrated probability at 0.5.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "reproduced-not-replicated",
+      "result_or_counterexample": "Accuracy improved for the pool while Brier and log loss worsened relative to Qwen on this fixed fixture.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "One fixed synthetic target; equal-weight mixture only; model identity does not establish semantic equivalence or independence.",
+      "uncertainty": "Pool Brier 95% query-bootstrap interval [0.095703, 0.112246], log-loss [0.237626, 0.258619]. Qwen Brier [0.010039, 0.033088], log-loss [0.047455, 0.081015].",
+      "wording": "On the common authored relevance target, the equal-weight calibrated-probability pool had accuracy 1.0, Brier 0.103582, and log loss 0.247340; Qwen alone had accuracy 0.986328, Brier 0.020728, and log loss 0.063376.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw judgments",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-1.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "exact replay judgments",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-2.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Pairs share one fixed relevance target and held-out cases."
+      ],
+      "category": "synthetic-finding",
+      "id": "C5",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "reproduced-not-replicated",
+      "result_or_counterexample": "Each judge pair has 0/512 recomputed held-out joint-error events. Query-cluster bootstrap percentile interval is [0, 0] because no observed query contains a joint error.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "One target and fixed query set; zero observed joint errors cannot show independence or zero population risk.",
+      "uncertainty": "The zero bootstrap interval is descriptive; it is not an upper bound on unseen-task risk.",
+      "wording": "Different model identities do not establish independent errors; the three judge pairs had zero observed joint errors in 512 held-out paired items per pair.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw Run 1",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-1.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw Run 2",
+          "sha256": "cb7e979ec83d500ff29d323635b2c5ff07e2d964f9e4bd63531f029adf0b0fa7",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-run-2.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "part and archive digests",
+          "sha256": "0a26f04a29f3672ba585a39e2fb66b02ede2e805f934bd551900cec451df7abd",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-artifact-manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "recorded comparison",
+          "sha256": "188b716be28d76cdbc2a84e10d3d586297cbed8b40c505b7e9b15f64e761b0e9",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/model-role-v2.3-replay-summary.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Both run files and part archives are preserved without modification."
+      ],
+      "category": "repository-result",
+      "id": "C6",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "reproduced-not-replicated",
+      "result_or_counterexample": "Uncompressed SHA-256 matches for both runs; row and response counts are checked. v2.3 bytes were hashed before scored calls; the Git commit was made after Run 1 began.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Same cases and fixed environment; no new tasks, prompts, hardware, or model versions.",
+      "uncertainty": "Not a confidence interval.",
+      "wording": "The frozen v2.3 study reproduces byte-for-byte across its two recorded runs on the same cases; it is exact replay, not independent replication.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "frozen internal challenge",
+          "sha256": "211cec206853b67f0debe1b8eb33280627dd3ad862c730664e5af492813ab975",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/operation-policy-challenge-v2-results.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "review and calibration status",
+          "sha256": "1b1ff39aebf18a824dc6e41c894e06063bdd4ce1043097ba181d1d8f738e84f0",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/research/independent-validation-and-model-role-status-2026-10-08.md"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "review status",
+          "sha256": "9bd67222f97c0181323ce9389ec9effa25a51cc81a2e2d3a56405a2a309e3e3f",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/research/operation-specific-policy-independent-review-packet-2026-10-08.md"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Policy-validity evidence needs independently justified reference outcomes."
+      ],
+      "category": "unavailable",
+      "id": "C7",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "unresolved",
+      "result_or_counterexample": "No external policy validation is present. Four forecast cases with calibration-revision mismatch remain excluded.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Internally authored cases and no independent adjudication.",
+      "uncertainty": "Unavailable: no field sample.",
+      "wording": "The operation-specific policy has not demonstrated independently validated field value; four forecast calibration-revision cases remain excluded from positive policy-validity claims.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw policy outcomes",
+          "sha256": "eedcdfedb82fcb5dd015aeacc317c02ee78b708bdaef749eee77f674e31ac784",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/evidence-acquisition-voi-2026-10-08.jsonl.gz"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "source and package hashes",
+          "sha256": "eb7fa1a12d7aabeac7b36029c82f26868d4a87bf1babb1ff7bc5282e3aeb3297",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Use only 12 pinned cases and two budgets; compare the same 24 case-budget states."
+      ],
+      "category": "synthetic-finding",
+      "id": "C8",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "descriptive-only",
+      "result_or_counterexample": "Deterministic VOI chose the same action as always-retrieve on 24/24 states. Both had 0/12 tight-budget success and 12/12 medium-budget success; bytes and unnecessary acquisitions also match.",
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_repository": "AbstractLogix/Bouleusis",
+      "threats_to_validity": "One controlled synthetic corpus and two budgets; not independent tasks.",
+      "uncertainty": "Finite fixed cases only; no inferential interval.",
+      "wording": "The original deterministic value-of-information policy did not demonstrate superior task utility over always-retrieve on its controlled cases.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "local pinned copy",
+          "path": "docs/research/experimental-results.json",
+          "role": "Benchmark A output",
+          "sha256": null,
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "json_pointers": [
+            {
+              "pointer": "/benchmark_a",
+              "sha256": "e1b2d6be3365d17ef703077cb29b24521bb97f9259a1dc849eebf14e1668c7f4"
+            }
+          ]
+        },
+        {
+          "access": "local pinned copy",
+          "path": "isoprax/research_experiments.py",
+          "role": "deterministic benchmark",
+          "sha256": "1e04c99b0ceb50a0b987ee4e9a8c3a44f9a10f1f44a2a4058e20219b12bf1a0e",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "tests/test_research_experiments.py",
+          "role": "target and mixture assertions",
+          "sha256": "3a9b768c257b7b4bdd59f97c610531f97a50c75abc9407ec320ca656e1b709f8",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Deterministic synthetic fixture; use target fields and weights recorded in JSON."
+      ],
+      "category": "synthetic-finding",
+      "id": "C9",
+      "manuscript_section": [
+        "main manuscript: Abstract; Counterexamples; Results"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Lane Brier score and explicit equal-weight mixture; AUC unavailable for constant predictor.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Two distinct lanes each have n=100, mean forecast 0.8, event rate 0.8, Brier 0.16. Exact mixture ID `synthetic.mixture.change-30d-and-operational-30m.equal-weight`, weights 0.5 and 0.5; same-target control n=200.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Synthetic only; constant forecast has no discrimination; not a JIT/AIOps field benchmark.",
+      "uncertainty": "No inferential uncertainty: deterministic finite fixture.",
+      "wording": "Equal numeric forecasts and equal per-lane calibration summaries can coexist with distinct event definitions; any reported cross-target pool must name its mixture estimand and weights.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "local pinned copy",
+          "path": "docs/research/experimental-results.json",
+          "role": "case-level challenge result",
+          "sha256": null,
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "json_pointers": [
+            {
+              "pointer": "/gate_comparison/cases",
+              "sha256": "85d71dfd5a3cf1405636dcaad642c6b77108ea859386c2ffa94bd58bc3da1ac1"
+            },
+            {
+              "pointer": "/gate_comparison/rules",
+              "sha256": "32a0c28771517233c10cb7a8d7e61590d7d48f3deed535f3474eb11919eaa08b"
+            }
+          ]
+        },
+        {
+          "access": "local pinned copy",
+          "path": "isoprax/operation_gate_experiment.py",
+          "role": "policy rules",
+          "sha256": "99b7cb92bfb73987817bcf359169e81b18a12f17928bf00f8e42fd75fb856a1b",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "tests/test_research_experiments.py",
+          "role": "challenge assertions",
+          "sha256": "3a9b768c257b7b4bdd59f97c610531f97a50c75abc9407ec320ca656e1b709f8",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "The expected labels are fixed within the internally authored fixture; ranking and decision-change totals are excluded because the saved rows do not support independent recomputation."
+      ],
+      "category": "synthetic-finding",
+      "id": "C10",
+      "manuscript_section": [
+        "main manuscript: Abstract; Results; Threats to validity"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "False permission denominator 12; unnecessary-refusal denominator 11; interpretation denominator 23. Ranking and decision changes are not reproducible from saved case rows.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "descriptive-only",
+      "result_or_counterexample": "Naive false permissions 12/12 invalid; global label 7/12; metadata-only 5/12; operation-specific 0/12. Unnecessary refusals: 0/11 for naive and operation-specific, 3/11 for global label, and 0/11 for metadata-only. Interpretation errors: 8/23 naive, 3/23 global label, and 0/23 metadata-only and operation-specific. Ranking and decision changes are unavailable from the saved per-case rows.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Cases were authored to exercise candidate conditions and lack independent adjudication; no general or field superiority claim.",
+      "uncertainty": "Descriptive finite-case counts only; no inferential interval or population estimate.",
+      "wording": "On the 23-case internally authored operation challenge, operation-specific gating made zero false permissions, unnecessary refusals, and interpretation errors; simpler baselines made some errors. Ranking and decision-change totals cannot be independently reproduced from the saved per-case rows.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "local pinned copy",
+          "path": "isoprax/commensurability.py",
+          "role": "structured comparison",
+          "sha256": "f260bc4f508c9b1a44c27c87c58a013bb1fb5c3381b2a1eadfb4f74c0fc0d2d2",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "specs/014-normative-commensurability-evidence/spec.md",
+          "role": "normative contract",
+          "sha256": "4272bf6ef677904813123a0af6b2be1f96c69a6889b3a5fbc41a9a1d7b437cf6",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Behavior is read from current code and normative specification."
+      ],
+      "category": "repository-result",
+      "id": "C11",
+      "manuscript_section": [
+        "main manuscript: Introduction; Contract and implementation; Discussion"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "See the protocol and registered result.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Equal structured fields permit direct comparison; event or observation mismatch blocks pooling; attestations do not override mismatch.",
+      "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+      "source_repository": "AbstractLogix/isoprax",
+      "threats_to_validity": "Matching incomplete metadata can falsely permit; alternate wording can falsely refuse.",
+      "uncertainty": "Not a statistical estimate.",
+      "wording": "The checker verifies equality or mismatch of structured declarations; it cannot verify declaration truth and may refuse semantically equivalent events written differently.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw one-bug sweep",
+          "sha256": "d74c5e76abbc0ced449bd2575e819f627d774c5c7f2023deae78c111a9d2cb70",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/evidence-selection-sweep-2026-10-08.jsonl.gz"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "derived reanalysis",
+          "sha256": "bdef0250d399a0257c0f17edbb514d493ffe58a27bc08b2f4413e3cee0f79dc8",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/research/bouleusis-retrieval-sweep-reanalysis.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "source hashes",
+          "sha256": "eb7fa1a12d7aabeac7b36029c82f26868d4a87bf1babb1ff7bc5282e3aeb3297",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Matched 540-byte arms are Random, Lexical, EmbeddingGemma 2, and fixture-order control; full context is a separate unbounded reference."
+      ],
+      "category": "synthetic-finding",
+      "id": "C12",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "reproduced-not-replicated",
+      "result_or_counterexample": "Raw recomputation: Random 10/10 decisive recall and 5/10 debugging success. Full context is unbounded and uses 660 bytes; it is not a 540-byte arm. Full-context reference also repairs 10/10 with mean false-belief confidence mass 0.166667 in the event log; this does not establish causation or comparative epistemic quality.",
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_repository": "AbstractLogix/Bouleusis",
+      "threats_to_validity": "One bug fixture; no causal explanation.",
+      "uncertainty": "Ten order trials are not independent tasks.",
+      "wording": "In the one-bug matched 540-byte sweep, Random retained decisive evidence in every order perturbation but succeeded on only half; the seeds are repeated order perturbations of one bug.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw multi-bug records",
+          "sha256": "0470bd7e88dbc39826957766d1bf4c779651205531d587a00d8b8d0b4fb0de57",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/retrieval-multibug-2026-10-08.jsonl.gz"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "source hashes",
+          "sha256": "eb7fa1a12d7aabeac7b36029c82f26868d4a87bf1babb1ff7bc5282e3aeb3297",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        }
+      ],
+      "assumptions": [
+        "Twelve fixed cases; compare all-evidence and separate full-context conditions."
+      ],
+      "category": "synthetic-finding",
+      "id": "C13",
+      "manuscript_section": [
+        "separate evidence note"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "descriptive-only",
+      "result_or_counterexample": "All-evidence and full-context success are each 12/12 in their conditions; all 228 records have zero false-belief confidence mass.",
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_repository": "AbstractLogix/Bouleusis",
+      "threats_to_validity": "Synthetic fixture; no general retrieval or epistemic-quality claim.",
+      "uncertainty": "Fixed 12 cases; no inferential interval.",
+      "wording": "In the pinned multi-bug records, all-evidence bounded conditions and the separate full-context reference converge to successful debugging; false-belief confidence mass is zero in these records.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "source provenance and license status",
+          "sha256": "eb7fa1a12d7aabeac7b36029c82f26868d4a87bf1babb1ff7bc5282e3aeb3297",
+          "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+          "source_repository": "AbstractLogix/Bouleusis",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/manifest.json"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "raw recomputation and integrity protocol",
+          "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+          "source_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+        },
+        {
+          "access": "public companion reference; excluded from flagship package",
+          "path": null,
+          "role": "owner authorization and selected-data license scope",
+          "sha256": null,
+          "source_commit": "2026-10-09 authorization recorded in IsoPrax",
+          "source_repository": "AbstractLogix/isoprax",
+          "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/docs/experiments/bouleusis-2026-10-08-raw/README.md"
+        }
+      ],
+      "assumptions": [
+        "Source metadata was read from the pinned repository."
+      ],
+      "category": "repository-result",
+      "id": "C14",
+      "manuscript_section": [
+        "companion evidence note: selected-data release"
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "See the protocol and registered result.",
+        "path": null,
+        "sampling_unit": "case or query cluster where applicable",
+        "sha256": "8a3df3044e3c8f05bfe8c7441a699490a206b16680f63f1e8b7e8369f3dfe761",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "qualification": "authorized-selected-data; scan-limited",
+      "result_or_counterexample": "The data manifest records the private source repository, source commit, original blob IDs and SHA-256 values, selected artifact list, owner authorization date, CC BY 4.0 scope, and excluded materials. A limited pattern scan found no tested credential, email, URL, or local home-path matches.",
+      "source_commit": "9f239d6f59cd22e1c1ebf1b9d86b0f28a8fc45b5",
+      "source_repository": "AbstractLogix/Bouleusis",
+      "threats_to_validity": "The string scan cannot establish the absence of all secrets, personal identifiers, copyrighted excerpts, or third-party rights. The authorization is limited to the selected data files.",
+      "uncertainty": "Not applicable.",
+      "wording": "The owner authorized public release of the four selected original Bouleusis research data files under CC BY 4.0; the pinned source repository metadata remains NOASSERTION. This authorization does not cover Bouleusis source code or third-party materials.",
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Gneiting and Raftery 2007, JASA DOI.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1198/016214506000001437"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L1",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Gneiting and Raftery 2007, JASA DOI.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Proper scoring rules assess probabilistic forecasts against realized outcomes; target definition remains part of interpretation.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Bates and Granger 1969, Operational Research Quarterly DOI.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1057/jors.1969.103"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L2",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Bates and Granger 1969, Operational Research Quarterly DOI.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Forecast combination is an established statistical topic.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Ranjan and Gneiting 2010, JRSS B DOI.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1111/j.1467-9868.2009.00726.x"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L3",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Ranjan and Gneiting 2010, JRSS B DOI.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Probability-forecast combination methods are studied for forecasts of the same event.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Bean et al. 2025 preprint.",
+          "sha256": null,
+          "uri": "https://arxiv.org/abs/2511.04703"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L4",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Bean et al. 2025 preprint.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Construct validity is an active concern in LLM benchmark design.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Herbold et al. 2022, Empirical Software Engineering.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1007/s10664-021-10092-4"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L5",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Herbold et al. 2022, Empirical Software Engineering.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "SZZ and feature construction can cause problems in defect-prediction data collection.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Lyu et al. 2021, TOSEM.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1145/3447876"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L6",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Lyu et al. 2021, TOSEM.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "AIOps data-splitting decisions can affect evaluation results.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Lyu et al. 2022, TOSEM.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1145/3488269"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L7",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Lyu et al. 2022, TOSEM.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Interpretation consistency is a separate AIOps evaluation concern.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Poenaru-Olaru et al. 2024, ICSE SE4AI.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1145/3644815.3644961"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L8",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Poenaru-Olaru et al. 2024, ICSE SE4AI.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Anomaly detectors face temporal change and adaptation concerns in AIOps settings.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Ni et al. 2022 official ESEC/FSE record.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1145/3540250.3549165"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L9",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Ni et al. 2022 official ESEC/FSE record.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "JIT-Fine studies JIT defect prediction and localization with semantic and expert features.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Nam et al. 2026 FSE proceedings and DOI.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1145/3808179"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L10",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Nam et al. 2026 FSE proceedings and DOI.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "ReDef studies code-change understanding for JIT software defect prediction.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Chen et al. 2025; Shetty et al. 2024 DOI https://doi.org/10.1145/3698038.3698525.",
+          "sha256": null,
+          "uri": "https://arxiv.org/abs/2501.06706"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L11",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Chen et al. 2025; Shetty et al. 2024 DOI https://doi.org/10.1145/3698038.3698525.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "AIOpsLab provides an operational evaluation environment for cloud agents and systems.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Gebru et al. 2021 CACM; Model Cards https://arxiv.org/abs/1810.03993.",
+          "sha256": null,
+          "uri": "https://doi.org/10.1145/3458723"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L12",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Gebru et al. 2021 CACM; Model Cards https://arxiv.org/abs/1810.03993.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Datasheets and Model Cards provide structured reporting approaches for datasets and models.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "W3C Recommendation.",
+          "sha256": null,
+          "uri": "https://www.w3.org/TR/prov-dm/"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L13",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "W3C Recommendation.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "W3C PROV defines a provenance data model.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "ACM SIGSOFT standards and https://github.com/acmsigsoft/artifact-evaluation.",
+          "sha256": null,
+          "uri": "https://www2.sigsoft.org/EmpiricalStandards/"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L14",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "ACM SIGSOFT standards and https://github.com/acmsigsoft/artifact-evaluation.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary publication or official archival record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Empirical-software and artifact-evaluation standards describe expectations for research and artifacts.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Yang et al. 2026, arXiv preprint.",
+          "sha256": null,
+          "uri": "https://arxiv.org/abs/2603.03378"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "The cited preprint or proceedings paper supports only this bounded prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L15",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and cited-claim scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Yang et al. 2026, arXiv preprint.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary proceedings record or author archival preprint",
+      "threats_to_validity": [
+        "The search is not exhaustive.",
+        "External work does not directly validate IsoPrax."
+      ],
+      "uncertainty": "Not an effect estimate; the literature audit is targeted, not systematic.",
+      "wording": "AOI is a 2026 preprint on autonomous cloud diagnosis evaluated on the AIOpsLab benchmark; it does not pair AIOps outcomes with JIT targets.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Guo, Pleiss, Sun, and Weinberger 2017, ICML/PMLR.",
+          "sha256": null,
+          "uri": "https://proceedings.mlr.press/v70/guo17a.html"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "The cited preprint or proceedings paper supports only this bounded prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L16",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and cited-claim scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Guo, Pleiss, Sun, and Weinberger 2017, ICML/PMLR.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary proceedings record or author archival preprint",
+      "threats_to_validity": [
+        "The search is not exhaustive.",
+        "External work does not directly validate IsoPrax."
+      ],
+      "uncertainty": "Not an effect estimate; the literature audit is targeted, not systematic.",
+      "wording": "Neural-network confidence calibration and post-processing are established research topics.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "hash_note": "No local publication copy is vendored; stable DOI or archival URL is the identity.",
+          "path": null,
+          "role": "Wilkinson and Ferro 2026, arXiv preprint.",
+          "sha256": null,
+          "uri": "https://arxiv.org/abs/2606.31621"
+        },
+        {
+          "access": "local pinned copy",
+          "path": "scripts/flagship_paper_integrity.py",
+          "role": "standalone flagship integrity runner",
+          "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e",
+          "source_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+          "source_repository": "AbstractLogix/isoprax"
+        }
+      ],
+      "assumptions": [
+        "The cited preprint or proceedings paper supports only this bounded prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L17",
+      "manuscript_section": [
+        "main manuscript: Related work or References"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and cited-claim scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Wilkinson and Ferro 2026, arXiv preprint.",
+      "source_commit": "Not applicable to external publication; stable DOI or archival URL is recorded.",
+      "source_repository": "Primary proceedings record or author archival preprint",
+      "threats_to_validity": [
+        "The search is not exhaustive.",
+        "External work does not directly validate IsoPrax."
+      ],
+      "uncertainty": "Not an effect estimate; the literature audit is targeted, not systematic.",
+      "wording": "Recent calibration theory studies repeated forecasts for a fixed observation and defines additional calibration notions.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "path": null,
+          "uri": "https://doi.org/10.1037/h0040957",
+          "role": "Cronbach and Meehl 1955 primary publication",
+          "sha256": null
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L18",
+      "manuscript_section": [
+        "main manuscript: Related work"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Cronbach and Meehl 1955 primary publication",
+      "source_commit": "Not applicable",
+      "source_repository": "Primary publication record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Construct validity is an established framework for supporting conceptual interpretations from measured indicators.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "path": null,
+          "uri": "https://doi.org/10.1177/109442810031002",
+          "role": "Vandenberg and Lance 2000 primary publication",
+          "sha256": null
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L19",
+      "manuscript_section": [
+        "main manuscript: Related work"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Vandenberg and Lance 2000 primary publication",
+      "source_commit": "Not applicable",
+      "source_repository": "Primary publication record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Measurement invariance is an established framework for evaluating whether measurements have comparable meaning across groups or conditions.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "artifacts": [
+        {
+          "access": "public",
+          "path": null,
+          "uri": "https://ieeexplore.ieee.org/document/9780058/",
+          "role": "Sjøberg and Bergersen 2023 IEEE publication",
+          "sha256": null
+        }
+      ],
+      "assumptions": [
+        "Cited source supports only the stated prior-work description."
+      ],
+      "category": "literature-supported",
+      "id": "L20",
+      "manuscript_section": [
+        "main manuscript: Related work"
+      ],
+      "protocol": {
+        "command": "uv run python scripts/flagship_paper_integrity.py --check-only",
+        "metric_definition": "Bibliographic identity and citation scope checked against publisher, official proceedings, author, or archival record.",
+        "path": "scripts/flagship_paper_integrity.py",
+        "sampling_unit": "Not applicable",
+        "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+      },
+      "qualification": "supported-within-scope",
+      "result_or_counterexample": "Sjøberg and Bergersen 2023 IEEE publication",
+      "source_commit": "Not applicable",
+      "source_repository": "Primary publication record",
+      "threats_to_validity": [
+        "Search is not exhaustive.",
+        "External work does not validate IsoPrax directly."
+      ],
+      "uncertainty": "Not an effect estimate; audit is targeted, not systematic.",
+      "wording": "Construct validity is an explicit concern in empirical software engineering and affects claims from operational indicators to concepts.",
+      "scope": "flagship",
+      "package_status": "checked by the flagship integrity runner"
+    },
+    {
+      "id": "C15",
+      "wording": "Semadmit PR #10 adds bounded behavioral assurance and a qualified Python claim-verification contract. The contract verifies declared evidence admission and result consistency; it does not establish claim truth, source authenticity, evidence reliability, forecasting performance, or real-world outcome commensurability.",
+      "category": "repository-assurance",
+      "assumptions": [
+        "The source certificate and assurance report accurately describe the exact merged and validated commits."
+      ],
+      "source_repository": "AbstractLogix/semadmit",
+      "source_commit": "e042aded9fd98d22aeb708337a26e9bbc9f2b7b8",
+      "artifacts": [
+        {
+          "access": "public",
+          "path": null,
+          "uri": "https://github.com/AbstractLogix/semadmit/blob/e042aded9fd98d22aeb708337a26e9bbc9f2b7b8/assurance/assurance-certificate.json",
+          "role": "machine assurance certificate",
+          "sha256": "8bd1412367a36de17925258eeb5222f0d42295107aa12ccb3d27f2ee9ae7ff0f",
+          "source_commit": "e042aded9fd98d22aeb708337a26e9bbc9f2b7b8",
+          "source_repository": "AbstractLogix/semadmit"
+        },
+        {
+          "access": "public",
+          "path": null,
+          "uri": "https://github.com/AbstractLogix/semadmit/blob/e042aded9fd98d22aeb708337a26e9bbc9f2b7b8/docs/independent-assurance.md",
+          "role": "assurance scope and limitations",
+          "sha256": "f835fd453346fa3a9e253d4a689960a5871c964143e0ba2535bfaf889653641a",
+          "source_commit": "e042aded9fd98d22aeb708337a26e9bbc9f2b7b8",
+          "source_repository": "AbstractLogix/semadmit"
+        }
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "Selected fixed vectors, parser cases, seeded Python differential requests, and controlled source mutations.",
+        "path": null,
+        "sha256": "8bd1412367a36de17925258eeb5222f0d42295107aa12ccb3d27f2ee9ae7ff0f",
+        "sampling_unit": "deterministic test case",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "result_or_counterexample": "The certificate records 57 shared Core result vectors, 68 parser cases, 9 identity vectors, one selected RFC 8785 vector, 96 seeded Python differential requests, and 7/7 selected Python mutations detected. Hosted Coverage passed. Claim-pack semantics remain Python-only; the reference is bounded to a test-only Core fixture.",
+      "uncertainty": "Not an empirical effect estimate. These counts apply only to the pinned assurance corpus and implementation.",
+      "threats_to_validity": "No claim truth, source authenticity, evidence reliability, Haskell claim-pack parity, total correctness, external forecasting performance, or scientific validation is established.",
+      "qualification": "bounded-behavioral-assurance",
+      "manuscript_section": [
+        "cross-repository assurance evidence note"
+      ],
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    },
+    {
+      "id": "C16",
+      "wording": "Bouleusis PR #4 records bounded epistemic replay invariants and runtime checks. These results do not establish general reasoning accuracy, belief truth, empirical forecasting performance, or cross-family outcome commensurability.",
+      "category": "repository-assurance",
+      "assumptions": [
+        "The private-source assurance report and machine artifact match the exact PR commit and tested source commit."
+      ],
+      "source_repository": "AbstractLogix/Bouleusis (private)",
+      "source_commit": "8f8394728f971d9393b51dbd6cbb56869ea3bc45",
+      "artifacts": [
+        {
+          "access": "private repository; authenticated read required",
+          "path": null,
+          "uri": "https://github.com/AbstractLogix/Bouleusis/blob/8f8394728f971d9393b51dbd6cbb56869ea3bc45/docs/assurance/epistemic-invariants-v1.json",
+          "role": "machine-readable epistemic invariant report",
+          "sha256": "451c239e87bf07bbc5c5f9051c52cac66cc712cf0f53a693918b7ad30ba1623f",
+          "source_commit": "8f8394728f971d9393b51dbd6cbb56869ea3bc45",
+          "source_repository": "AbstractLogix/Bouleusis"
+        },
+        {
+          "access": "private repository; authenticated read required",
+          "path": null,
+          "uri": "https://github.com/AbstractLogix/Bouleusis/blob/8f8394728f971d9393b51dbd6cbb56869ea3bc45/docs/reports/epistemic-invariants-assurance-2026-10-09.md",
+          "role": "assurance method, validation, and limitations",
+          "sha256": "abf1217ce11f97d085527598eb82d2340c7128fe019d22a6dd7f4bb0a1e0903d",
+          "source_commit": "8f8394728f971d9393b51dbd6cbb56869ea3bc45",
+          "source_repository": "AbstractLogix/Bouleusis"
+        }
+      ],
+      "protocol": {
+        "command": "See the pinned companion PR; not run by the flagship package.",
+        "metric_definition": "Fixed state transitions, generated deterministic valid/invalid streams, integration cases, and selected source mutations.",
+        "path": null,
+        "sha256": "451c239e87bf07bbc5c5f9051c52cac66cc712cf0f53a693918b7ad30ba1623f",
+        "sampling_unit": "deterministic replay/test stream",
+        "uri": "https://github.com/AbstractLogix/isoprax/blob/803761414c8c8bb4ede00f719cc7a2d009f4a6a2/scripts/paper_integrity.py"
+      },
+      "result_or_counterexample": "The machine report records 14 tested invariants, 128 deterministic valid and 128 invalid generated streams, 9/9 selected source mutations detected, and a resolved duplicate run-scoped event-identity defect. Local Python 3.12 reported 177 passed and 13 skipped; hosted CI ran 44 Semadmit client tests and 14 Bouleusis integration tests. PR #4 remained open without independent human review.",
+      "uncertainty": "Not an empirical accuracy estimate. Counts apply only to the pinned test corpus and runtime checks.",
+      "threats_to_validity": "Assurance is bounded to listed replay and runtime invariants. It does not validate general reasoning, model accuracy, claim truth, all operating systems, or real-world outcome definitions. Full source evidence is private and requires authenticated access.",
+      "qualification": "bounded-replay-assurance; independent-review-open",
+      "manuscript_section": [
+        "cross-repository assurance evidence note"
+      ],
+      "scope": "companion",
+      "package_status": "retained for provenance; not checked by the flagship integrity runner"
+    }
+  ],
+  "created": "2026-10-09",
+  "repo_commit": "5d46abf27e2b15740090be0b6e389f44322a396f",
+  "schema_version": 1,
+  "scope_note": "The registry preserves all 36 claims. The standalone flagship package checks the 24 claims tagged as flagship. The remaining 12 claims belong to companion model, retrieval, acquisition, data-release, or cross-repository assurance evidence; their remote references are provenance only and are not downloaded or required for flagship reproduction.",
+  "title": "IsoPrax main-paper and companion-study claim/evidence registry",
+  "scope_counts": {
+    "total": 36,
+    "flagship": 24,
+    "companion": 12
+  },
+  "standalone_base_commit": "79df12d14a1b931863ea263cf6c827bd7cb9fd71",
+  "provenance": {
+    "repo_commit_role": "repo_commit identifies an earlier research source snapshot. It is not the introduction commit of this registry or the standalone runner.",
+    "standalone_runner_introduction_commit": "780edda34a0b0f396001ea43bd4085502a88c892",
+    "local_artifact_sha256_scope": "Local artifact and protocol SHA-256 values identify the checked-out file bytes, which may differ from bytes at a historical introduction commit.",
+    "validation_commit_policy": "Record the tested PR head and CI run outside this self-hashed registry after validation; do not embed a commit hash that depends on this file."
+  }
+}
