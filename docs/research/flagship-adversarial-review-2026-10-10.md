@@ -95,8 +95,16 @@ This is an internal, skeptical review of the manuscript and its evidence. It is 
 
 Mechanical replay establishes the stated finite calculations and file identities. It does not establish the truth of declarations, scientific novelty, or validity on independently authored cases.
 
+## Focused related-work objection — high severity
+
+**Objection.** The paper has not shown a capability unavailable from established benchmark-validity methods plus a general data contract and policy engine. Freiesleben and Zezulka (2026) already require validity conditions for benchmark-score interpretation. Qin (2026, [arXiv v1](https://arxiv.org/abs/2608.19269v1)) gives a family-indexed semantic audit with recorded benchmark outcomes. [ODCS](https://bitol-io.github.io/open-data-contract-standard/v3.2.0/) can hold semantic and quality declarations, and its [CLI](https://docs.datacontract.com/testing) can run custom checks. A custom rule can compare the same fields as the IsoPrax checker. The full source comparison is in the citation audit.
+
+**Affected claim.** The abstract, related-work contribution paragraph, C11, and any claim of distinctive operation-specific value.
+
+**Disposition.** Narrowed. The manuscript describes a forecast-specific implementation and synthetic challenge. It does not claim a unique capability or an established gain in effort or reliability. The ODCS plus policy comparator has not been built or tested here, so equivalence of effort and reliability also remains unproved. Independent methods and empirical-software reviewers should judge whether the focused implementation is a publishable contribution.
+
 ## Three strongest unresolved criticisms
 
-1. **Contribution beyond established practice.** Minimum evidence: an independent methods review that compares the contract with construct-validity, measurement-invariance, and estimand-alignment practice, and states a concrete use that those methods do not already provide.
+1. **Contribution beyond established methods and data contracts.** Minimum evidence: an independent methods review of Freiesleben and Zezulka, Qin, and ODCS, plus a matched implementation that tests whether IsoPrax adds capability, reduces effort, or improves reliability over a general data contract with a policy rule.
 2. **Value of operation-specific conditions.** Minimum evidence: a preregistered set of cases written and labeled by people who did not implement the rule, with blinded application, valid positive bridge cases, and invalid cases that hold superficial metadata constant while changing target or observation semantics.
 3. **Relevance beyond synthetic fixtures.** Minimum evidence: an independently checked pair of real outcome pipelines with provenance, event and observation definitions, windows, label error analysis, and a predeclared decision objective. Any claimed operational benefit also needs a prospective or held-out decision evaluation.

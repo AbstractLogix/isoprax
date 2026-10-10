@@ -37,9 +37,9 @@ Record the `git rev-parse HEAD` output as the validation commit for your review.
 
 ## Independent-review invitation drafts — not sent
 
-**Measurement-methodology researcher.** We invite an independent review of [PR #56](https://github.com/AbstractLogix/isoprax/pull/56) and this packet. Please assess whether the proposed structural pooling check and separate operation rule add a contribution beyond construct validity, measurement invariance, and estimand definition. Identify valid semantic or utility bridges that the proposed rule could refuse. The experiments are synthetic; please separate mechanical reproduction from scientific validity.
+**Measurement-methodology researcher.** We invite an independent review of [PR #56](https://github.com/AbstractLogix/isoprax/pull/56) and this packet. Please compare its contribution with Freiesleben and Zezulka (2026), Qin (2026, arXiv v1), and ODCS plus a policy rule. Identify valid semantic or utility bridges that the proposed rule could refuse. The experiments are synthetic; please separate mechanical reproduction from scientific validity.
 
-**Empirical software-engineering researcher.** We invite an independent review of [PR #56](https://github.com/AbstractLogix/isoprax/pull/56) and this packet. Please assess whether Benchmark A and the 23 internally authored cases support the claimed software contribution. Identify missing independent cases, observation-process checks, and field evidence needed before any JIT/AIOps application claim. Please flag unsupported wording or a mismatch between the manuscript and code.
+**Empirical software-engineering researcher.** We invite an independent review of [PR #56](https://github.com/AbstractLogix/isoprax/pull/56) and this packet. Please assess whether Benchmark A and the 23 internally authored cases support the claimed software contribution beyond ODCS plus a policy rule. Identify missing independent cases, observation-process checks, and field evidence needed before any JIT/AIOps application claim. Please flag unsupported wording or a mismatch between the manuscript and code.
 
 ## Requested independent review
 
@@ -48,6 +48,7 @@ Record the `git rev-parse HEAD` output as the validation commit for your review.
 3. Do the internally authored synthetic cases support the stated descriptive contribution? Which independently authored positive and negative cases are needed next?
 4. Do the paper, code, and generated tables agree on what the public structural checker implements and what the synthetic operation rule tests?
 5. Does any sentence imply field performance, real JIT/AIOps equivalence, Semadmit enforcement, or general value beyond the repository results?
+6. What capability does IsoPrax implement that cannot already be obtained, with comparable effort and reliability, by combining established validity methodology with a general-purpose data contract and policy engine? Please compare the [focused related-work check](literature-citation-audit-2026-10-10.md) with the code. If the answer is none, say so and identify the smallest useful contribution claim.
 
 Please separate manuscript-level criticism from recommendations for future field validation. Do not treat the model-role or retrieval studies as evidence for the flagship claims. Companion model-output rights remain unresolved; this packet requires no model output, model weight, or Bouleusis raw retrieval record.
 
@@ -59,6 +60,7 @@ The manuscript and reproduction package are ready for author review. It is not a
 
 - [ ] Confirm that the paper claims a structural pooling check and a separate synthetic operation-rule challenge, with no field efficacy claim.
 - [ ] Review the exact manuscript tables, 24 flagship claim records, and limits in the adversarial review.
+- [ ] Decide whether the focused related-work comparison supports any incremental contribution claim; do not treat the untested ODCS comparator as an established advantage.
 - [ ] Record the PR head and CI run used for validation outside the self-hashed registry. If the branch history is rewritten or merged by squash, reassess the runner introduction commit and rerun the provenance test on the release ref.
 - [ ] Request independent methods and empirical software-engineering reviews; record objections and author responses before a submission decision.
 - [ ] Keep companion model outputs and their unresolved rights assessment outside the flagship evidence and any flagship data release.
