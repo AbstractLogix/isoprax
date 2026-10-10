@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Probabilistic forecasts are calibrated relative to specified outcomes. Calibration alone does not show that forecasts from different prediction tasks measure the same event. We examine this distinction for just-in-time software defect prediction and operational failure prediction, where labels, observation processes, and prediction windows can differ. The statistical premise is established background; this paper does not claim it as a new calibration theorem. Its proposed contribution is narrower: an explicit, operation-sensitive contract for declaring when direct comparison or pooling is supported, plus a deterministic implementation and synthetic challenge. In Benchmark A, two lanes each produced mean forecast 0.8, event rate 0.8, and Brier score 0.16, while their event definitions, observation processes, thresholds, and windows differed. A same-target control used the same numeric setup. The different-target summary is valid only as its named equal-weight mixture estimand, not as a forecast of one common event. In a finite, internally authored policy challenge, the operation-specific rule made fewer false permissions than the tested simpler rules; the fixture does not establish general superiority or field value. The checker validates declarations, not the truth of measurement pipelines. Independent scientific review and external validation remain open. [[C9]] [[C10]]
+Probabilistic forecasts are calibrated relative to specified outcomes. Calibration alone does not show that forecasts from different prediction tasks measure the same event. We examine this distinction for just-in-time software defect prediction and operational failure prediction, where labels, observation processes, and prediction windows can differ. The statistical premise is established background; this paper does not claim it as a new calibration theorem. We propose an operation-sensitive contract, implement a structural check for direct pooling, and test a separate operation-specific rule on synthetic cases. In Benchmark A, two lanes each produced mean forecast 0.8, event rate 0.8, and Brier score 0.16, while their event definitions, observation processes, thresholds, and windows differed. A same-target control used the same numeric setup. The different-target summary is valid only as its named equal-weight mixture estimand, not as a forecast of one common event. In a finite, internally authored policy challenge, the operation-specific rule made fewer false permissions than the tested simpler rules; the fixture does not establish general superiority or field value. The checker compares declared fields; it does not establish the truth of measurement pipelines. Independent scientific review and external validation remain open. [[C9]] [[C10]] [[C11]]
 
 **Keywords:** forecast calibration; outcome definition; commensurability; software defect prediction; operational failure prediction; reproducibility
 
@@ -12,7 +12,7 @@ Just-in-time software defect prediction (JIT-DP) and operational failure predict
 
 This paper asks a limited question: what must be declared before a system treats forecasts as predictions of one common event? Our central premise is that calibration is target-relative. A forecast may be calibrated for its own outcome while another calibrated forecast concerns a different outcome. Proper scoring rules evaluate forecasts against realized outcomes, but they do not erase differences in the outcome variables being scored. [[C1]] [[L1]] [[L16]]
 
-We call the proposed declaration-and-operation conditions an **outcome-commensurability contract**. The contract is not a new statistical law and does not replace construct validity, measurement invariance, estimand definition, or forecast-combination theory. It makes a subset of those concerns explicit in a software-checkable interface. The checker can compare declarations; it cannot establish that the declarations accurately describe how labels were produced. [[C11]]
+We call the proposed declaration-and-operation conditions an **outcome-commensurability contract**. The contract is not a new statistical law and does not replace construct validity, measurement invariance, estimand definition, or forecast-combination theory. It makes a subset of those concerns explicit. The implemented checker compares selected declarations for direct pooling; a separate synthetic rule challenge explores other operations. Neither establishes that the declarations accurately describe how labels were produced. [[C11]]
 
 The paper has two research questions:
 
@@ -31,7 +31,7 @@ The concern overlaps with construct validity and measurement invariance. Constru
 
 Software prediction studies also face label and evaluation risks. Defect labels can depend on collection and linking methods (Herbold et al., 2022); AIOps results can depend on data splits (Lyu et al., 2021), interpretation practice (Lyu et al., 2022), and adaptation to change (Poenaru-Olaru et al., 2024). Recent autonomous-cloud diagnosis work extends this operational line but does not pair its outcomes with JIT targets. Those works motivate explicit outcome and observation declarations, but they do not establish that any two datasets are commensurable. [[L5]] [[L6]] [[L7]] [[L8]] [[L15]]
 
-The contribution claimed here is an executable, operation-aware declaration contract and a falsifiable synthetic demonstration. The novelty claim is intentionally modest. Whether this software contribution adds value beyond established construct-validity and measurement frameworks requires independent review and cases that were not authored by the proposing team.
+The contribution claimed here is an executable structural pooling check and a synthetic challenge of proposed operation-specific rules. The novelty claim is intentionally modest. Whether this software contribution adds value beyond established construct-validity and measurement frameworks requires independent review and cases that were not authored by the proposing team. [[C10]] [[C11]]
 
 ## Formal problem
 
@@ -52,7 +52,9 @@ We distinguish four operations:
 - **Ranking:** order items under a declared ranking target and population.
 - **Decision comparison:** compare actions using a declared action set, state mapping, and common utility or loss.
 
-The proposed contract permits direct same-event pooling only when the required target semantics match and the selected operation permits pooling. A different-event summary may still be reported if it has a predeclared mixture estimand and weights. A decision comparison across distinct events can also be meaningful when both are mapped to common states, actions, and utilities. That utility comparison does not make the event probabilities interchangeable. The current reference implementation does not implement a general utility bridge, so it does not certify one.
+These are interpretation categories. The separate synthetic challenge uses six requested actions: compare, rank, pool, transfer, average, and combine. It does not implement calibration assessment as a gate. [[C10]]
+
+The proposed contract requires sufficient target alignment before direct same-event pooling. The implemented checker compares event, observation process, window, and threshold declarations for that pooling decision. The synthetic rule challenge tests further conditions for each requested operation. A different-event summary may still be reported if it has a predeclared mixture estimand and weights. A decision comparison across distinct events can also be meaningful when both are mapped to common states, actions, and utilities. That utility comparison does not make the event probabilities interchangeable. The current reference implementation does not implement a general utility bridge, so it does not certify one. [[C10]] [[C11]]
 
 ### Counterexamples to overbroad claims
 
@@ -70,7 +72,7 @@ Finally, a predeclared random mixture over target types can define a valid aggre
 
 ## Contract and implementation
 
-The public specification distinguishes structural conformance from semantic conformance. Structural conformance means that records follow a declared shared interface. It does not mean that two outputs predict the same event. The reference checker compares structured outcome declarations and requested operations. It can reject a mismatch that is represented in those declarations. It cannot inspect a real measurement pipeline and prove the declaration true. It can also refuse a valid semantic bridge if that bridge is absent from the supported schema. [[C11]]
+The public specification distinguishes structural conformance from semantic conformance. Structural conformance means that records follow a declared shared interface. It does not mean that two outputs predict the same event. The reference checker compares selected structured outcome fields for direct pooling; the operation-specific rule runs in the separate synthetic challenge. The checker can reject a mismatch represented in its fields. It cannot inspect a real measurement pipeline and prove a declaration true. It can also refuse a valid semantic bridge if that bridge is absent from the supported schema. [[C10]] [[C11]]
 
 The operation-gating proposal is therefore a conservative interface rule, not a universal semantic oracle. A false permission can encourage an unsupported interpretation. An unnecessary refusal can block a valid operation, especially a utility comparison supported by an explicit bridge. The policy trade-off must be tested on independently adjudicated cases; matching metadata is not ground truth.
 
@@ -150,7 +152,7 @@ For eventual journal submission, deposit this exact release in a public reposito
 
 ## Conclusion
 
-Calibration is target-relative. Therefore, calibration alone does not establish that forecasts from different prediction families measure the same event. A named mixture can support a pooled summary for that mixture, while a common utility mapping can support some cross-target decisions; neither operation makes distinct event probabilities interchangeable. The executable contract makes these distinctions explicit for the operations it supports. The synthetic results demonstrate the distinction and expose limitations in the current policy evidence. The contract's novelty, completeness, and operational value remain hypotheses for independent review and prospective testing.
+Calibration is target-relative. Therefore, calibration alone does not establish that forecasts from different prediction families measure the same event. A named mixture can support a pooled summary for that mixture, while a common utility mapping can support some cross-target decisions; neither operation makes distinct event probabilities interchangeable. The structural checker makes a direct pooling decision from declared fields, and the synthetic challenge tests additional operation-specific conditions. These results expose limits in the current policy evidence. The contract's novelty, completeness, and operational value remain hypotheses for independent review and prospective testing.
 
 ## References
 

@@ -1,5 +1,7 @@
+import hashlib
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -31,6 +33,40 @@ def test_flagship_integrity_reproduces_from_pinned_inputs() -> None:
     assert result["claim_registry"]["companion_claims_excluded_from_reproduction"] == 12
     assert result["operation_gate_case_count"] == 23
     assert not (ROOT / "docs/experiments").exists()
+
+
+def test_runner_provenance_uses_its_introduction_commit() -> None:
+    registry = json.loads((ROOT / integrity.CLAIMS).read_text(encoding="utf-8"))
+    runner_path = "scripts/flagship_paper_integrity.py"
+    introduced = subprocess.run(
+        ["git", "log", "--diff-filter=A", "--format=%H", "HEAD", "--", runner_path],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    assert introduced == [
+        registry["provenance"]["standalone_runner_introduction_commit"]
+    ]
+    historical_bytes = subprocess.run(
+        ["git", "show", f"{introduced[0]}:{runner_path}"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    ).stdout
+    assert historical_bytes
+
+    current_sha256 = hashlib.sha256((ROOT / runner_path).read_bytes()).hexdigest()
+    references = [
+        artifact
+        for claim in registry["claims"]
+        if claim["scope"] == "flagship"
+        for artifact in claim.get("artifacts", [])
+        if artifact.get("path") == runner_path
+    ]
+    assert len(references) == 21
+    assert all(item["source_commit"] == introduced[0] for item in references)
+    assert all(item["sha256"] == current_sha256 for item in references)
 
 
 def test_altered_flagship_result_section_fails(tmp_path: Path) -> None:

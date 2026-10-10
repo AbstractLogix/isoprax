@@ -18,27 +18,47 @@ The paper uses no model output, model weights, or Bouleusis retrieval archive. I
 
 ## Minimal reproduction
 
-From a clean public checkout, with no private credentials:
+From a clean public checkout with full Git history and no private credentials:
 
 ```sh
+git clone https://github.com/AbstractLogix/isoprax.git
+cd isoprax
+git fetch origin refs/pull/56/head:refs/heads/review/flagship-56
+git switch review/flagship-56
+git rev-parse HEAD
 uv sync --locked --group dev --extra gpu
 uv run python scripts/flagship_paper_integrity.py
 uv run python scripts/flagship_paper_integrity.py --check-only
 uv run pytest --no-cov -q tests/test_flagship_paper_integrity.py tests/test_research_experiments.py
+uv run pytest tests -q --cov-report=xml
 ```
 
-The first command regenerates the numeric summary and both tables. The check-only command verifies the generated files and pinned inputs. The runner makes no network or model calls. Run the full repository CI commands in the replication note if broader code review is required.
+Record the `git rev-parse HEAD` output as the validation commit for your review. The selected experiment sections existed at historical research commit `5d46abf27e2b15740090be0b6e389f44322a396f`; the standalone runner first appeared at `780edda34a0b0f396001ea43bd4085502a88c892`. Artifact SHA-256 values identify the checked-out file bytes. The validation commit is not embedded in the self-hashed registry. The first runner command regenerates the numeric summary and both tables. The check-only command verifies generated files and pinned inputs. The runner makes no network or model calls. The full test command requires Git history for existing repository ancestry checks.
+
+## Independent-review invitation drafts — not sent
+
+**Measurement-methodology researcher.** We invite an independent review of [PR #56](https://github.com/AbstractLogix/isoprax/pull/56) and this packet. Please assess whether the proposed structural pooling check and separate operation rule add a contribution beyond construct validity, measurement invariance, and estimand definition. Identify valid semantic or utility bridges that the proposed rule could refuse. The experiments are synthetic; please separate mechanical reproduction from scientific validity.
+
+**Empirical software-engineering researcher.** We invite an independent review of [PR #56](https://github.com/AbstractLogix/isoprax/pull/56) and this packet. Please assess whether Benchmark A and the 23 internally authored cases support the claimed software contribution. Identify missing independent cases, observation-process checks, and field evidence needed before any JIT/AIOps application claim. Please flag unsupported wording or a mismatch between the manuscript and code.
 
 ## Requested independent review
 
-1. Does the software contract add a concrete contribution beyond construct validity, measurement invariance, and estimand definition?
-2. Does the paper limit its refusal correctly to unsupported direct pooling while leaving room for explicit mixtures and decision comparisons under validated utility?
-3. Are the outcome, observation-process, threshold, and window declarations sufficient to make the synthetic counterexample clear?
-4. Are the 23 internally authored challenge cases useful as a descriptive demonstration, given that their expected labels were not independently adjudicated?
+1. Does the proposed contribution add value beyond existing measurement and estimand practice? Which claim, if any, needs narrowing or removal?
+2. Which explicit semantic, horizon, observation, or utility bridges would make a comparison valid even when raw outcome fields differ? Does the proposal handle or clearly defer them?
+3. Do the internally authored synthetic cases support the stated descriptive contribution? Which independently authored positive and negative cases are needed next?
+4. Do the paper, code, and generated tables agree on what the public structural checker implements and what the synthetic operation rule tests?
 5. Does any sentence imply field performance, real JIT/AIOps equivalence, Semadmit enforcement, or general value beyond the repository results?
 
-Please separate manuscript-level criticism from recommendations for future field validation. Do not treat the model-role or retrieval studies as evidence for the flagship claims.
+Please separate manuscript-level criticism from recommendations for future field validation. Do not treat the model-role or retrieval studies as evidence for the flagship claims. Companion model-output rights remain unresolved; this packet requires no model output, model weight, or Bouleusis raw retrieval record.
 
 ## Readiness
 
 The manuscript and reproduction package are ready for author review. It is not an empirically validated field study. External review remains pending. The three main unresolved objections and minimum evidence needed are in the adversarial review.
+
+## Author-review checklist
+
+- [ ] Confirm that the paper claims a structural pooling check and a separate synthetic operation-rule challenge, with no field efficacy claim.
+- [ ] Review the exact manuscript tables, 24 flagship claim records, and limits in the adversarial review.
+- [ ] Record the PR head and CI run used for validation outside the self-hashed registry. If the branch history is rewritten or merged by squash, reassess the runner introduction commit and rerun the provenance test on the release ref.
+- [ ] Request independent methods and empirical software-engineering reviews; record objections and author responses before a submission decision.
+- [ ] Keep companion model outputs and their unresolved rights assessment outside the flagship evidence and any flagship data release.

@@ -84,6 +84,17 @@ This is an internal, skeptical review of the manuscript and its evidence. It is 
 
 **Disposition.** Narrowed. The result refutes only the sufficiency claim that matching calibration summaries alone establish a common event. It does not reject explicit mixture estimands or valid utility comparisons.
 
+## Final manuscript audit
+
+| Audit question | Finding and action |
+|---|---|
+| Contribution | Calibration's dependence on the outcome and the need for comparable measurements are established ideas. The retained proposal is a structural pooling check plus a separately tested operation-specific rule. The abstract, formal section, implementation section, and conclusion now state this boundary. Independent reviewers must judge whether the software contract adds a useful contribution. |
+| Evidence sufficiency | Benchmark A is a deterministic counterexample to a sufficiency claim. The 23 cases were written within the project and support descriptive rule counts only. The manuscript makes no field-rate, general-superiority, or real JIT/AIOps efficacy claim. |
+| Unsupported language | An earlier draft implied that the public checker evaluated requested operations. The public checker compares event, observation process, window, and threshold fields for direct pooling. The operation-specific rules run in a separate synthetic challenge. No general semantic or utility bridge is implemented. The manuscript now distinguishes them. |
+| Internal consistency | The two manuscript tables match regenerated results. The paper separates four interpretation categories from the six requested actions in the synthetic challenge. The registry now treats ranking and decision-change totals as unavailable from saved case rows. Its standalone-runner references identify the historical introduction commit separately from the checked-out file digest. No frozen experimental record changed. |
+
+Mechanical replay establishes the stated finite calculations and file identities. It does not establish the truth of declarations, scientific novelty, or validity on independently authored cases.
+
 ## Three strongest unresolved criticisms
 
 1. **Contribution beyond established practice.** Minimum evidence: an independent methods review that compares the contract with construct-validity, measurement-invariance, and estimand-alignment practice, and states a concrete use that those methods do not already provide.

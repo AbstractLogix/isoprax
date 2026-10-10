@@ -9,7 +9,7 @@
   "files": [
     {
       "path": "docs/research/Calibration Is Not Enough_ Outcome Commensurability as a Precondition for Cross-Family Failure Prediction.md",
-      "sha256": "259864db07e2bef5e9377ef0bedaa81e67185b41f87f0ee072053a7cf0722c59"
+      "sha256": "d617361f730ef45fa019f8bc6e30582e54dae5a6bf5948bfdcd7e88d5f99d1b0"
     },
     {
       "path": "docs/research/README.md",
@@ -21,7 +21,7 @@
     },
     {
       "path": "docs/research/flagship-adversarial-review-2026-10-10.md",
-      "sha256": "8d1dedffb388727e873cf9d33b3382cbb5bfbb76f7892b9508741497b935f059"
+      "sha256": "9f60b3436b2f75a347ad1a9e004da3f3180f3c29444e43faaa2d3fc9715de808"
     },
     {
       "path": "docs/research/flagship-dependency-separation-2026-10-10.md",
@@ -29,7 +29,7 @@
     },
     {
       "path": "docs/research/flagship-replication-2026-10-10.md",
-      "sha256": "91e962971bcd0449417f0fec9338beeb870046a4a2d602575dcdcca2cd84aef3"
+      "sha256": "ff6750359d1f289ca1783c3b8f244135c45687aad78fe705d086cecb97436a75"
     },
     {
       "path": "docs/research/flagship-scope-decision-2026-10-10.md",
@@ -41,11 +41,11 @@
     },
     {
       "path": "docs/research/paper-claims-evidence.json",
-      "sha256": "2e65bf076ab1acf0b21b8a06c3e7228fa64cbef1163758c17e57bb94e06b7371"
+      "sha256": "3fcc344f0dfe4e16a06adf3e86097086b33e4e28d288553cbc6dcd1e3f9334c1"
     },
     {
       "path": "docs/research/paper-review-packet-2026-10-10.md",
-      "sha256": "8cc1a656c41df3680e0785b5776ce211553c4b134594d222b49abe8130abc857"
+      "sha256": "8d6d2fdf2a6062291150c56df9a4245ff1ad232d6d3b87db486671f09b02f6ac"
     },
     {
       "path": "docs/research/tev1-output-rights-2026-10-10.md",
@@ -77,7 +77,7 @@
     },
     {
       "path": "tests/test_flagship_paper_integrity.py",
-      "sha256": "7bcd310022a2f79eed12529628f3ec3b45e5ca6c86f9ef3196742e23a05527fe"
+      "sha256": "a0e38e1c4648e6a0819f41bb0ccae14eb71302333bf8a46c1c85ec1952ef79d2"
     },
     {
       "path": "tests/test_research_experiments.py",

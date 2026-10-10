@@ -8,7 +8,7 @@ The package retains the 36-row claim registry. The integrity runner checks the 2
 
 ## Clean checkout commands
 
-From the repository root:
+From the repository root in a full-history checkout:
 
 ```sh
 uv sync --locked --group dev --extra gpu
@@ -21,6 +21,8 @@ uv run pytest tests -q --cov-report=xml
 ```
 
 The first integrity command writes `paper-recomputed-results.json` and `paper-recomputed-tables.md`. The second checks them without writing. The runner makes no model calls, network calls, or private repository requests. It needs no GitHub credentials.
+
+The focused provenance test reads Git history to confirm that the standalone runner exists at its stated introduction commit. A shallow clone does not contain enough history for that test or for the repository's predeclaration ancestry tests. The claim registry identifies the earlier research source commit, the runner's introduction commit, and SHA-256 values for checked-out artifacts. Record the validation commit with `git rev-parse HEAD` and the linked CI run after checks complete; do not embed that commit in the self-hashed registry.
 
 ## Reproduced numeric claims
 
