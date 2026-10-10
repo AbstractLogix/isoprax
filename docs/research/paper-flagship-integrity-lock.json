@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "source_record_provenance": {
+    "path": "docs/research/experimental-results.json",
+    "source_commit": "79df12d14a1b931863ea263cf6c827bd7cb9fd71",
+    "full_file_sha256_at_source_commit": "02d3642044768c47957221a1e615dc221baf248b97eb4a61c8d75fa8eca80fcd",
+    "note": "Full hash records original bytes. The verifier checks only result_sections below."
+  },
+  "files": [
+    {
+      "path": "docs/research/Calibration Is Not Enough_ Outcome Commensurability as a Precondition for Cross-Family Failure Prediction.md",
+      "sha256": "259864db07e2bef5e9377ef0bedaa81e67185b41f87f0ee072053a7cf0722c59"
+    },
+    {
+      "path": "docs/research/README.md",
+      "sha256": "407cbd4d1dc15781e04268965d399991fe05d678a5e0c417ed4de1358dd4d4b9"
+    },
+    {
+      "path": "docs/research/coverage-reconciliation-2026-10-10.md",
+      "sha256": "51f2906e228cf31f23a50ad50ddbcd2f0455ec9cd838ce0d9613c1a0790d1006"
+    },
+    {
+      "path": "docs/research/flagship-adversarial-review-2026-10-10.md",
+      "sha256": "8d1dedffb388727e873cf9d33b3382cbb5bfbb76f7892b9508741497b935f059"
+    },
+    {
+      "path": "docs/research/flagship-dependency-separation-2026-10-10.md",
+      "sha256": "ecfd822278610c85dfb670bb02a5195095b26a3652008288456a1f7571961594"
+    },
+    {
+      "path": "docs/research/flagship-replication-2026-10-10.md",
+      "sha256": "91e962971bcd0449417f0fec9338beeb870046a4a2d602575dcdcca2cd84aef3"
+    },
+    {
+      "path": "docs/research/flagship-scope-decision-2026-10-10.md",
+      "sha256": "ae8b829319ad871cee1908f0fb573265175c24d4a31691abf92168aadfef59fc"
+    },
+    {
+      "path": "docs/research/literature-citation-audit-2026-10-10.md",
+      "sha256": "cd1e31fe703d96518b2398766fd8f7e96fe0541dfe05b3d2f2696f290cc8180b"
+    },
+    {
+      "path": "docs/research/paper-claims-evidence.json",
+      "sha256": "2e65bf076ab1acf0b21b8a06c3e7228fa64cbef1163758c17e57bb94e06b7371"
+    },
+    {
+      "path": "docs/research/paper-review-packet-2026-10-10.md",
+      "sha256": "8cc1a656c41df3680e0785b5776ce211553c4b134594d222b49abe8130abc857"
+    },
+    {
+      "path": "docs/research/tev1-output-rights-2026-10-10.md",
+      "sha256": "79184b45519035d9cbea8896d609922619b08b8ba95f587270a9f78d1fc66378"
+    },
+    {
+      "path": "isoprax/commensurability.py",
+      "sha256": "f260bc4f508c9b1a44c27c87c58a013bb1fb5c3381b2a1eadfb4f74c0fc0d2d2"
+    },
+    {
+      "path": "isoprax/operation_gate_experiment.py",
+      "sha256": "99b7cb92bfb73987817bcf359169e81b18a12f17928bf00f8e42fd75fb856a1b"
+    },
+    {
+      "path": "isoprax/research_experiments.py",
+      "sha256": "1e04c99b0ceb50a0b987ee4e9a8c3a44f9a10f1f44a2a4058e20219b12bf1a0e"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "1a4ae604f0eb822a4a4464558b35be801cb5744ad118cdb0c4ab93be6c6b9d32"
+    },
+    {
+      "path": "scripts/flagship_paper_integrity.py",
+      "sha256": "ea293e0dfdb2316cb94c356bdd1a1fa002feb73ac05bbce6bc99ce4b5071511e"
+    },
+    {
+      "path": "specs/014-normative-commensurability-evidence/spec.md",
+      "sha256": "4272bf6ef677904813123a0af6b2be1f96c69a6889b3a5fbc41a9a1d7b437cf6"
+    },
+    {
+      "path": "tests/test_flagship_paper_integrity.py",
+      "sha256": "7bcd310022a2f79eed12529628f3ec3b45e5ca6c86f9ef3196742e23a05527fe"
+    },
+    {
+      "path": "tests/test_research_experiments.py",
+      "sha256": "3a9b768c257b7b4bdd59f97c610531f97a50c75abc9407ec320ca656e1b709f8"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "9b2fe76cd8827b7143e81d18af9551761f8ad346e677606806b496b17af5d2bd"
+    }
+  ],
+  "result_sections": [
+    {
+      "path": "docs/research/experimental-results.json",
+      "pointer": "/benchmark_a",
+      "sha256": "e1b2d6be3365d17ef703077cb29b24521bb97f9259a1dc849eebf14e1668c7f4"
+    },
+    {
+      "path": "docs/research/experimental-results.json",
+      "pointer": "/gate_comparison/cases",
+      "sha256": "85d71dfd5a3cf1405636dcaad642c6b77108ea859386c2ffa94bd58bc3da1ac1"
+    },
+    {
+      "path": "docs/research/experimental-results.json",
+      "pointer": "/gate_comparison/rules",
+      "sha256": "32a0c28771517233c10cb7a8d7e61590d7d48f3deed535f3474eb11919eaa08b"
+    }
+  ]
+}

@@ -1,0 +1,728 @@
+{
+  "benchmark_a": {
+    "declared_numeric_mixture": {
+      "estimand": "equal-weight mean of the 30-day change-label event risk and the 30-minute operational-threshold event risk; select a lane with probability 0.5, then observe that lane's own event",
+      "is_one_common_event": false,
+      "metrics": {
+        "brier_score": 0.16,
+        "ece_10_equal_width_bins": 0.0,
+        "event_rate": 0.8,
+        "mean_forecast": 0.8,
+        "n": 200,
+        "negative_count": 40,
+        "positive_count": 160,
+        "roc_auc": null,
+        "roc_auc_unavailable_reason": "constant forecast scores do not discriminate"
+      },
+      "target_definition": {
+        "component_targets": {
+          "change": "synthetic.change.fix-linked-defect.30d",
+          "operational": "synthetic.operations.threshold-breach.30m"
+        },
+        "id": "synthetic.mixture.change-30d-and-operational-30m.equal-weight",
+        "kind": "equal-weight mixture of lane-specific event risks",
+        "sampling_rule": "select one lane with its declared weight, then observe that lane's own event"
+      },
+      "weights": {
+        "change": 0.5,
+        "operational": 0.5
+      }
+    },
+    "invalid_interpretation": "the pooled 0.80 is the probability of one common event across both lanes",
+    "lanes": [
+      {
+        "forecast": 0.8,
+        "lane": "change",
+        "metrics": {
+          "brier_score": 0.16000000000000003,
+          "ece_10_equal_width_bins": 2.220446049250313e-16,
+          "event_rate": 0.8,
+          "mean_forecast": 0.7999999999999998,
+          "n": 100,
+          "negative_count": 20,
+          "positive_count": 80,
+          "roc_auc": null,
+          "roc_auc_unavailable_reason": "constant forecast scores do not discriminate"
+        },
+        "n": 100,
+        "outcome_definition": {
+          "event": "change is linked to a defect fix",
+          "id": "synthetic.change.fix-linked-defect.30d",
+          "observation_process": "repository issue and fix-link observation",
+          "threshold": "at least one qualifying fix link",
+          "window": "30 days after change"
+        },
+        "permitted_operations": [
+          "report this lane's calibration against its own declared target",
+          "include its risk in a separately named, predeclared mixture estimand"
+        ],
+        "prohibited_interpretations": [
+          "0.80 is the probability of the other lane's event",
+          "the two event definitions describe one common failure event"
+        ]
+      },
+      {
+        "forecast": 0.8,
+        "lane": "operational",
+        "metrics": {
+          "brier_score": 0.16000000000000003,
+          "ece_10_equal_width_bins": 2.220446049250313e-16,
+          "event_rate": 0.8,
+          "mean_forecast": 0.7999999999999998,
+          "n": 100,
+          "negative_count": 20,
+          "positive_count": 80,
+          "roc_auc": null,
+          "roc_auc_unavailable_reason": "constant forecast scores do not discriminate"
+        },
+        "n": 100,
+        "outcome_definition": {
+          "event": "service telemetry crosses a failure threshold",
+          "id": "synthetic.operations.threshold-breach.30m",
+          "observation_process": "deployment telemetry threshold observation",
+          "threshold": "declared service-level threshold",
+          "window": "30 minutes after deployment"
+        },
+        "permitted_operations": [
+          "report this lane's calibration against its own declared target",
+          "include its risk in a separately named, predeclared mixture estimand"
+        ],
+        "prohibited_interpretations": [
+          "0.80 is the probability of the other lane's event",
+          "the two event definitions describe one common failure event"
+        ]
+      }
+    ],
+    "permitted_operations": [
+      "report calibration against each lane's own target",
+      "report a numeric result for the exact declared 50:50 lane-risk mixture",
+      "pool metrics in the valid same-target control"
+    ],
+    "prohibited_or_unsupported_interpretations": [
+      "equal probabilities imply one common event",
+      "the different-target 0.80 mixture is a common-event probability",
+      "calibration of each lane establishes cross-target equivalence"
+    ],
+    "status": "executed synthetic benchmark",
+    "valid_same_target_control": {
+      "estimand": "same declared event risk in a 50:50 mixture of two synthetic cohorts",
+      "lanes": [
+        {
+          "forecast": 0.8,
+          "lane": "control-a",
+          "metrics": {
+            "brier_score": 0.16000000000000003,
+            "ece_10_equal_width_bins": 2.220446049250313e-16,
+            "event_rate": 0.8,
+            "mean_forecast": 0.7999999999999998,
+            "n": 100,
+            "negative_count": 20,
+            "positive_count": 80,
+            "roc_auc": null,
+            "roc_auc_unavailable_reason": "constant forecast scores do not discriminate"
+          },
+          "n": 100,
+          "outcome_definition": {
+            "event": "service telemetry crosses the declared failure threshold",
+            "id": "synthetic.shared.threshold-breach.30m",
+            "observation_process": "same deployment telemetry threshold observation",
+            "threshold": "same declared service-level threshold",
+            "window": "30 minutes after deployment"
+          },
+          "permitted_operations": [
+            "report this lane's calibration against its own declared target",
+            "include its risk in a separately named, predeclared mixture estimand"
+          ],
+          "prohibited_interpretations": [
+            "0.80 is the probability of the other lane's event",
+            "the two event definitions describe one common failure event"
+          ]
+        },
+        {
+          "forecast": 0.8,
+          "lane": "control-b",
+          "metrics": {
+            "brier_score": 0.16000000000000003,
+            "ece_10_equal_width_bins": 2.220446049250313e-16,
+            "event_rate": 0.8,
+            "mean_forecast": 0.7999999999999998,
+            "n": 100,
+            "negative_count": 20,
+            "positive_count": 80,
+            "roc_auc": null,
+            "roc_auc_unavailable_reason": "constant forecast scores do not discriminate"
+          },
+          "n": 100,
+          "outcome_definition": {
+            "event": "service telemetry crosses the declared failure threshold",
+            "id": "synthetic.shared.threshold-breach.30m",
+            "observation_process": "same deployment telemetry threshold observation",
+            "threshold": "same declared service-level threshold",
+            "window": "30 minutes after deployment"
+          },
+          "permitted_operations": [
+            "report this lane's calibration against its own declared target",
+            "include its risk in a separately named, predeclared mixture estimand"
+          ],
+          "prohibited_interpretations": [
+            "0.80 is the probability of the other lane's event",
+            "the two event definitions describe one common failure event"
+          ]
+        }
+      ],
+      "metrics": {
+        "brier_score": 0.16,
+        "ece_10_equal_width_bins": 0.0,
+        "event_rate": 0.8,
+        "mean_forecast": 0.8,
+        "n": 200,
+        "negative_count": 40,
+        "positive_count": 160,
+        "roc_auc": null,
+        "roc_auc_unavailable_reason": "constant forecast scores do not discriminate"
+      },
+      "permitted_operations": [
+        "pool target-local calibration diagnostics for the declared 50:50 cohort mixture",
+        "compare forecasts against the same event definition and observation process"
+      ],
+      "target": {
+        "event": "service telemetry crosses the declared failure threshold",
+        "id": "synthetic.shared.threshold-breach.30m",
+        "observation_process": "same deployment telemetry threshold observation",
+        "threshold": "same declared service-level threshold",
+        "window": "30 minutes after deployment"
+      },
+      "weights": {
+        "control-a": 0.5,
+        "control-b": 0.5
+      }
+    }
+  },
+  "claim_registry": {
+    "companion_claims_excluded_from_reproduction": 12,
+    "flagship_claims": 24,
+    "flagship_ids": [
+      "C1",
+      "C10",
+      "C11",
+      "C9",
+      "L1",
+      "L10",
+      "L11",
+      "L12",
+      "L13",
+      "L14",
+      "L15",
+      "L16",
+      "L17",
+      "L18",
+      "L19",
+      "L2",
+      "L20",
+      "L3",
+      "L4",
+      "L5",
+      "L6",
+      "L7",
+      "L8",
+      "L9"
+    ],
+    "total_claims": 36
+  },
+  "excluded_data": [
+    "shared_model result section in the source JSON",
+    "six-role model outputs and runtime metadata",
+    "Bouleusis retrieval and acquisition records",
+    "operation-policy challenge v2 records"
+  ],
+  "integrity": {
+    "full_result_file_hash_is_provenance_only": true,
+    "verified_result_sections": [
+      {
+        "path": "docs/research/experimental-results.json",
+        "pointer": "/benchmark_a",
+        "sha256": "e1b2d6be3365d17ef703077cb29b24521bb97f9259a1dc849eebf14e1668c7f4"
+      },
+      {
+        "path": "docs/research/experimental-results.json",
+        "pointer": "/gate_comparison/cases",
+        "sha256": "85d71dfd5a3cf1405636dcaad642c6b77108ea859386c2ffa94bd58bc3da1ac1"
+      },
+      {
+        "path": "docs/research/experimental-results.json",
+        "pointer": "/gate_comparison/rules",
+        "sha256": "32a0c28771517233c10cb7a8d7e61590d7d48f3deed535f3474eb11919eaa08b"
+      }
+    ],
+    "verified_source_files": 20
+  },
+  "interpretation_limits": [
+    "All flagship experiments are synthetic and deterministic.",
+    "The 23 policy cases were authored within the project and not independently adjudicated.",
+    "A hash or replay establishes byte or calculation identity, not semantic truth or external validity.",
+    "The operation-gate table reports only permission, refusal, and interpretation counts reduced from saved case rows."
+  ],
+  "operation_gate_case_count": 23,
+  "operation_gate_case_metrics": {
+    "global_label": {
+      "case_count": 23,
+      "false_permissions": 7,
+      "interpretation_errors": 3,
+      "invalid_case_denominator": 12,
+      "unnecessary_refusals": 3,
+      "valid_case_denominator": 11
+    },
+    "metadata_only": {
+      "case_count": 23,
+      "false_permissions": 5,
+      "interpretation_errors": 0,
+      "invalid_case_denominator": 12,
+      "unnecessary_refusals": 0,
+      "valid_case_denominator": 11
+    },
+    "naive_aggregation": {
+      "case_count": 23,
+      "false_permissions": 12,
+      "interpretation_errors": 8,
+      "invalid_case_denominator": 12,
+      "unnecessary_refusals": 0,
+      "valid_case_denominator": 11
+    },
+    "operation_specific": {
+      "case_count": 23,
+      "false_permissions": 0,
+      "interpretation_errors": 0,
+      "invalid_case_denominator": 12,
+      "unnecessary_refusals": 0,
+      "valid_case_denominator": 11
+    }
+  },
+  "operation_gate_cases": [
+    {
+      "case": "compare_same_target",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "compare",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "compare_equivalent_definition_cross_family",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "compare",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "compare_different_event",
+      "expected_permission": false,
+      "expected_target_relationship": "different_targets",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "different_targets",
+        "naive_aggregation": "same_target",
+        "operation_specific": "different_targets"
+      },
+      "operation": "compare",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "compare_incompatible_metric_units",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "compare",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "rank_same_target_aligned",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "rank",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "rank_declared_decision_mapping",
+      "expected_permission": true,
+      "expected_target_relationship": "decision_objective",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "decision_objective",
+        "naive_aggregation": "same_target",
+        "operation_specific": "decision_objective"
+      },
+      "operation": "rank",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "rank_different_target_no_mapping",
+      "expected_permission": false,
+      "expected_target_relationship": "different_targets",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "different_targets",
+        "naive_aggregation": "same_target",
+        "operation_specific": "different_targets"
+      },
+      "operation": "rank",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "rank_same_target_misaligned_sample",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "rank",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "pool_same_target_predeclared_weights",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "pool",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "pool_same_target_weights_missing",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "pool",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "pool_declared_mixture",
+      "expected_permission": true,
+      "expected_target_relationship": "declared_mixture",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "declared_mixture",
+        "naive_aggregation": "same_target",
+        "operation_specific": "declared_mixture"
+      },
+      "operation": "pool",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "pool_different_target_no_mixture",
+      "expected_permission": false,
+      "expected_target_relationship": "different_targets",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "different_targets",
+        "naive_aggregation": "same_target",
+        "operation_specific": "different_targets"
+      },
+      "operation": "pool",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "pool_overlapping_rows_unmodeled",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "pool",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "transfer_same_population_with_calibration",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "transfer",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "transfer_shift_validated",
+      "expected_permission": true,
+      "expected_target_relationship": "validated_transport",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "validated_transport",
+        "naive_aggregation": "same_target",
+        "operation_specific": "validated_transport"
+      },
+      "operation": "transfer",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "transfer_shift_unvalidated",
+      "expected_permission": false,
+      "expected_target_relationship": "different_targets",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "different_targets",
+        "naive_aggregation": "same_target",
+        "operation_specific": "different_targets"
+      },
+      "operation": "transfer",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "transfer_calibration_evidence_missing",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "transfer",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "average_same_target_same_time",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "average",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "average_prediction_time_mismatch",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "average",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "average_different_horizon",
+      "expected_permission": false,
+      "expected_target_relationship": "different_targets",
+      "interpretations": {
+        "global_label": "different_targets",
+        "metadata_only": "different_targets",
+        "naive_aggregation": "same_target",
+        "operation_specific": "different_targets"
+      },
+      "operation": "average",
+      "permissions": {
+        "global_label": false,
+        "metadata_only": false,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    },
+    {
+      "case": "combine_independent_sources",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "combine",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "combine_shared_source_with_model",
+      "expected_permission": true,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "combine",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": true
+      }
+    },
+    {
+      "case": "combine_shared_source_unmodeled",
+      "expected_permission": false,
+      "expected_target_relationship": "same_target",
+      "interpretations": {
+        "global_label": "same_target",
+        "metadata_only": "same_target",
+        "naive_aggregation": "same_target",
+        "operation_specific": "same_target"
+      },
+      "operation": "combine",
+      "permissions": {
+        "global_label": true,
+        "metadata_only": true,
+        "naive_aggregation": true,
+        "operation_specific": false
+      }
+    }
+  ],
+  "schema_version": 1,
+  "source_record": {
+    "consumed_sections": [
+      "/benchmark_a",
+      "/gate_comparison/cases",
+      "/gate_comparison/rules"
+    ],
+    "full_file_sha256_at_source_commit": "02d3642044768c47957221a1e615dc221baf248b97eb4a61c8d75fa8eca80fcd",
+    "path": "docs/research/experimental-results.json",
+    "source_commit": "79df12d14a1b931863ea263cf6c827bd7cb9fd71"
+  },
+  "status": "reproduced for the pinned synthetic flagship records; not independent scientific replication"
+}
